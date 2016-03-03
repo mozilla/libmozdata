@@ -42,7 +42,6 @@ class Track(object):
 
     def __get_apikey(self):
         if self.credentials:
-            pprint(self.credentials)
             return self.credentials['tokens'][self.CRASH_STATS_URL]
         else:
             return ''

@@ -5,7 +5,6 @@ import re
 import numbers
 
 from HGFileInfo import HGFileInfo
-from HGFiles import HGFiles
 from BZInfo import BZInfo
 from CrashInfo import CrashInfo
 import utils
