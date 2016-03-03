@@ -6,9 +6,7 @@ from pprint import pprint
 
 class CrashInfo(object):
 
-    # TODO: put the token somewhere else...
     # TODO: count is probably erroneous since there is a range by default in supersearch...
-    HEADER = { 'Auth-Token': '9c458a171b534ce9998fbb7e80c65bd6' }
     CRASH_STATS_URL = 'https://crash-stats.mozilla.com'
     SUPERSEARCH_URL = CRASH_STATS_URL + '/api/SuperSearch'
     TIMEOUT = 5
