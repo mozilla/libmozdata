@@ -92,7 +92,7 @@ class Track(object):
                 return True
 
         return False
-    
+
     @staticmethod
     def __get_bt_stats(info, credentials):
         hits = info['hits']
@@ -103,7 +103,6 @@ class Track(object):
         rec = 0.
         weird_address = { }
         os_cpu = { }
-        cpu_info = { }
         reason = { }
         cycles = { }
         if bt_info:
@@ -122,21 +121,11 @@ class Track(object):
                 addrs[t] = addrs[t] + 1 if t in addrs else 1
                 t = (v['os'], v['cpu_name'])
                 os_cpu[t] = os_cpu[t] + 1 if t in os_cpu else 1
-                ci = v['cpu_info']
-                cpu_info[ci] = cpu_info[ci] + 1 if ci in cpu_info else 1
-                r = v['reason']
-                reason[r] = reason[r] + 1 if r in reason else 1
                 
             rec = utils.percent(float(recursive_bt) / total)
 
             for k, v in os_cpu.iteritems():
                 os_cpu[k] = utils.percent(float(v) / total)
-
-            for k, v in cpu_info.iteritems():
-                cpu_info[k] = utils.percent(float(v) / total)
-
-            for k, v in reason.iteritems():
-                reason[k] = utils.percent(float(v) / total)
 
             for k, v in addrs.iteritems():
                 percent = float(v) / total
@@ -147,7 +136,7 @@ class Track(object):
 
             total = int(total)
 
-        return { 'sample_size': total, 'bt_has_rec': rec, 'weird_address': weird_address, 'cycles': cycles, 'os_cpu': os_cpu, 'cpu_info': cpu_info }
+        return { 'sample_size': total, 'bt_has_rec': rec, 'weird_address': weird_address, 'cycles': cycles, 'os_cpu': os_cpu }
 
     @staticmethod
     def __get_filename_rev(path):
@@ -192,7 +181,11 @@ class Track(object):
         self.info['buildids'] = Track.__get_stats(info, 'build_id')
         self.info['versions'] = Track.__get_stats(info, 'version')
         self.info['channels'] = Track.__get_stats(info, 'release_channel')
+        self.info['cpu_name'] = Track.__get_stats(info, 'cpu_name')
+        self.info['cpu_info'] = Track.__get_stats(info, 'cpu_info')
+        self.info['reason'] = Track.__get_stats(info, 'reason')
         self.info['system_memory_use'] = Track.__get_system_memory_use_mean(info)
+        
         filename, rev = Track.__get_topmost_filename(info)
         self.info['filename'] = filename
         self.info['revision'] = rev
@@ -216,7 +209,15 @@ class Track(object):
                                                             'release_channel': 'nightly',
                                                             '_sort': 'build_id',
                                                             '_columns': ['uuid', 'topmost_filenames'],
-                                                            '_facets': ['platform_pretty_version', 'build_id', 'version', 'release_channel', 'system_memory_use_percentage', 'addons'],
+                                                            '_facets': ['platform_pretty_version',
+                                                                        'build_id',
+                                                                        'version',
+                                                                        'release_channel',
+                                                                        'system_memory_use_percentage',
+                                                                        'cpu_name',
+                                                                        'cpu_info',
+                                                                        'reason',
+                                                                        'addons'],
                                                             '_results_number': 100,
                                                                 },
                                                  headers = header,
@@ -228,7 +229,6 @@ class Track(object):
 #t = Track('mozilla::gfx::DrawTargetCairo::FillGlyphs', '2016-02-27', day_delta = 3)
 #t = Track('nss3.dll@0x1eab60 | GetFileInfo', '2016-02-28', day_delta = 2)
 #t = Track('PR_DestroyThreadPrivate | PR_CleanupThread | PR_NativeRunThread | pr_root', '2016-02-26')
-t = Track('mp4parse_new', '2016-02-28', credentials = utils.get_credentials('/home/calixte/credentials.json'))
 #t = Track('mozilla::ipc::MessageListener::IntentionalCrash', '2016-02-27', day_delta = 3)
 #t = Track('js::gc::GCRuntime::sweepBackgroundThings', '2015-12-22', day_delta = 3)
 #t = Track('nsCOMPtr_base::assign_from_qi | nsCOMPtr<T>::nsCOMPtr<T> | nsDocShell::EnsureFind', '2016-02-29', day_delta = 2)
@@ -238,4 +238,6 @@ t = Track('mp4parse_new', '2016-02-28', credentials = utils.get_credentials('/ho
 #t = Track('mozilla::ipc::MessageChannel::ShouldDeferMessage', '2016-03-01', day_delta = 2)
 #t = Track('mozalloc_abort | NS_DebugBreak | nsDebugImpl::Abort | XPTC__InvokebyIndex', '2016-03-01', day_delta = 2) 
 
+#t = Track(signature = 'mp4parse_new', day = '2016-02-28', day_delta = 1, credentials = utils.get_credentials('/home/calixte/credentials.json'))
+t = Track('mozilla::gfx::DrawTargetCairo::FillGlyphs', '2016-02-27', day_delta = 3, credentials = utils.get_credentials('/home/calixte/credentials.json'))
 pprint(t.get())

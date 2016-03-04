@@ -99,8 +99,6 @@ class Backtrace(object):
                 self.info[uuid] = { 'cycles': [ ],
                                         'address': '',
                                         'cpu_name': json['cpu_name'],
-                                        'cpu_info': json['cpu_info'],
-                                        'reason': json['reason'],
                                         'os': json['os_pretty_version'] }
                 if 'frames' in ct:
                     frames = ct['frames']
