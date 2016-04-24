@@ -6,7 +6,7 @@ import os
 
 class HGExploration(object):
 
-    def __init__(self, rev = 'tip', path = '/home/calixte/dev/mozilla/mozilla-central.hg'):
+    def __init__(self, rev='tip', path='/home/calixte/dev/mozilla/mozilla-central.hg'):
         self.root = path
         self.ui = ui.ui()
         self.rev = rev
@@ -15,11 +15,11 @@ class HGExploration(object):
         self.haspushlog = hasattr(self.repo, 'pushlog')
 
     def __explore_file(self, path, file_hook, userdata):
-        #pprint(path)
+        # pprint(path)
         if path in self.ctx:
             fctx = self.ctx[path]
             file_hook(self.repo, self.haspushlog, fctx, userdata)
-            
+
     def __explore_dir(self, path, file_hook, userdata):
         for root, subdirs, files in os.walk(path):
             if files:
@@ -42,15 +42,17 @@ class HGExploration(object):
         for rev in fl.revs():
             _fctx = fctx.filectx(rev)
             author = _fctx.user()
-            pushdate = None
+            date = None
             if haspushlog:
                 pushinfo = repo.pushlog.pushfromchangeset(_fctx)
                 if pushinfo:
                     pushdate = mercurial.util.makedate(pushinfo[2])[0]
-                    pushdate = datetime.utcfromtimestamp(pushdate)
-            
-            #pprint([path, author, pushdate])
+                    date = datetime.utcfromtimestamp(pushdate)
+            else:
+                date = _fctx.date()
+
+            # pprint([path, author, pushdate])
 
 
-ud = { }
-hge = HGExploration().explore(file_hook = HGExploration.stat_file, userdata = ud)
+ud = {}
+hge = HGExploration().explore(file_hook=HGExploration.stat_file, userdata=ud)

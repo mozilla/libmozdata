@@ -1,0 +1,101 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
+from datetime import datetime
+import re
+import numbers
+
+from HGFileInfo import HGFileInfo
+from BZInfo import BZInfo
+import utils
+
+
+class FileStats(object):
+    """Stats about a file in the repo.
+    """
+
+    def __init__(self, path, channel='nightly', node='tip', utc_ts=None, max_days=3, credentials=None):
+        """Constructor
+
+        Args:
+            path (str): file path
+            channel (str): channel version of firefox
+            node (Optional[str]): the node, by default 'tip'
+            utc_ts (Optional[int]): UTC timestamp, file pushdate <= utc_ts
+            max_days (Optional[int]): use to find out the "guilty" patch, by default it's 3
+            credentials (Optional[dict]): credentials to use
+        """
+        self.utc_ts = utc_ts if isinstance(utc_ts, numbers.Number) and utc_ts > 0 else None
+        self.path = path
+        self.max_days = max_days
+        self.credentials = credentials
+        self.hi = HGFileInfo(path, channel=channel, node=node, utc_ts=self.utc_ts, credentials=self.credentials)
+        self.info = self.hi.get()[path]
+
+    def get_info(self, dig_when_non_pertinent=True):
+        """Get info
+
+        Args:
+            dig_when_non_pertinent (Optional[bool]): when True, even if the last patch is non-pertinent
+            (i.e. its push date isn't around utc_ts modulo max_days), the info about it are collected.
+
+        Returns:
+            dict: info
+        """
+        info = {'path': self.path,
+                'guilty': None,
+                'needinfo': None}
+
+        c = self.__check_dates()
+        if not c and not dig_when_non_pertinent:
+            return None
+
+        if isinstance(c, bool):
+            bugs = self.info['bugs']
+            bi = BZInfo(bugs, credentials=self.credentials) if bugs else None
+            if c:  # we have a 'guilty' set of patches
+                author_pattern = re.compile('<([^>]+>)')
+                stats = {}
+                last = self.info['last']
+                last_author = None
+                for patch in last:
+                    m = author_pattern.search(patch['author'])
+                    if m:
+                        author = m.group(1)
+                    else:
+                        author = patch['author']
+                    if not last_author:
+                        last_author = author
+                    stats[author] = stats[author] + 1 if author in stats else 1
+                info['guilty'] = {'main_author': utils.get_best(stats) if stats else None,
+                                  'last_author': last_author,
+                                  'patches': last}
+
+            if bi:
+                # find out the good person to query for a needinfo
+                info['needinfo'] = bi.get_best_collaborator()
+                comp_prod = bi.get_best_component_product()
+                info['component'] = comp_prod[0]
+                info['product'] = comp_prod[1]
+
+        return info
+
+    def __check_dates(self):
+        """Check if the last patch has been pushed (cf pushdate) max_days before the utc_ts
+
+        Returns:
+            bool: a boolean
+        """
+        if self.hi.get_utc_ts():
+            # we get the last patch (according to utc_ts)
+            last = self.info['last']
+            if last:
+                date = datetime.utcfromtimestamp(self.hi.get_utc_ts())
+                pushdate = datetime.utcfromtimestamp(last[0]['pushdate'][0])
+                td = date - pushdate
+                return td.days <= self.max_days
+        return None
+
+
+# if __name__ == '__main__':
