@@ -1,3 +1,7 @@
 language: python
+install:
+  - pip install codecov
 script:
   - coverage run --source=clouseau -m unittest discover tests/
+after_success:
+  - codecov
