@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from connection import Connection
+from connection import (Connection, Query)
 
 
 class Bugzilla(Connection):
@@ -13,7 +13,7 @@ class Bugzilla(Connection):
     # URL = 'https://bugzilla-dev.allizom.org'
     API_URL = URL + '/rest/bug'
 
-    def __init__(self, bugids, credentials=None, bughandler=None, bugdata=None, historyhandler=None, historydata=None, commenthandler=None, commentdata=None):
+    def __init__(self, bugids=None, credentials=None, bughandler=None, bugdata=None, historyhandler=None, historydata=None, commenthandler=None, commentdata=None, queries=None):
         """Constructor
 
         Args:
@@ -25,24 +25,28 @@ class Bugzilla(Connection):
             historydata (Optional): the data to use with the history handler
             commenthandler (Optional[function]): the handler to use with each retrieved bug comment
             commentdata (Optional): the data to use with the comment handler
+            queries (List[Query]): queries rather than single query
         """
-        super(Bugzilla, self).__init__(Bugzilla.URL, credentials=credentials)
-        if isinstance(bugids, basestring):
-            self.bugids = [bugids]
-        elif isinstance(bugids, int):
-            self.bugids = [str(bugids)]
+        if queries:
+            super(Bugzilla, self).__init__(Bugzilla.URL, queries=queries, credentials=credentials)
         else:
-            self.bugids = map(str, bugids)
-        self.bughandler = bughandler
-        self.bugdata = bugdata
-        self.historyhandler = historyhandler
-        self.historydata = historydata
-        self.commenthandler = commenthandler
-        self.commentdata = commentdata
-        self.bugs_results = []
-        self.history_results = []
-        self.comment_results = []
-        self.got_data = False
+            super(Bugzilla, self).__init__(Bugzilla.URL, credentials=credentials)
+            if isinstance(bugids, basestring):
+                self.bugids = [bugids]
+            elif isinstance(bugids, int):
+                self.bugids = [str(bugids)]
+            else:
+                self.bugids = map(str, bugids)
+            self.bughandler = bughandler
+            self.bugdata = bugdata
+            self.historyhandler = historyhandler
+            self.historydata = historydata
+            self.commenthandler = commenthandler
+            self.commentdata = commentdata
+            self.bugs_results = []
+            self.history_results = []
+            self.comment_results = []
+            self.got_data = False
 
     def put(self, data):
         """Put some data in bugs
@@ -86,12 +90,15 @@ class Bugzilla(Connection):
         return self
 
     def wait(self):
-        self.get_data()
-        self.wait_bugs()
-        for r in self.comment_results:
-            r.result()
-        for r in self.history_results:
-            r.result()
+        if self.queries:
+            super(Bugzilla, self).wait()
+        else:
+            self.get_data()
+            self.wait_bugs()
+            for r in self.comment_results:
+                r.result()
+            for r in self.history_results:
+                r.result()
 
     def wait_bugs(self):
         """Just wait for bugs
