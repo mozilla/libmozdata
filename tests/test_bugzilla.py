@@ -5,6 +5,7 @@
 import unittest
 from clouseau import bugzilla
 
+
 class BugIDTest(unittest.TestCase):
 
     def test_bugid(self):
