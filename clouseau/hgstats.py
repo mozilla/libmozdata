@@ -1,8 +1,9 @@
-from mercurial import ui, hg, extensions
+from mercurial import ui, hg
 import mercurial
 from pprint import pprint
 from datetime import datetime
 import os
+
 
 class HGExploration(object):
 
@@ -51,7 +52,7 @@ class HGExploration(object):
             else:
                 date = _fctx.date()
 
-            # pprint([path, author, pushdate])
+            pprint([path, author, date])
 
 
 ud = {}
