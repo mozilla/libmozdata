@@ -1,4 +1,6 @@
 language: python
+install:
+  - pip install -r test-requirements.txt
 script:
   - python -m unittest discover tests/
   - flake8 .
