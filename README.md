@@ -4,5 +4,5 @@
 ## Running tests
 
 ```sh
-python -m unittest discover tests/
+coverage run --source=clouseau -m unittest discover tests/
 ```
