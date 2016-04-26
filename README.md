@@ -3,6 +3,12 @@
 
 ## Running tests
 
+Install test prerequisites via `pip`:
+```sh
+pip install -r test-requirements.txt
+```
+
+Run tests:
 ```sh
 python -m unittest discover tests/
 ```
