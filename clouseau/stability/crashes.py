@@ -161,7 +161,7 @@ def get_stats(channel, date, versions=None, last_days=11, tcbs_limit=50, credent
 
     for sgn, stats in signatures.iteritems():
         # stats is 2-uple: ([count, win_count, mac_count, linux_count, startup_count], trend)
-        crash_stats_per_mega_adi = [float(stats[1][i]) * 1e6 / float(adi[i]) for i in range(last_days)]
+        crash_stats_per_mega_adi = [float(stats[1][s]) * 1e6 / float(adi[s]) for s in range(last_days)]
         _signatures[sgn] = {'tc_rank': _signatures[sgn],
                             'crash_count': stats[0][0],
                             'startup_percent': float(stats[0][4]) / float(stats[0][0]),
