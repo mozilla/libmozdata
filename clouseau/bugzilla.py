@@ -48,6 +48,9 @@ class Bugzilla(Connection):
             self.comment_results = []
             self.got_data = False
 
+    def get_header(self):
+        return {'X-Bugzilla-API-Key': self.get_apikey(Bugzilla.URL)}
+
     def put(self, data):
         """Put some data in bugs
 
@@ -59,9 +62,6 @@ class Bugzilla(Connection):
                 ids = self.bugids
             else:
                 ids = self.__get_bugs_list()
-
-            if 'api_key' not in data:
-                data['api_key'] = self.get_apikey(Bugzilla.URL)
 
             url = Bugzilla.API_URL + '/'
             for _ids in Connection.chunks(ids):
@@ -164,11 +164,9 @@ class Bugzilla(Connection):
     def __get_bugs(self):
         """Get the bugs
         """
-        api_key = self.get_apikey(Bugzilla.URL)
         for bugids in Connection.chunks(self.bugids):
             self.bugs_results.append(self.session.get(Bugzilla.API_URL,
-                                                      params={'api_key': api_key,
-                                                              'id': ','.join(bugids)},
+                                                      params={'id': ','.join(bugids)},
                                                       verify=True,
                                                       timeout=self.TIMEOUT,
                                                       background_callback=self.__bugs_cb))
@@ -176,11 +174,9 @@ class Bugzilla(Connection):
     def __get_bugs_by_search(self):
         """Get the bugs in making a search query
         """
-        api_key = self.get_apikey(Bugzilla.URL)
         url = Bugzilla.API_URL + '?'
         for query in self.bugids:
             self.bugs_results.append(self.session.get(url + query,
-                                                      params={'api_key': api_key},
                                                       verify=True,
                                                       timeout=self.TIMEOUT,
                                                       background_callback=self.__bugs_cb))
@@ -195,12 +191,10 @@ class Bugzilla(Connection):
                 for bug in res.json()['bugs']:
                     _list.add(bug['id'])
 
-        api_key = self.get_apikey(Bugzilla.URL)
         results = []
         url = Bugzilla.API_URL + '?'
         for query in self.bugids:
             results.append(self.session.get(url + query,
-                                            params={'api_key': api_key},
                                             verify=True,
                                             timeout=self.TIMEOUT,
                                             background_callback=cb))
@@ -227,10 +221,8 @@ class Bugzilla(Connection):
         """Get the bug history
         """
         url = Bugzilla.API_URL + '/%s/history'
-        req_params = {'api_key': self.get_apikey(Bugzilla.URL)}
         for bugid in self.bugids:
             self.history_results.append(self.session.get(url % bugid,
-                                                         params=req_params,
                                                          timeout=self.TIMEOUT,
                                                          background_callback=self.__history_cb))
 
@@ -256,9 +248,7 @@ class Bugzilla(Connection):
         """Get the bug comment
         """
         url = Bugzilla.API_URL + '/%s/comment'
-        req_params = {'api_key': self.get_apikey(Bugzilla.URL)}
         for bugid in self.bugids:
             self.comment_results.append(self.session.get(url % bugid,
-                                                         params=req_params,
                                                          timeout=self.TIMEOUT,
                                                          background_callback=self.__comment_cb))
