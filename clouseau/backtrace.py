@@ -57,20 +57,24 @@ def get_infos(uuids, fraction=0.3, credentials=None):
 
     def handler(json, data):
         jd = json['json_dump']
-        frames = jd['threads'][json['crashedThread']]['frames']
-        data['cpu_name'] = json['cpu_name']
-        data['os'] = json['os_pretty_version']
-        functions = []
-        for frame in frames:
-            if 'function' in frame:
-                functions.append(frame['function'])
-        bt = tuple(functions)
-        data['cycles'] = __cycles_detection(functions)
-        data['functions'] = bt
-        data['address'] = jd['crash_info']['address']
+        if 'threads' in jd and 'crashedThread' in json:
+            thread_nb = json['crashedThread']
+            if thread_nb is not None:
+                frames = jd['threads'][thread_nb]['frames']
+                data['cpu_name'] = json['cpu_name']
+                data['os'] = json['os_pretty_version']
+                functions = []
+                for frame in frames:
+                    if 'function' in frame:
+                        functions.append(frame['function'])
+                bt = tuple(functions)
+                data['cycles'] = __cycles_detection(functions)
+                data['functions'] = bt
+        if 'crash_info' in jd:
+            data['address'] = jd['crash_info']['address']
 
     base = {'cycles': [],
-            'functions': [],
+            'functions': None,
             'address': '',
             'cpu_name': '',
             'os': ''}
