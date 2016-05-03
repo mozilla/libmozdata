@@ -13,7 +13,7 @@ class Bugzilla(Connection):
     # URL = 'https://bugzilla-dev.allizom.org'
     API_URL = URL + '/rest/bug'
 
-    def __init__(self, bugids=None, credentials=None, bughandler=None, bugdata=None, historyhandler=None, historydata=None, commenthandler=None, commentdata=None, queries=None):
+    def __init__(self, bugids=None, credentials=None, bughandler=None, bugdata=None, historyhandler=None, historydata=None, commenthandler=None, commentdata=None, attachmenthandler=None, attachmentdata=None, queries=None):
         """Constructor
 
         Args:
@@ -25,6 +25,8 @@ class Bugzilla(Connection):
             historydata (Optional): the data to use with the history handler
             commenthandler (Optional[function]): the handler to use with each retrieved bug comment
             commentdata (Optional): the data to use with the comment handler
+            attachmenthandler (Optional[function]): the handler to use with each retrieved bug attachment
+            attachmentdata (Optional): the data to use with the attachment handler
             queries (List[Query]): queries rather than single query
         """
         if queries:
@@ -43,9 +45,12 @@ class Bugzilla(Connection):
             self.historydata = historydata
             self.commenthandler = commenthandler
             self.commentdata = commentdata
+            self.attachmenthandler = attachmenthandler
+            self.attachmentdata = attachmentdata
             self.bugs_results = []
             self.history_results = []
             self.comment_results = []
+            self.attachment_results = []
             self.got_data = False
 
     def put(self, data):
@@ -84,6 +89,8 @@ class Bugzilla(Connection):
                     self.__get_history()
                 if self.commenthandler:
                     self.__get_comment()
+                if self.attachmenthandler:
+                    self.__get_attachment()
             elif self.bughandler:
                 self.__get_bugs_for_history_comment()
 
@@ -98,6 +105,8 @@ class Bugzilla(Connection):
             for r in self.comment_results:
                 r.result()
             for r in self.history_results:
+                r.result()
+            for r in self.attachment_results:
                 r.result()
 
     def wait_bugs(self):
@@ -119,7 +128,7 @@ class Bugzilla(Connection):
         return False
 
     def __get_bugs_for_history_comment(self):
-        """Get history and commend (if there are some handlers) after a search query
+        """Get history and comment (if there are some handlers) after a search query
         """
         if self.historyhandler or self.commenthandler:
             bugids = []
@@ -147,6 +156,9 @@ class Bugzilla(Connection):
             if self.commenthandler:
                 self.comment_results = []
                 self.__get_comment()
+            if self.attachmenthandler:
+                self.attachment_results = []
+                self.__get_attachment()
         else:
             self.__get_bugs_by_search()
 
@@ -262,3 +274,32 @@ class Bugzilla(Connection):
                                                          params=req_params,
                                                          timeout=self.TIMEOUT,
                                                          background_callback=self.__comment_cb))
+
+    def __attachment_cb(self, sess, res):
+        """Callback for bug attachment
+
+        Args:
+            sess: session
+            res: result
+        """
+        if res.status_code == 200:
+            json = res.json()
+            if 'bugs' in json:
+                bugs = json['bugs']
+                if bugs:
+                    for key in bugs.keys():
+                        if isinstance(key, basestring) and key.isdigit():
+                            attachments = bugs[key]
+                            self.attachmenthandler(attachments, key, self.attachmentdata)
+                            break
+
+    def __get_attachment(self):
+        """Get the bug attachment
+        """
+        url = Bugzilla.API_URL + '/%s/attachment'
+        req_params = {'api_key': self.get_apikey(Bugzilla.URL)}
+        for bugid in self.bugids:
+            self.attachment_results.append(self.session.get(url % bugid,
+                                                            params=req_params,
+                                                            timeout=self.TIMEOUT,
+                                                            background_callback=self.__attachment_cb))
