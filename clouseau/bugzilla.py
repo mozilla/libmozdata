@@ -252,7 +252,7 @@ class Bugzilla(Connection):
                 bugs = json['bugs']
                 if bugs:
                     for key in bugs.keys():
-                        if isinstance(key, basestring) and key.isdigit():
+                        if isinstance(key, six.string_types) and key.isdigit():
                             comments = bugs[key]
                             self.commenthandler(comments, key, self.commentdata)
                             break
@@ -279,7 +279,7 @@ class Bugzilla(Connection):
                 bugs = json['bugs']
                 if bugs:
                     for key in bugs.keys():
-                        if isinstance(key, basestring) and key.isdigit():
+                        if isinstance(key, six.string_types) and key.isdigit():
                             attachments = bugs[key]
                             self.attachmenthandler(attachments, key, self.attachmentdata)
                             break
