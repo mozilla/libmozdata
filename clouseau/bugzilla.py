@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import six
 from .connection import (Connection, Query)
 
 
@@ -31,7 +32,7 @@ class Bugzilla(Connection):
             super(Bugzilla, self).__init__(Bugzilla.URL, queries=queries, credentials=credentials)
         else:
             super(Bugzilla, self).__init__(Bugzilla.URL, credentials=credentials)
-            if isinstance(bugids, basestring):
+            if isinstance(bugids, six.string_types):
                 self.bugids = [bugids]
             elif isinstance(bugids, int):
                 self.bugids = [str(bugids)]
