@@ -2,7 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from connection import (Connection)
+import six
+from .connection import (Connection)
 
 
 class Bugzilla(Connection):
@@ -33,7 +34,7 @@ class Bugzilla(Connection):
             super(Bugzilla, self).__init__(Bugzilla.URL, queries=queries, credentials=credentials)
         else:
             super(Bugzilla, self).__init__(Bugzilla.URL, credentials=credentials)
-            if isinstance(bugids, basestring):
+            if isinstance(bugids, six.string_types):
                 self.bugids = [bugids]
             elif isinstance(bugids, int):
                 self.bugids = [str(bugids)]
@@ -251,7 +252,7 @@ class Bugzilla(Connection):
                 bugs = json['bugs']
                 if bugs:
                     for key in bugs.keys():
-                        if isinstance(key, basestring) and key.isdigit():
+                        if isinstance(key, six.string_types) and key.isdigit():
                             comments = bugs[key]
                             self.commenthandler(comments, key, self.commentdata)
                             break
@@ -278,7 +279,7 @@ class Bugzilla(Connection):
                 bugs = json['bugs']
                 if bugs:
                     for key in bugs.keys():
-                        if isinstance(key, basestring) and key.isdigit():
+                        if isinstance(key, six.string_types) and key.isdigit():
                             attachments = bugs[key]
                             self.attachmenthandler(attachments, key, self.attachmentdata)
                             break
