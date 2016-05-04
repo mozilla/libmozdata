@@ -76,7 +76,7 @@ class Phonebook(Connection):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Mozilla\'s phonebook')
     parser.add_argument('-q', '--query', action='store', default='*', help='query to pass to phonebook, by default \'*\'')
-    parser.add_argument('-c', '--credentials', action='store', default='', help='credentials file to use')
+    parser.add_argument('-C', '--credentials', action='store', default='', help='credentials file to use')
 
     args = parser.parse_args()
 

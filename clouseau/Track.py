@@ -2,8 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import argparse
 from urlparse import urlparse
 from datetime import (date, datetime, timedelta)
+from pprint import pprint
 import utils
 import math
 import re
@@ -19,7 +21,7 @@ class Track(object):
     Track a crash
     """
 
-    def __init__(self, signature, start_date, duration=1, channel='nightly', credentials=None):
+    def __init__(self, signature, start_date, duration=-1, channel='nightly', product='Firefox', credentials=None):
         """Constructor
 
         Args:
@@ -31,6 +33,7 @@ class Track(object):
         """
         self.duration = duration
         self.channel = channel
+        self.product = product
         self.credentials = credentials
         self.signature = signature
         self.info = {}
@@ -167,10 +170,11 @@ class Track(object):
         _bts = {}
         for uuid, data in info.iteritems():
             bt = data['functions']
-            if bt in _bts:
-                _bts[bt].append(uuid)
-            else:
-                _bts[bt] = [uuid]
+            if bt:
+                if bt in _bts:
+                    _bts[bt].append(uuid)
+                else:
+                    _bts[bt] = [uuid]
 
         bts = {}
         common_part = None
@@ -243,6 +247,10 @@ class Track(object):
                 elif percent >= 0.25:
                     weird_address[k] = utils.percent(percent)
 
+            _addrs = []
+            for k in addrs.iterkeys():
+                _addrs.append(k[0])
+
             total = int(total)
 
         return {'sample_size': total,
@@ -262,10 +270,16 @@ class Track(object):
         Returns:
             (str, str): filename and node
         """
-        m = self.hg_pattern.search(path)
-        filename = m.group(1)
-        node = m.group(2)
-        return (filename, node)
+        if path:
+            m = self.hg_pattern.search(path)
+            if m:
+                filename = m.group(1)
+                node = m.group(2)
+            else:
+                filename = path
+                node = ''
+            return (filename, node)
+        return (None, None)
 
     def __get_topmost_filename(self, info):
         """Get topmost filename
@@ -276,8 +290,14 @@ class Track(object):
         Returns:
             (str, str): filename and node
         """
-        path = info['hits'][0]['topmost_filenames']
-        return self.__get_filename_node(path)
+        hits = info['hits']
+        fn = {}
+        for hit in hits:
+            name = hit['topmost_filenames']
+            if name:
+                fn[name] = fn[name] + 1 if name in fn else 1
+
+        return self.__get_filename_node(utils.get_best(fn))
 
     def __walk_on_the_backtrace(self):
         """All is in the function name
@@ -357,27 +377,32 @@ class Track(object):
         """Retrieve information
         """
         start_date = utils.get_date_str(self.date)
-        end_date = self.date + timedelta(self.duration)
-        today = date.today()
-        today = datetime(today.year, today.month, today.day)
-        if end_date > today:
-            end_date = today
-        end_date = utils.get_date_str(end_date)
+        if self.duration < 0:
+            search_date = ['>=' + start_date]
+        else:
+            end_date = self.date + timedelta(self.duration)
+            today = date.today()
+            today = datetime(today.year, today.month, today.day)
+            if end_date > today:
+                search_date = ['>=' + start_date]
+            else:
+                search_date = ['>=' + start_date, '<' + utils.get_date_str(end_date)]
 
         nb_hits = []
-        socorro.SuperSearch(params={'product': 'Firefox',
+        socorro.SuperSearch(params={'product': self.product,
                                     'signature': '=' + self.signature,
-                                    'date': ['>=' + start_date,
-                                             '<' + end_date],
+                                    'date': search_date,
                                     'release_channel': self.channel,
                                     '_results_number': 0},
                             handler=lambda json, data: nb_hits.append(json['total']),
                             credentials=self.credentials).wait()
 
-        self.search = socorro.SuperSearch(params={'product': 'Firefox',
+        if nb_hits[0] > 1000:
+            nb_hits[0] = 1000
+
+        self.search = socorro.SuperSearch(params={'product': self.product,
                                                   'signature': '=' + self.signature,
-                                                  'date': ['>=' + start_date,
-                                                           '<' + end_date],
+                                                  'date': search_date,
                                                   'release_channel': self.channel,
                                                   '_sort': 'build_id',
                                                   '_columns': ['uuid', 'topmost_filenames'],
@@ -397,5 +422,18 @@ class Track(object):
                                           credentials=self.credentials)
 
 
-# t = Track(signature='nsInterfaceHashtable<T>::Get | mozilla::dom::indexedDB::`anonymous namespace\'\'::DatabaseConnection::GetCachedStatement', channel='release', start_date='2016-04-22', duration=4, credentials=utils.get_credentials('/home/calixte/credentials.json'))
-# pprint(t.get())
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Track')
+    parser.add_argument('-s', '--signature', action='store', help='crash signature as in Socorro')
+    parser.add_argument('-S', '--startdate', action='store', default='today', help='the start date to retrieve crash info')
+    parser.add_argument('-d', '--duration', action='store', default=-1, help='the number of day after the start date')
+    parser.add_argument('-c', '--channel', action='store', default='nightly', help='release channel')
+    parser.add_argument('-p', '--product', action='store', default='Firefox', help='the product, by default Firefox')
+    parser.add_argument('-C', '--credentials', action='store', default='', help='credentials file to use')
+
+    args = parser.parse_args()
+
+    if args.signature:
+        credentials = utils.get_credentials(args.credentials) if args.credentials else None
+        t = Track(signature=args.signature, start_date=args.startdate, duration=args.duration, channel=args.channel, product=args.product, credentials=credentials)
+        pprint(t.get())
