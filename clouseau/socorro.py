@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import six
 from urlparse import urlparse
 from connection import (Connection, Query)
 import utils
@@ -102,7 +103,7 @@ class ProcessedCrash(Socorro):
         __base = {'crash_id': None,
                   'datatype': 'processed'}
 
-        if isinstance(crashids, basestring):
+        if isinstance(crashids, six.string_types):
             __base['crash_id'] = crashids
             _dict = {}
             data[crashids] = _dict
@@ -419,7 +420,7 @@ class SignatureTrend(Socorro):
                   'end_date': end_date,
                   'signature': None}
 
-        if isinstance(signatures, basestring):
+        if isinstance(signatures, six.string_types):
             __base['signature'] = signatures
             _list = []
             data[signatures] = _list
@@ -578,7 +579,7 @@ class SignatureURLs(Socorro):
                   'signature': None}
         handler = SignatureURLs.get_default_handler(trunc)
 
-        if isinstance(signatures, basestring):
+        if isinstance(signatures, six.string_types):
             __base['signature'] = signatures
             _list = []
             data[signatures] = _list
@@ -642,7 +643,7 @@ class Bugs(Socorro):
         """
         data = {}
 
-        if isinstance(signatures, basestring):
+        if isinstance(signatures, six.string_types):
             _set = set()
             data[signatures] = _set
             Bugs(params={'signatures': signatures}, credentials=credentials, handler=Bugs.default_handler, handlerdata=_set).wait()

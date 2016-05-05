@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import six
 import operator
 import time
 from datetime import (datetime, date, timedelta)
@@ -34,7 +35,7 @@ def get_timestamp(dt):
     Returns:
         int: the corresponding timestamp
     """
-    if isinstance(dt, basestring):
+    if isinstance(dt, six.string_types):
         dt = get_date_ymd(dt)
     return int(time.mktime(dt.timetuple()))
 
