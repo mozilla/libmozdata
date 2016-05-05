@@ -2,9 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import argparse
 from datetime import datetime
-import re
 import numbers
+from pprint import pprint
+import re
 
 from HGFileInfo import HGFileInfo
 from BZInfo import BZInfo
@@ -68,6 +70,7 @@ class FileStats(object):
                     if not last_author:
                         last_author = author
                     stats[author] = stats[author] + 1 if author in stats else 1
+
                 info['guilty'] = {'main_author': utils.get_best(stats) if stats else None,
                                   'last_author': last_author,
                                   'patches': last}
@@ -78,6 +81,7 @@ class FileStats(object):
                 comp_prod = bi.get_best_component_product()
                 info['component'] = comp_prod[0]
                 info['product'] = comp_prod[1]
+                info['bugs'] = len(bugs)
 
         return info
 
@@ -98,4 +102,18 @@ class FileStats(object):
         return None
 
 
-# if __name__ == '__main__':
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='File Stats')
+    parser.add_argument('-p', '--path', action='store', help='file path')
+    parser.add_argument('-n', '--node', action='store', default='tip', help='Mercurial node, by default \'tip\'')
+    parser.add_argument('-c', '--channel', action='store', default='nightly', help='release channel')
+    parser.add_argument('-d', '--date', action='store', default='today', help='max date for pushdate, format YYYY-mm-dd')
+    parser.add_argument('-m', '--maxdays', action='store', default=3, help='max days before date')
+    parser.add_argument('-C', '--credentials', action='store', default='', help='credentials file to use')
+
+    args = parser.parse_args()
+
+    if args.path:
+        credentials = utils.get_credentials(args.credentials) if args.credentials else None
+        fs = FileStats(args.path, args.channel, args.node, utils.get_timestamp(args.date), args.maxdays, credentials)
+        pprint(fs.get_info())

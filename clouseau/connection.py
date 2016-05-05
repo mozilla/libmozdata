@@ -65,9 +65,9 @@ class Connection(object):
             if res.status_code == 200:
                 query.handler(res.json(), query.handlerdata)
             else:
-                print 'Connection error:'
-                print '   url: ', res.url
-                print '   json: ', res.json()
+                print('Connection error:')
+                print('   url: ', res.url)
+                print('   json: ', res.json())
 
         return cb
 

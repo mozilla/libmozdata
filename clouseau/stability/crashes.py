@@ -9,6 +9,9 @@ from clouseau.connection import (Connection, Query)
 from clouseau.bugzilla import Bugzilla
 
 
+from pprint import pprint
+
+
 def __adi_handler(json, data):
     for adi in json['hits']:
         date = utils.get_date_ymd(adi['date'])
@@ -45,7 +48,7 @@ def __bug_handler(json, data):
         data.append((bug['id'], bug['resolution']))
 
 
-def get_stats(channel, date, versions=None, last_days=11, tcbs_limit=50, credentials=None):
+def get_stats(channel, date, versions=None, last_days=11, tcbs_limit=50, crash_type='browser', credentials=None):
     channel = channel.lower()
     if not versions:
         versions = socorro.ProductVersions.get_version(channel, credentials=credentials)
@@ -72,7 +75,7 @@ def get_stats(channel, date, versions=None, last_days=11, tcbs_limit=50, credent
     # TODO: ask to Socorro team to add a feature to get that directly
     tcbs = {}
     base = {'product': 'Firefox',
-            'crash_type': 'Browser',
+            'crash_type': crash_type,
             'version': None,
             'limit': tcbs_limit,
             'duration': 24 * last_days,
@@ -161,7 +164,7 @@ def get_stats(channel, date, versions=None, last_days=11, tcbs_limit=50, credent
 
     for sgn, stats in signatures.iteritems():
         # stats is 2-uple: ([count, win_count, mac_count, linux_count, startup_count], trend)
-        crash_stats_per_mega_adi = [float(stats[1][i]) * 1e6 / float(adi[i]) for i in range(last_days)]
+        crash_stats_per_mega_adi = [float(stats[1][s]) * 1e6 / float(adi[s]) for s in range(last_days)]
         _signatures[sgn] = {'tc_rank': _signatures[sgn],
                             'crash_count': stats[0][0],
                             'startup_percent': float(stats[0][4]) / float(stats[0][0]),
@@ -175,5 +178,5 @@ def get_stats(channel, date, versions=None, last_days=11, tcbs_limit=50, credent
             'adi': adi,
             'signatures': _signatures}
 
-# sgns = get_stats('release', '2016-04-24', versions=['45.0.2'], credentials=utils.get_credentials('/home/calixte/credentials.json'), tcbs_limit=300)
-# pprint(sgns)#['nsInterfaceHashtable<T>::Get | mozilla::dom::indexedDB::`anonymous namespace\'\'::DatabaseConnection::GetCachedStatement'])
+#stats = get_stats('release', '2016-04-25', versions=['45.0.2'], credentials=utils.get_credentials('/home/calixte/credentials.json'), tcbs_limit=60)
+#pprint(stats['signatures']['_alldiv'])
