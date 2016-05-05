@@ -3,8 +3,8 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import re
-import utils
-from bugzilla import Bugzilla
+from . import utils
+from .bugzilla import Bugzilla
 
 
 class BZInfo(Bugzilla):

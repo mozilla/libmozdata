@@ -3,7 +3,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import six
-from connection import (Connection, Query)
+from .connection import (Connection, Query)
 
 
 class Mercurial(Connection):

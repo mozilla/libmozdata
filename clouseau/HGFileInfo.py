@@ -5,8 +5,8 @@
 import re
 import six
 from datetime import datetime
-from connection import Query
-import hgmozilla
+from .connection import Query
+from . import hgmozilla
 
 
 class HGFileInfo(object):

@@ -4,8 +4,8 @@
 
 import six
 from urlparse import urlparse
-from connection import (Connection, Query)
-import utils
+from .connection import (Connection, Query)
+from . import utils
 
 
 class Socorro(Connection):

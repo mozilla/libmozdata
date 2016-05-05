@@ -8,9 +8,9 @@ import numbers
 from pprint import pprint
 import re
 
-from HGFileInfo import HGFileInfo
-from BZInfo import BZInfo
-import utils
+from .HGFileInfo import HGFileInfo
+from .BZInfo import BZInfo
+from . import utils
 
 
 class FileStats(object):
