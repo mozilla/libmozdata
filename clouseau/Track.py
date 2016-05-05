@@ -168,7 +168,7 @@ class Track(object):
             dict: stats for each backtraces
         """
         _bts = {}
-        for uuid, data in info.iteritems():
+        for uuid, data in info.items():
             bt = data['functions']
             if bt:
                 if bt in _bts:
@@ -179,7 +179,7 @@ class Track(object):
         bts = {}
         common_part = None
 
-        for bt, uuids in _bts.iteritems():
+        for bt, uuids in _bts.items():
             bts[bt] = (uuids[0], len(uuids))
             if common_part is None:
                 common_part = bt
@@ -223,7 +223,7 @@ class Track(object):
             backtraces, bts_common_part = Track.__get_different_bt_stats(bt_info)
 
             total = float(len(bt_info))
-            for v in bt_info.itervalues():
+            for v in bt_info.values():
                 _cycles = v['cycles']
                 if _cycles:
                     recursive_bt += 1
@@ -237,10 +237,10 @@ class Track(object):
 
             rec = utils.percent(float(recursive_bt) / total)
 
-            for k, v in os_cpu.iteritems():
+            for k, v in os_cpu.items():
                 os_cpu[k] = utils.percent(float(v) / total)
 
-            for k, v in addrs.iteritems():
+            for k, v in addrs.items():
                 percent = float(v) / total
                 if memory.isweird(*k):
                     weird_address[k] = utils.percent(percent)
@@ -310,7 +310,7 @@ class Track(object):
         backtraces = btinfo['backtraces']
 
         # get the uuid where the bt has the better stats
-        uuid = max(backtraces.iteritems(), key=lambda x: x[1][1])[1][0]
+        uuid = max(backtraces.items(), key=lambda x: x[1][1])[1][0]
 
         fileinfo = None
         bt = backtrace.get_files(uuid, common=bt_common_part, credentials=self.credentials)

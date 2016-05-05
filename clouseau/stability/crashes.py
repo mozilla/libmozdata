@@ -92,8 +92,8 @@ def get_stats(channel, date, versions=None, last_days=11, tcbs_limit=50, crash_t
     socorro.TCBS(queries=queries, credentials=credentials).wait()
 
     # aggregate the results from the different versions
-    for tc in tcbs.itervalues():
-        for sgn, count in tc.iteritems():
+    for tc in tcbs.values():
+        for sgn, count in tc.items():
             if sgn in signatures:
                 c = signatures[sgn]
                 for i in range(5):
@@ -145,12 +145,12 @@ def get_stats(channel, date, versions=None, last_days=11, tcbs_limit=50, crash_t
 
     socorro.SuperSearch(queries=queries, credentials=credentials).wait()
 
-    for sgn, trend in trends.iteritems():
+    for sgn, trend in trends.items():
         signatures[sgn] = (signatures[sgn], [trend[key] for key in sorted(trend.keys(), reverse=True)])
 
     _signatures = {}
     # order self.signatures by crash count
-    l = sorted(signatures.iteritems(), key=lambda x: x[1][0][0], reverse=True)
+    l = sorted(signatures.items(), key=lambda x: x[1][0][0], reverse=True)
     i = 1
     for s in l:
         _signatures[s[0]] = i  # top crash rank
@@ -162,7 +162,7 @@ def get_stats(channel, date, versions=None, last_days=11, tcbs_limit=50, crash_t
 
     res_bugs.wait()
 
-    for sgn, stats in signatures.iteritems():
+    for sgn, stats in signatures.items():
         # stats is 2-uple: ([count, win_count, mac_count, linux_count, startup_count], trend)
         crash_stats_per_mega_adi = [float(stats[1][s]) * 1e6 / float(adi[s]) for s in range(last_days)]
         _signatures[sgn] = {'tc_rank': _signatures[sgn],

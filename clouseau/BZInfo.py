@@ -64,7 +64,7 @@ class BZInfo(Bugzilla):
         # TODO: use this graph to get other metrics (??)
         # TODO: We could weight a contrib with a gaussian which depends to the time
         collaborations = {}
-        for info in self.get().itervalues():
+        for info in self.get().values():
             if info['authorized']:
                 owner = info['owner']
                 if owner not in collaborations:
@@ -95,7 +95,7 @@ class BZInfo(Bugzilla):
             (tuple): a pair containing 'best' component & product
         """
         comps_prods = {}
-        for info in self.get().itervalues():
+        for info in self.get().values():
             if info['authorized']:
                 comp_prod = (info['component'], info['product'])
                 comps_prods[comp_prod] = comps_prods[comp_prod] + 1 if comp_prod in comps_prods else 1

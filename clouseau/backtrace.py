@@ -113,7 +113,7 @@ def __cycles_detection(funs):
             positions[fun] = [i]
 
     lengths = {}
-    for k, v in positions.iteritems():
+    for k, v in positions.items():
         if len(v) >= 2:
             l = v[1] - v[0]
             good = True
@@ -128,7 +128,7 @@ def __cycles_detection(funs):
                     lengths[l] = [(k, v)]
 
     cycles = []
-    for k, v in lengths.iteritems():
+    for k, v in lengths.items():
         l = sorted(v, key=lambda x: x[1][0])
         pat = []
         container = [l[0][0]]

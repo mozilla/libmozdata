@@ -21,7 +21,7 @@ def get_best(stats):
         a key
     """
     if stats:
-        return max(stats.iteritems(), key=operator.itemgetter(1))[0]
+        return max(stats.items(), key=operator.itemgetter(1))[0]
     else:
         return None
 
