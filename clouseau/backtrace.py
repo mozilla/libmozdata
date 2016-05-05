@@ -129,7 +129,7 @@ def __cycles_detection(funs):
 
     cycles = []
     for k, v in lengths.iteritems():
-        l = sorted(v, cmp=lambda x, y: cmp(x[1][0], y[1][0]))
+        l = sorted(v, key=lambda x: x[1][0])
         pat = []
         container = [l[0][0]]
         pos = l[0][1][0]
