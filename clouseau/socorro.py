@@ -3,7 +3,10 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import six
-from urlparse import urlparse
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 from .connection import (Connection, Query)
 from . import utils
 
