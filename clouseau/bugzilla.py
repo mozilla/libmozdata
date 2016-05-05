@@ -39,7 +39,7 @@ class Bugzilla(Connection):
             elif isinstance(bugids, int):
                 self.bugids = [str(bugids)]
             else:
-                self.bugids = map(str, bugids)
+                self.bugids = list(map(str, bugids))
             self.bughandler = bughandler
             self.bugdata = bugdata
             self.historyhandler = historyhandler
