@@ -21,7 +21,18 @@ class UtilsTest(unittest.TestCase):
         self.assertGreater(utils.get_timestamp('today'), utils.get_timestamp(date))
 
     def test_get_date_ymd(self):
-        pass
+        self.assertIsNotNone(utils.get_date_ymd('today'))
+        date = datetime.datetime.strptime('1991-04-16', '%Y-%m-%d')
+        self.assertEqual(utils.get_date_ymd('1991/04/16'), date)
+        self.assertEqual(utils.get_date_ymd('1991-04-16'), date)
+        self.assertEqual(utils.get_date_ymd('1991 04 16'), date)
+
+        with self.assertRaises(Exception):
+            utils.get_date_ymd('04/16/1991')
+        with self.assertRaises(Exception):
+            utils.get_date_ymd('16/04/1991')
+        with self.assertRaises(Exception):
+            utils.get_date_ymd('1991-04-16 12:00:00')
 
     def test_get_today(self):
         self.assertIsNotNone(utils.get_today())
