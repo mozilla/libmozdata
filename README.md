@@ -19,6 +19,7 @@ coverage run --source=clouseau -m unittest discover tests/
 ### Credentials
 
 For particular queries on Socorro or Bugzilla, it requires to have some API keys.
+
 Create a file credentials.json (or an other name: it doesn't matter) with the following contents:
 ```{
     "tokens":
