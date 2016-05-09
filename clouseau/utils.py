@@ -5,6 +5,7 @@
 import six
 import operator
 import time
+import calendar
 from datetime import (datetime, date, timedelta)
 import math
 import json
@@ -37,7 +38,7 @@ def get_timestamp(dt):
     """
     if isinstance(dt, six.string_types):
         dt = get_date_ymd(dt)
-    return int(time.mktime(dt.timetuple()))
+    return int(calendar.timegm(dt.timetuple()))
 
 
 def get_date_ymd(dt):

@@ -22,8 +22,8 @@ class UtilsTest(unittest.TestCase):
 
     def test_get_timestamp(self):
         date = '1991-04-16'
-        self.assertEqual(utils.get_timestamp(date), 671756400)
-        self.assertEqual(utils.get_timestamp(datetime.datetime.strptime(date, '%Y-%m-%d')), 671756400)
+        self.assertEqual(utils.get_timestamp(date), 671760000)
+        self.assertEqual(utils.get_timestamp(datetime.datetime.strptime(date, '%Y-%m-%d')), 671760000)
 
     def test_get_date_ymd(self):
         pass
