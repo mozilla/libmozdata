@@ -7,12 +7,6 @@ import datetime
 import json
 from clouseau import utils
 
-try:
-    FileNotFoundError
-except NameError:
-    class FileNotFoundError(OSError):
-        pass
-
 
 class UtilsTest(unittest.TestCase):
 
@@ -54,7 +48,7 @@ class UtilsTest(unittest.TestCase):
         self.assertEqual(utils.simple_percent(3.5), '3.5%')
 
     def test_get_credentials(self):
-        with self.assertRaises(FileNotFoundError):
+        with self.assertRaises(Exception):
             utils.get_credentials('doesntexist')
 
         with open('/tmp/afile', 'w') as f:
