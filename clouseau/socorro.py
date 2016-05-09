@@ -327,7 +327,7 @@ class ProductVersions(Socorro):
         if remove_dates:
             _versions = {}
             for k, v in versions.items():
-                _versions[k] = map(lambda p: p[1], v)
+                _versions[k] = list(map(lambda p: p[1], v))
             return _versions
 
         return versions
