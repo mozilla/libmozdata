@@ -97,7 +97,7 @@ class Connection(object):
         Returns:
             dict: the header
         """
-        return None
+        return dict()
 
     def get_auth(self):
         """Get the auth to use each query
@@ -121,6 +121,8 @@ class Connection(object):
                 self.queries = [self.queries]
 
             header = self.get_header()
+            if 'Connection' not in header:
+                header['Connection'] = 'close'
             auth = self.get_auth()
 
             for query in self.queries:
