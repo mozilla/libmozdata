@@ -24,20 +24,24 @@ class UtilsTest(unittest.TestCase):
         pass
 
     def test_get_today(self):
-        pass
+        self.assertIsNotNone(utils.get_today())
 
     def test_get_date_str(self):
         date = '1991-04-16'
         self.assertEqual(utils.get_date_str(datetime.datetime.strptime(date, '%Y-%m-%d')), date)
 
     def test_get_date(self):
-        pass
+        self.assertEqual(utils.get_date('1991/04/16'), '1991-04-16')
+        self.assertEqual(utils.get_date('1991/04/16', 1), '1991-04-15')
 
     def test_get_now_timestamp(self):
-        pass
+        date = '1991-04-16'
+        self.assertGreater(utils.get_now_timestamp(), utils.get_timestamp(date))
 
     def test_is64(self):
-        pass
+        self.assertEqual(utils.is64('64bit'), True)
+        self.assertEqual(utils.is64('A 64 bit machine'), True)
+        self.assertEqual(utils.is64('A 32 bit machine'), False)
 
     def test_percent(self):
         self.assertEqual(utils.percent(0.23), '23%')
