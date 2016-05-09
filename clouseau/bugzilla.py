@@ -14,11 +14,12 @@ class Bugzilla(Connection):
     # URL = 'https://bugzilla-dev.allizom.org'
     API_URL = URL + '/rest/bug'
 
-    def __init__(self, bugids=None, credentials=None, bughandler=None, bugdata=None, historyhandler=None, historydata=None, commenthandler=None, commentdata=None, attachmenthandler=None, attachmentdata=None, queries=None):
+    def __init__(self, bugids=None, include_fields='_default', credentials=None, bughandler=None, bugdata=None, historyhandler=None, historydata=None, commenthandler=None, commentdata=None, attachmenthandler=None, attachmentdata=None, queries=None):
         """Constructor
 
         Args:
             bugids (List[str]): list of bug ids or search query
+            include_fields (List[str]): list of include fields
             credentials (Optional[dict]): credentials to use with bugzilla
             bughandler (Optional[function]): the handler to use with each retrieved bug
             bugdata (Optional): the data to use with the bug handler
@@ -40,6 +41,7 @@ class Bugzilla(Connection):
                 self.bugids = [str(bugids)]
             else:
                 self.bugids = list(map(str, bugids))
+            self.include_fields = include_fields
             self.bughandler = bughandler
             self.bugdata = bugdata
             self.historyhandler = historyhandler
@@ -116,6 +118,60 @@ class Bugzilla(Connection):
         for r in self.bugs_results:
             r.result()
 
+    @staticmethod
+    def follow_dup(bugids, credentials=None):
+        """Follow the duplicated bugs
+
+        Args:
+            bugids (List[str]): list of bug ids
+            credentials (Optional[dict]): credentials to use with bugzilla
+
+        Returns:
+            dict: each bug in entry is mapped to the last bug in the duplicate chain (None if there's no dup and 'cycle' if a cycle is detected)
+        """
+        include_fields = ['id', 'resolution', 'dupe_of']
+        dup = {}
+        _set = set()
+        for bugid in bugids:
+            dup[str(bugid)] = None
+
+        def bughandler(bug, data):
+            if bug['resolution'] == 'DUPLICATE':
+                dupeofid = str(bug['dupe_of'])
+                dup[str(bug['id'])] = [dupeofid]
+                _set.add(dupeofid)
+
+        bz = Bugzilla(bugids=bugids, include_fields=include_fields, bughandler=bughandler, credentials=credentials).get_data()
+        bz.wait_bugs()
+
+        def bughandler2(bug, data):
+            if bug['resolution'] == 'DUPLICATE':
+                bugid = str(bug['id'])
+                for _id in dup.iterkeys():
+                    dupid = dup[_id]
+                    if dupid and dupid[-1] == bugid:
+                        dupeofid = str(bug['dupe_of'])
+                        if dupeofid == _id or dupeofid in dupid:
+                            # avoid infinite loop if any
+                            dup[_id].append('cycle')
+                        else:
+                            dup[_id].append(dupeofid)
+                            _set.add(dupeofid)
+
+        bz.bughandler = bughandler2
+
+        while _set:
+            bz.bugids = list(_set)
+            _set.clear()
+            bz.got_data = False
+            bz.get_data().wait_bugs()
+
+        for k in dup.iterkeys():
+            v = dup[k]
+            dup[k] = v[-1] if v else None
+
+        return dup
+
     def __is_bugid(self):
         """Check if the first bugid is a bug id or a search query
 
@@ -179,7 +235,8 @@ class Bugzilla(Connection):
         """
         for bugids in Connection.chunks(self.bugids):
             self.bugs_results.append(self.session.get(Bugzilla.API_URL,
-                                                      params={'id': ','.join(bugids)},
+                                                      params={'id': ','.join(bugids),
+                                                              'include_fields': self.include_fields},
                                                       verify=True,
                                                       timeout=self.TIMEOUT,
                                                       background_callback=self.__bugs_cb))

@@ -3,11 +3,12 @@ import mercurial
 from pprint import pprint
 from datetime import datetime
 import os
+import argparse
 
 
 class HGExploration(object):
 
-    def __init__(self, rev='tip', path='/home/calixte/dev/mozilla/mozilla-central.hg'):
+    def __init__(self, path, rev='tip'):
         self.root = path
         self.ui = ui.ui()
         self.rev = rev
@@ -55,5 +56,12 @@ class HGExploration(object):
             pprint([path, author, date])
 
 
-ud = {}
-hge = HGExploration().explore(file_hook=HGExploration.stat_file, userdata=ud)
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='hgstats')
+    parser.add_argument('-p', '--path', action='store', required=True, help='the path to the mercurial repository')
+    parser.add_argument('-r', '--revision', action='store', default='tip', help='the revision')
+
+    args = parser.parse_args()
+
+    ud = {}
+    hge = HGExploration(path=args.path, rev=args.revision).explore(file_hook=HGExploration.stat_file, userdata=ud)
