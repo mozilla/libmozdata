@@ -63,7 +63,7 @@ def get_date_ymd(dt):
     if l and len(l) == 3:
         if len(l[0]) == 4:
             (y, m, d) = map(int, l)
-        elif len[2] == 4:
+        elif len(l[2]) == 4:
             (m, d, y) = map(int, l)
     return datetime(y, m, d)
 
