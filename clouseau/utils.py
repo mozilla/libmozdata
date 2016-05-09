@@ -8,6 +8,7 @@ from datetime import (datetime, date, timedelta)
 import math
 import json
 import random
+import six
 
 
 def get_best(stats):
@@ -34,7 +35,7 @@ def get_timestamp(dt):
     Returns:
         int: the corresponding timestamp
     """
-    if isinstance(dt, basestring):
+    if isinstance(dt, six.string_types):
         dt = get_date_ymd(dt)
     return int(time.mktime(dt.timetuple()))
 
@@ -49,7 +50,8 @@ def get_date_ymd(dt):
         datetime: a datetime object
     """
     if dt == 'today':
-        return date.today()
+        today = date.today()
+        return datetime(today.year, today.month, today.day)
 
     l = None
     if '-' in dt:
