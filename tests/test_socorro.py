@@ -52,7 +52,7 @@ class PlatformsTest(unittest.TestCase):
 class ProductVersionsTest(unittest.TestCase):
 
     def test_versions(self):
-        versions = socorro.ProductVersions.get_last_active_firefox()
+        versions = socorro.ProductVersions.get_active()
         self.assertIsNot(versions, None)
 
     def test_cached_versions(self):
