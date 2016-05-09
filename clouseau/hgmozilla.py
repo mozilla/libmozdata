@@ -2,7 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from connection import (Connection, Query)
+import six
+from .connection import (Connection, Query)
 
 
 class Mercurial(Connection):
@@ -186,7 +187,7 @@ class FileInfo(Mercurial):
         __base = {'node': node,
                   'file': None}
 
-        if isinstance(paths, basestring):
+        if isinstance(paths, six.string_types):
             __base['file'] = paths
             _dict = {}
             data[paths] = _dict

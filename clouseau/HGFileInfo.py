@@ -3,9 +3,10 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import re
+import six
 from datetime import datetime
-from connection import Query
-import hgmozilla
+from .connection import Query
+from . import hgmozilla
 
 
 class HGFileInfo(object):
@@ -29,7 +30,7 @@ class HGFileInfo(object):
         self.node = node
         self.utc_ts = utc_ts
         self.info = {}
-        self.paths = [paths] if isinstance(paths, basestring) else paths
+        self.paths = [paths] if isinstance(paths, six.string_types) else paths
         for path in self.paths:
             self.info[path] = {'authors': {},
                                'bugs': set(),

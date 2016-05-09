@@ -36,7 +36,7 @@ class FXRevision(Connection):
         self.info[json['buildid']] = json['moz_source_stamp']
 
     def __get_info(self):
-        for date in self.dates.itervalues():
+        for date in self.dates.values():
             self.results.append(self.session.get(self.__make_url(date),
                                                  timeout=self.TIMEOUT,
                                                  background_callback=self.__info_cb))

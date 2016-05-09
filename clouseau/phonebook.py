@@ -50,7 +50,7 @@ class Phonebook(Connection):
             data (dict): the container which will receive the data
         """
         mail_pattern = re.compile('mail=([^,]*)')
-        for k, v in json.iteritems():
+        for k, v in json.items():
             _manager = None
             if 'manager' in v:
                 manager = v['manager']

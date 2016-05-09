@@ -8,7 +8,7 @@ import clouseau.utils as utils
 from clouseau.connection import (Connection, Query)
 from clouseau.bugzilla import Bugzilla
 
-
+import argparse
 from pprint import pprint
 
 
@@ -92,8 +92,8 @@ def get_stats(channel, date, versions=None, last_days=11, tcbs_limit=50, crash_t
     socorro.TCBS(queries=queries, credentials=credentials).wait()
 
     # aggregate the results from the different versions
-    for tc in tcbs.itervalues():
-        for sgn, count in tc.iteritems():
+    for tc in tcbs.values():
+        for sgn, count in tc.items():
             if sgn in signatures:
                 c = signatures[sgn]
                 for i in range(5):
@@ -145,12 +145,12 @@ def get_stats(channel, date, versions=None, last_days=11, tcbs_limit=50, crash_t
 
     socorro.SuperSearch(queries=queries, credentials=credentials).wait()
 
-    for sgn, trend in trends.iteritems():
+    for sgn, trend in trends.items():
         signatures[sgn] = (signatures[sgn], [trend[key] for key in sorted(trend.keys(), reverse=True)])
 
     _signatures = {}
     # order self.signatures by crash count
-    l = sorted(signatures.iteritems(), key=lambda x: x[1][0][0], reverse=True)
+    l = sorted(signatures.items(), key=lambda x: x[1][0][0], reverse=True)
     i = 1
     for s in l:
         _signatures[s[0]] = i  # top crash rank
@@ -162,7 +162,7 @@ def get_stats(channel, date, versions=None, last_days=11, tcbs_limit=50, crash_t
 
     res_bugs.wait()
 
-    for sgn, stats in signatures.iteritems():
+    for sgn, stats in signatures.items():
         # stats is 2-uple: ([count, win_count, mac_count, linux_count, startup_count], trend)
         crash_stats_per_mega_adi = [float(stats[1][s]) * 1e6 / float(adi[s]) for s in range(last_days)]
         _signatures[sgn] = {'tc_rank': _signatures[sgn],
@@ -178,5 +178,15 @@ def get_stats(channel, date, versions=None, last_days=11, tcbs_limit=50, crash_t
             'adi': adi,
             'signatures': _signatures}
 
-#stats = get_stats('release', '2016-04-25', versions=['45.0.2'], credentials=utils.get_credentials('/home/calixte/credentials.json'), tcbs_limit=60)
-#pprint(stats['signatures']['_alldiv'])
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Track')
+    parser.add_argument('-c', '--channel', action='store', default='release', help='release channel')
+    parser.add_argument('-d', '--date', action='store', default='today', help='the end date')
+    parser.add_argument('-v', '--versions', action='store', nargs='+', default=['46.0'], help='the Firefox versions')
+    parser.add_argument('-C', '--credentials', action='store', default='', help='credentials file to use')
+
+    args = parser.parse_args()
+
+    credentials = utils.get_credentials(args.credentials) if args.credentials else None
+    stats = get_stats(args.channel, args.date, versions=args.versions, credentials=credentials)
+    pprint(stats['signatures']['_alldiv'])

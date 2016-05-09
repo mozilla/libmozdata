@@ -2,9 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from urlparse import urlparse
-from connection import (Connection, Query)
-import utils
+import six
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
+from .connection import (Connection, Query)
+from . import utils
 
 
 class Socorro(Connection):
@@ -102,7 +106,7 @@ class ProcessedCrash(Socorro):
         __base = {'crash_id': None,
                   'datatype': 'processed'}
 
-        if isinstance(crashids, basestring):
+        if isinstance(crashids, six.string_types):
             __base['crash_id'] = crashids
             _dict = {}
             data[crashids] = _dict
@@ -271,7 +275,7 @@ class ProductVersions(Socorro):
                 else:
                     _data[build_type] = (version_n, [(ff['start_date'], version)])
 
-            for k, v in _data.iteritems():
+            for k, v in _data.items():
                 versions = v[1]
                 if len(versions) > 1:
                     sorted(versions, key=lambda t: utils.get_date_ymd(t[0]))
@@ -419,7 +423,7 @@ class SignatureTrend(Socorro):
                   'end_date': end_date,
                   'signature': None}
 
-        if isinstance(signatures, basestring):
+        if isinstance(signatures, six.string_types):
             __base['signature'] = signatures
             _list = []
             data[signatures] = _list
@@ -578,7 +582,7 @@ class SignatureURLs(Socorro):
                   'signature': None}
         handler = SignatureURLs.get_default_handler(trunc)
 
-        if isinstance(signatures, basestring):
+        if isinstance(signatures, six.string_types):
             __base['signature'] = signatures
             _list = []
             data[signatures] = _list
@@ -642,7 +646,7 @@ class Bugs(Socorro):
         """
         data = {}
 
-        if isinstance(signatures, basestring):
+        if isinstance(signatures, six.string_types):
             _set = set()
             data[signatures] = _set
             Bugs(params={'signatures': signatures}, credentials=credentials, handler=Bugs.default_handler, handlerdata=_set).wait()
@@ -655,7 +659,7 @@ class Bugs(Socorro):
             Bugs(queries=queries, credentials=credentials).wait()
 
         _data = {}
-        for s, b in data.iteritems():
+        for s, b in data.items():
             _data[s] = list(b)
 
         return _data
