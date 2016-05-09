@@ -189,7 +189,7 @@ class ProductVersions(Socorro):
     """
 
     URL = Socorro.API_URL + '/ProductVersions'
-    __cached_versions = None
+    __cached_versions = {}
 
     def __init__(self, params=None, handler=None, handlerdata=None, credentials=None):
         """Constructor
@@ -203,32 +203,48 @@ class ProductVersions(Socorro):
         super(ProductVersions, self).__init__(Query(ProductVersions.URL, params, handler, handlerdata), credentials)
 
     @staticmethod
-    def get_cached_versions(credentials=None):
+    def get_cached_versions(product='Firefox', credentials=None):
         """Get the versions (which has been put in a cache)
 
         Args:
+            product (Optional[str]): product to use, by default 'Firefox'
             credentials (Optional[dict]): credentials to use with Socorro
 
         Returns:
             dict: versions
         """
-        if not ProductVersions.__cached_versions:
-            ProductVersions.__cached_versions = ProductVersions.get_last_active_firefox(credentials)
-        return ProductVersions.__cached_versions
+        if product not in ProductVersions.__cached_versions:
+            ProductVersions.__cached_versions[product] = ProductVersions.get_active(product, credentials=credentials)
+        return ProductVersions.__cached_versions[product]
 
     @staticmethod
-    def get_version(channel, credentials=None):
+    def get_last_version(channel, product='Firefox', credentials=None):
         """Get last version for a channel
 
         Args:
             channel (str): 'nightly', 'aurora', 'beta' or 'release'
+            product (Optional[str]): product to use, by default 'Firefox'
+            credentials (Optional[dict]): credentials to use with Socorro
+
+        Returns:
+            str: the last version corresponding to the channel
+        """
+        return ProductVersions.get_versions(channel, product, credentials)[0]
+
+    @staticmethod
+    def get_versions(channel, product='Firefox', credentials=None):
+        """Get last version for a channel
+
+        Args:
+            channel (str): 'nightly', 'aurora', 'beta' or 'release'
+            product (Optional[str]): product to use, by default 'Firefox'
             credentials (Optional[dict]): credentials to use with Socorro
 
         Returns:
             str: the last version corresponding to the channel
         """
         if channel:
-            return ProductVersions.get_cached_versions(credentials)[channel.lower()][0][1]
+            return [p[1] for p in ProductVersions.get_cached_versions(product, credentials)[channel.lower()]]
         else:
             return None
 
@@ -250,15 +266,16 @@ class ProductVersions(Socorro):
             return None
 
     @staticmethod
-    def default_handler(json, data):
+    def default_handler(number, json, data):
         """Default handler
 
         Args:
+            number (Optional[int]): version number
             json (dict): json
             data (list): list to append the platforms name
         """
-        _data = {}
         if json['total']:
+            _data = {}
             ffs = json['hits']
             for ff in ffs:
                 build_type = ff['build_type'].lower()  # release, beta, aurora, nightly
@@ -266,14 +283,21 @@ class ProductVersions(Socorro):
                 version_n = ProductVersions.__get_version(version)
                 # take only the latest versions, e.g. if 45.x and 44.x are "release"
                 # then 45.x is only considered
-                if build_type in _data:
-                    t = _data[build_type]
-                    if version_n == t[0]:
-                        t[1].append((ff['start_date'], version))
-                    elif version_n > t[0]:
-                        _data.version[build_type] = (version_n, [(ff['start_date'], version)])
+                if number:
+                    if number == version_n:
+                        if build_type in _data:
+                            _data[build_type][1].append((ff['start_date'], version))
+                        else:
+                            _data[build_type] = (version_n, [(ff['start_date'], version)])
                 else:
-                    _data[build_type] = (version_n, [(ff['start_date'], version)])
+                    if build_type in _data:
+                        t = _data[build_type]
+                        if version_n == t[0]:
+                            t[1].append((ff['start_date'], version))
+                        elif version_n > t[0]:
+                            _data[build_type] = (version_n, [(ff['start_date'], version)])
+                    else:
+                        _data[build_type] = (version_n, [(ff['start_date'], version)])
 
             for k, v in _data.items():
                 versions = v[1]
@@ -282,10 +306,13 @@ class ProductVersions(Socorro):
                 data[k] = versions
 
     @staticmethod
-    def get_last_active_firefox(credentials=None):
-        """Get the last active Firefox versions
+    def get_active(product='Firefox', vnumber=None, is_rapid_beta=False, remove_dates=True, credentials=None):
+        """Get the active versions
 
         Args:
+            product (Optional[str]): product to use, by default 'Firefox'
+            vnumber (Optional[int]): a version number 45, 46, ...
+            is_rapid_beta (Optional[bool]): for version which are rapid beta, by default False
             credentials (Optional[dict]): credentials to use with Socorro
 
         Returns:
@@ -293,8 +320,16 @@ class ProductVersions(Socorro):
         """
         versions = {}
         ProductVersions(params={'active': True,
-                                'product': 'Firefox'},
-                        credentials=credentials, handler=ProductVersions.default_handler, handlerdata=versions).wait()
+                                'product': product,
+                                'is_rapid_beta': is_rapid_beta},
+                        credentials=credentials, handler=lambda json, data: ProductVersions.default_handler(vnumber, json, data), handlerdata=versions).wait()
+
+        if remove_dates:
+            _versions = {}
+            for k, v in versions.iteritems():
+                _versions[k] = map(lambda p: p[1], v)
+            return _versions
+
         return versions
 
 
@@ -346,7 +381,7 @@ class TCBS(Socorro):
             dict: a json
         """
         if not version:
-            version = ProductVersions.get_version(channel, credentials)
+            version = ProductVersions.get_last_version(channel, credentials)
             if not version:
                 return None
 
@@ -410,7 +445,7 @@ class SignatureTrend(Socorro):
             dict: the trend for each signature
         """
         if not version:
-            version = ProductVersions.get_version(channel, credentials)
+            version = ProductVersions.get_last_version(channel, credentials)
             if not version:
                 return None
 
@@ -471,7 +506,10 @@ class ADI(Socorro):
             data (list): list to append the platforms name
         """
         if json['total']:
-            data += json['hits']
+            for adi in json['hits']:
+                date = utils.get_date_ymd(adi['date'])
+                adi_count = adi['adi_count']
+                data[date] = data[date] + adi_count if date in data else adi_count
 
     @staticmethod
     def get(version=None, channel=None, duration=7, end_date='today', product='Firefox', platforms=None, credentials=None):
@@ -490,18 +528,18 @@ class ADI(Socorro):
             dict: the trend for each signature
         """
         if not version:
-            version = ProductVersions.get_version(channel, credentials)
+            version = ProductVersions.get_last_version(channel, credentials)
             if not version:
                 return None
 
-        data = []
+        data = {}
         start_date = utils.get_date(end_date, duration)
         end_date = utils.get_date(end_date)
         ADI(params={'product': product,
                     'versions': version,
                     'start_date': start_date,
                     'end_date': end_date,
-                    'platforms': platforms if platforms else Platforms.get_cached_all()},
+                    'platforms': platforms if platforms else Platforms.get_cached_all(credentials=credentials)},
             handler=ADI.default_handler,
             handlerdata=data,
             credentials=credentials).wait()
@@ -568,7 +606,7 @@ class SignatureURLs(Socorro):
             dict: the URLs for each signature
         """
         if not version:
-            version = ProductVersions.get_version(channel, credentials)
+            version = ProductVersions.get_last_version(channel, credentials)
             if not version:
                 return None
 
