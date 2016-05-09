@@ -9,7 +9,6 @@ from datetime import (datetime, date, timedelta)
 import math
 import json
 import random
-import six
 
 
 def get_best(stats):
