@@ -18,6 +18,7 @@ class UtilsTest(unittest.TestCase):
         date = '1991-04-16'
         self.assertEqual(utils.get_timestamp(date), 671760000)
         self.assertEqual(utils.get_timestamp(datetime.datetime.strptime(date, '%Y-%m-%d')), 671760000)
+        self.assertGreater(utils.get_timestamp('today'), utils.get_timestamp(date))
 
     def test_get_date_ymd(self):
         pass
@@ -26,7 +27,8 @@ class UtilsTest(unittest.TestCase):
         pass
 
     def test_get_date_str(self):
-        pass
+        date = '1991-04-16'
+        self.assertEqual(utils.get_date_str(datetime.datetime.strptime(date, '%Y-%m-%d')), date)
 
     def test_get_date(self):
         pass
@@ -54,7 +56,7 @@ class UtilsTest(unittest.TestCase):
         with open('/tmp/afile', 'w') as f:
             f.write('nothing')
 
-        with self.assertRaises(json.decoder.JSONDecodeError):
+        with self.assertRaises(Exception):
             utils.get_credentials('/tmp/afile')
 
         with open('/tmp/afile', 'w') as f:
@@ -63,7 +65,12 @@ class UtilsTest(unittest.TestCase):
         self.assertEqual(utils.get_credentials('/tmp/afile'), {'key': 'value'})
 
     def test_get_sample(self):
-        pass
+        arr = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        self.assertEqual(utils.get_sample(arr, -7), arr)
+        self.assertEqual(utils.get_sample(arr, 0), [])
+        self.assertEqual(utils.get_sample(arr, 1), arr)
+        self.assertEqual(utils.get_sample(arr, 7), arr)
+        self.assertEqual(len(utils.get_sample(arr, 0.1)), 1)
 
     def test_get_date_from_buildid(self):
         self.assertEqual(utils.get_date_from_buildid('20160407164938'), datetime.datetime(2016, 4, 7, 0, 0))
