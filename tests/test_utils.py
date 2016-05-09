@@ -12,7 +12,7 @@ class UtilsTest(unittest.TestCase):
 
     def test_get_best(self):
         self.assertEqual(utils.get_best(None), None)
-        self.assertEqual(utils.get_best({ 'key1': 7, 'key2': 99, 'key3': 4 }), 'key2')
+        self.assertEqual(utils.get_best({'key1': 7, 'key2': 99, 'key3': 4}), 'key2')
 
     def test_get_timestamp(self):
         date = '1991-04-16'
@@ -48,19 +48,19 @@ class UtilsTest(unittest.TestCase):
         self.assertEqual(utils.simple_percent(3.5), '3.5%')
 
     def test_get_credentials(self):
-        with self.assertRaises(FileNotFoundError) as exc:
+        with self.assertRaises(FileNotFoundError):
             utils.get_credentials('doesntexist')
 
         with open('/tmp/afile', 'w') as f:
-          f.write('nothing')
+            f.write('nothing')
 
-        with self.assertRaises(json.decoder.JSONDecodeError) as exc:
+        with self.assertRaises(json.decoder.JSONDecodeError):
             utils.get_credentials('/tmp/afile')
 
         with open('/tmp/afile', 'w') as f:
-          json.dump({ 'key': 'value' }, f)
+            json.dump({'key': 'value'}, f)
 
-        self.assertEqual(utils.get_credentials('/tmp/afile'), { 'key': 'value' })
+        self.assertEqual(utils.get_credentials('/tmp/afile'), {'key': 'value'})
 
     def test_get_sample(self):
         pass
