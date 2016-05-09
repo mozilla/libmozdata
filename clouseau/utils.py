@@ -160,7 +160,6 @@ def get_credentials(path):
     """
     with open(path) as In:
         return json.load(In)
-    return None
 
 
 def get_sample(data, fraction):
