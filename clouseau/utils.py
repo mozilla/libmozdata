@@ -60,12 +60,11 @@ def get_date_ymd(dt):
         l = dt.split('/')
     elif ' ' in dt:
         l = dt.split(' ')
-    if l and len(l) == 3:
-        if len(l[0]) == 4:
-            (y, m, d) = map(int, l)
-        elif len(l[2]) == 4:
-            (m, d, y) = map(int, l)
-    return datetime(y, m, d)
+    if l and len(l) == 3 and len(l[0]) == 4:
+      (y, m, d) = map(int, l)
+      return datetime(y, m, d)
+    else:
+      raise Exception('Malformed string (should be YYYY-MM-DD)')
 
 
 def get_today():
