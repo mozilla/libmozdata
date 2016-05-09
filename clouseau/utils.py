@@ -92,7 +92,7 @@ def get_date(_date, delta=None):
     """Get the date as string
 
     Args:
-        ymd (datetime): a datetime
+        ymd (str): a date
     Returns:
         str: the date as a string 'Year-month-day'
     """
