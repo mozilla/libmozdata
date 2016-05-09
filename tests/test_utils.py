@@ -7,6 +7,12 @@ import datetime
 import json
 from clouseau import utils
 
+try:
+    FileNotFoundError
+except NameError:
+    class FileNotFoundError(OSError):
+        pass
+
 
 class UtilsTest(unittest.TestCase):
 
