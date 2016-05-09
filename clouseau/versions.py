@@ -21,7 +21,10 @@ def __getTemplateValue(url):
     version_regex = re.compile(".*<p>(.*)</p>.*")
     template_page = str(requests.get(url).text.encode('utf-8')).replace('\n', '')
     parsed_template = version_regex.match(template_page)
-    return int(parsed_template.groups()[0])
+    n = parsed_template.groups()[0]
+    if n.endswith('\\n'):
+        n = n[:-2]
+    return int(n)
 
 
 def __getVersions():
@@ -32,7 +35,7 @@ def __getVersions():
     """
     base_url = 'https://wiki.mozilla.org/Template:%s_VERSION'
     names = ['RELEASE', 'BETA', 'AURORA', 'CENTRAL']
-    versions = map(lambda name: __getTemplateValue(base_url % name), names)
+    versions = list(map(lambda name: __getTemplateValue(base_url % name), names))
     return {'release': versions[0], 'beta': versions[1], 'aurora': versions[2], 'nightly': versions[3]}
 
 
