@@ -190,8 +190,8 @@ def get_date_from_buildid(bid):
     """
     # 20160407164938 == 2016 04 07 16 49 38
 
-    year = bid / 10000000000
-    month = bid / 100000000 - year * 100
-    day = bid / 1000000 - (year * 100 + month) * 100
+    year = int(bid[:4])
+    month = int(bid[4:6])
+    day = int(bid[6:8])
 
     return datetime(year, month, day)
