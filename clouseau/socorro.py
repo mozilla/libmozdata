@@ -9,6 +9,7 @@ except ImportError:
     from urlparse import urlparse
 from .connection import (Connection, Query)
 from . import utils
+from datetime import timedelta
 
 
 class Socorro(Connection):
@@ -57,6 +58,27 @@ class SuperSearch(Socorro):
                 if 'url' in facets or 'email' in facets:
                     url = SuperSearch.URL_UNREDACTED
             super(SuperSearch, self).__init__(Query(url, params, handler, handlerdata), credentials)
+
+    @staticmethod
+    def get_search_date(start, end):
+        """Get a search date list for [start, end[ (end can be in the future)
+
+        Args:
+            start (str): start date in 'YYYY-mm-dd' format or 'today'
+            end (str): start date in 'YYYY-mm-dd' format por 'today'
+
+        Returns:
+            List(str): containing acceptabl interval for Socorro.SuperSearch
+        """
+        _start = utils.get_date(start)
+        _end = utils.get_date_ymd(end) + timedelta(1)
+        today = utils.get_date_ymd('today')
+        if _end > today:
+            search_date = ['>=' + _start]
+        else:
+            search_date = ['>=' + _start, '<' + utils.get_date_str(_end)]
+
+        return search_date
 
 
 class ProcessedCrash(Socorro):
