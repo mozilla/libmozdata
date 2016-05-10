@@ -26,5 +26,10 @@ class MemoryTest(unittest.TestCase):
         self.assertTrue(memory.isweird('0x000000000000ffff', '64'))
         self.assertTrue(memory.isweird('0x0000ffff', '32'))
 
+        with self.assertRaises(Exception):
+            self.assertTrue(memory.isweird(None, '64'))
+        with self.assertRaises(Exception):
+            self.assertTrue(memory.isweird(42, '32'))
+
 if __name__ == '__main__':
     unittest.main()
