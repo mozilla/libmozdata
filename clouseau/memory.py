@@ -19,13 +19,14 @@ def isweird(addr, cpu_name):
         addr = addr.lower()
         if addr == '0x0':
             return True
+        addr = addr[2:].lstrip('0')
         if utils.is64(cpu_name):
-            if len(addr) <= 10:
+            if len(addr) <= 8:
                 val = int(addr, 16)
                 if val <= (1 << 16):  # val <= 0xffff (ie: first 64k)
                     return True
-            elif addr.startswith('0xffffffff'):
-                addr = addr[10:]  # 10 == len('0xffffffff')
+            elif addr.startswith('ffffffff'):
+                addr = addr[8:]  # 8 == len('ffffffff')
                 val = int(addr, 16)
                 if val >= ((1 << 32) - (1 << 16)):  # val >= 0xffffffffffff0000 (ie: last 64k)
                     return True
