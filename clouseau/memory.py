@@ -27,7 +27,7 @@ def isweird(addr, cpu_name):
             elif addr.startswith('0xffffffff'):
                 addr = addr[10:]  # 10 == len('0xffffffff')
                 val = int(addr, 16)
-                if val >= ((1 << 32) - (1 << 16)):  # val >= 0xfffffffffff0000 (ie: last 64k)
+                if val >= ((1 << 32) - (1 << 16)):  # val >= 0xffffffffffff0000 (ie: last 64k)
                     return True
         else:
             val = int(addr, 16)
