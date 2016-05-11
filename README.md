@@ -34,7 +34,8 @@ Create a file credentials.json (or an other name: it doesn't matter) with the fo
     {
         "https://crash-stats.mozilla.com": "your Socorro API token",
         "https://bugzilla.mozilla.org": "your Bugzilla API token",
-        "https://bugzilla-dev.allizom.org": "your Bugzilla-dev API token (for test only)"
+        "https://bugzilla-dev.allizom.org": "your Bugzilla-dev API token (for test only)",
+        "https://sql.telemetry.mozilla.org": "your re:dash API token"
     }
 }
 ```
