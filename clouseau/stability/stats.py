@@ -122,9 +122,9 @@ if __name__ == '__main__':
     credentials = utils.get_credentials(args.credentials) if args.credentials else None
     if args.output:
         if args.format == 'csv':
-            tocsv(args.output, args.channel, versions=args.version, product=args.product, start_date=args.startdate, end_date=args.enddate, credentials=credentials)
+            tocsv(args.output, args.channel, versions=int(args.version), product=args.product, start_date=args.startdate, end_date=args.enddate, credentials=credentials)
         else:  # json
-            tojson(args.output, args.channel, versions=args.version, product=args.product, start_date=args.startdate, end_date=args.enddate, credentials=credentials)
+            tojson(args.output, args.channel, versions=int(args.version), product=args.product, start_date=args.startdate, end_date=args.enddate, credentials=credentials)
     else:
-        data = get(args.channel, versions=args.version, product=args.product, start_date=args.startdate, end_date=args.enddate, credentials=credentials)
+        data = get(args.channel, versions=int(args.version), product=args.product, start_date=args.startdate, end_date=args.enddate, credentials=credentials)
         pprint(reformat_data(data))

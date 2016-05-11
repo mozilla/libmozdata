@@ -52,6 +52,12 @@ def get_date_ymd(dt):
     if dt == 'today':
         today = date.today()
         return datetime(today.year, today.month, today.day)
+    elif dt == 'yesterday':
+        yesterday = date.today() + timedelta(-1)
+        return datetime(yesterday.year, yesterday.month, yesterday.day)
+    elif dt == 'tomorrow':
+        tomorrow = date.today() + timedelta(1)
+        return datetime(tomorrow.year, tomorrow.month, tomorrow.day)
 
     l = None
     if '-' in dt:

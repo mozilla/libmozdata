@@ -2,21 +2,43 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import argparse
+import six
+import functools
 from datetime import (datetime, timedelta)
+from pprint import pprint
 import clouseau.socorro as socorro
 import clouseau.utils as utils
+from clouseau.redash import Redash
 from clouseau.connection import (Connection, Query)
 from clouseau.bugzilla import Bugzilla
 
-import argparse
-from pprint import pprint
 
+def __get_khours(start_date, end_date, channel, versions, credentials):
+    qid = '346'
+    khours = Redash.get(qid, credentials=credentials)
+    rows = khours[qid]['query_result']['data']['rows']
+    res = {}
 
-def __adi_handler(json, data):
-    for adi in json['hits']:
-        date = utils.get_date_ymd(adi['date'])
-        adi_count = adi['adi_count']
-        data[date] = data[date] + adi_count if date in data else adi_count
+    # init the data
+    duration = (end_date - start_date).days
+    for i in range(duration + 1):
+        res[start_date + timedelta(i)] = 0.
+
+    if channel == 'beta':
+        versions = set([v[:-2] for v in versions])
+    else:
+        versions = set(versions)
+
+    for row in rows:
+        if row['channel'] == channel:
+            v = row['build_version']
+            if v in versions:
+                d = utils.get_date_ymd(row['activity_date'])
+                if d >= start_date and d <= end_date:
+                    res[d] += row['usage_khours']
+
+    return res
 
 
 def __tcbs_handler(json, data):
@@ -48,37 +70,45 @@ def __bug_handler(json, data):
         data.append((bug['id'], bug['resolution']))
 
 
-def get_stats(channel, date, versions=None, last_days=11, tcbs_limit=50, crash_type='browser', credentials=None):
+def get(channel, date, versions=None, product='Firefox', duration=11, tcbs_limit=50, crash_type='all', credentials=None):
     channel = channel.lower()
-    if not versions:
-        versions = socorro.ProductVersions.get_version(channel, credentials=credentials)
+    if not isinstance(versions, list):
+        if isinstance(versions, six.integer_types):
+            versions = socorro.ProductVersions.get_active(vnumber=versions, product=product, credentials=credentials)
+            versions = versions[channel.lower()]
+        elif isinstance(versions, six.string_types):
+            if '.' not in versions:
+                versions = socorro.ProductVersions.get_active(vnumber=int(versions), product=product, credentials=credentials)
+                versions = versions[channel.lower()]
+            else:
+                versions = [versions]
+        else:
+            versions = socorro.ProductVersions.get_active(product=product, credentials=credentials)
+            versions = versions[channel.lower()]
+
     platforms = socorro.Platforms.get_cached_all(credentials=credentials)
 
+    if crash_type and isinstance(crash_type, six.string_types):
+        crash_type = [crash_type]
+
     _date = utils.get_date_ymd(date)
-    start_date = utils.get_date_str(_date - timedelta(last_days - 1))
-    end_date = date
+    start_date = utils.get_date_str(_date - timedelta(duration - 1))
+    end_date = utils.get_date(date)
 
     signatures = {}
 
     # First, we get the ADI
-    adi = {}
-    res_adi = socorro.ADI(params={'product': 'Firefox',
-                                  'platforms': platforms,
-                                  'versions': versions,
-                                  'start_date': start_date,
-                                  'end_date': end_date},
-                          handler=__adi_handler,
-                          handlerdata=adi)
+    adi = socorro.ADI.get(version=versions, product=product, end_date=end_date, duration=duration, platforms=platforms, credentials=credentials)
 
     # Second we get info from TCBS (Top Crash By Signature)
     # we can have several active versions (45.0, 45.0.1) so we need to aggregates the results
     # TODO: ask to Socorro team to add a feature to get that directly
     tcbs = {}
     base = {'product': 'Firefox',
-            'crash_type': crash_type,
+            'crash_type': 'all',
             'version': None,
             'limit': tcbs_limit,
-            'duration': 24 * last_days,
+            'duration': 24 * duration,
             'end_date': end_date}
 
     queries = []
@@ -96,10 +126,14 @@ def get_stats(channel, date, versions=None, last_days=11, tcbs_limit=50, crash_t
         for sgn, count in tc.items():
             if sgn in signatures:
                 c = signatures[sgn]
-                for i in range(5):
+                for i in range(5):  # 5 is the len of the list (see __tcbs_handler)
                     c[i] += count[i]
             else:
                 signatures[sgn] = count
+
+    # get the khours
+    khours = __get_khours(utils.get_date_ymd(start_date), utils.get_date_ymd(end_date), channel, versions, credentials)
+    khours = [khours[key] for key in sorted(khours.keys(), reverse=True)]
 
     # TODO: too many requests... should be improved with chunks
     bugs = {}
@@ -121,17 +155,16 @@ def get_stats(channel, date, versions=None, last_days=11, tcbs_limit=50, crash_t
     # so get the siganture trend
     trends = {}
     default_trend = {}
-    for i in range(last_days):
+    for i in range(duration):
         default_trend[_date - timedelta(i)] = 0
 
-    _start_date = utils.get_date_str(_date - timedelta(last_days - 1))
-    _end_date = utils.get_date_str(_date + timedelta(1))
+    _start_date = utils.get_date_str(_date - timedelta(duration - 1))
+    _end_date = utils.get_date_str(_date)
 
     base = {'product': 'Firefox',
             'version': versions,
             'signature': None,
-            'date': ['>=' + _start_date,
-                     '<' + _end_date],
+            'date': socorro.SuperSearch.get_search_date(_start_date, _end_date),
             'release_channel': channel,
             '_results_number': 0,
             '_histogram.date': ['signature'],
@@ -141,7 +174,7 @@ def get_stats(channel, date, versions=None, last_days=11, tcbs_limit=50, crash_t
     for sgns in Connection.chunks(map(lambda sgn: '=' + sgn, signatures.iterkeys()), 10):
         cparams = base.copy()
         cparams['signature'] = sgns
-        queries.append(Query(socorro.SuperSearch.URL, cparams, lambda json, data: __trend_handler(default_trend, json, data), trends))
+        queries.append(Query(socorro.SuperSearch.URL, cparams, functools.partial(__trend_handler, default_trend), trends))
 
     socorro.SuperSearch(queries=queries, credentials=credentials).wait()
 
@@ -156,7 +189,6 @@ def get_stats(channel, date, versions=None, last_days=11, tcbs_limit=50, crash_t
         _signatures[s[0]] = i  # top crash rank
         i += 1
 
-    res_adi.wait()
     # adi maps date to adi count
     adi = [adi[key] for key in sorted(adi.keys(), reverse=True)]
 
@@ -164,11 +196,14 @@ def get_stats(channel, date, versions=None, last_days=11, tcbs_limit=50, crash_t
 
     for sgn, stats in signatures.items():
         # stats is 2-uple: ([count, win_count, mac_count, linux_count, startup_count], trend)
-        crash_stats_per_mega_adi = [float(stats[1][s]) * 1e6 / float(adi[s]) for s in range(last_days)]
+        nan = float('nan')
+        crash_stats_per_mega_adi = [float(stats[1][s]) * 1e6 / float(adi[s]) if adi[s] else nan for s in range(duration)]
+        crash_stats_per_mega_hours = [float(stats[1][s]) * 1e3 / khours[s] if khours[s] else nan for s in range(duration)]
         _signatures[sgn] = {'tc_rank': _signatures[sgn],
                             'crash_count': stats[0][0],
                             'startup_percent': float(stats[0][4]) / float(stats[0][0]),
                             'crash_stats_per_mega_adi': crash_stats_per_mega_adi,
+                            'crash_stats_per_mega_hours': crash_stats_per_mega_hours,
                             'crash_by_day': stats[1],
                             'bugs': bugs[sgn]}
 
@@ -176,17 +211,20 @@ def get_stats(channel, date, versions=None, last_days=11, tcbs_limit=50, crash_t
             'end_date': end_date,
             'versions': versions,
             'adi': adi,
+            'khours': khours,
             'signatures': _signatures}
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Track')
     parser.add_argument('-c', '--channel', action='store', default='release', help='release channel')
-    parser.add_argument('-d', '--date', action='store', default='today', help='the end date')
-    parser.add_argument('-v', '--versions', action='store', nargs='+', default=['46.0'], help='the Firefox versions')
+    parser.add_argument('-d', '--date', action='store', default='yesterday', help='the end date')
+    parser.add_argument('-D', '--duration', action='store', default=11, help='the duration')
+    parser.add_argument('-v', '--versions', action='store', nargs='+', help='the Firefox versions')
+    parser.add_argument('-t', '--tcbslimit', action='store', default=50, help='the Firefox versions')
     parser.add_argument('-C', '--credentials', action='store', default='', help='credentials file to use')
 
     args = parser.parse_args()
 
     credentials = utils.get_credentials(args.credentials) if args.credentials else None
-    stats = get_stats(args.channel, args.date, versions=args.versions, credentials=credentials)
-    pprint(stats['signatures']['_alldiv'])
+    stats = get(args.channel, args.date, versions=args.versions, duration=int(args.duration), tcbs_limit=int(args.tcbslimit), credentials=credentials)
+    pprint(stats)

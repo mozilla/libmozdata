@@ -3,6 +3,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import six
+import functools
 try:
     from urllib.parse import urlparse
 except ImportError:
@@ -292,7 +293,7 @@ class ProductVersions(Socorro):
         """Default handler
 
         Args:
-            number (Optional[int]): version number
+            number (int): version number
             json (dict): json
             data (list): list to append the platforms name
         """
@@ -344,7 +345,7 @@ class ProductVersions(Socorro):
         ProductVersions(params={'active': True,
                                 'product': product,
                                 'is_rapid_beta': is_rapid_beta},
-                        credentials=credentials, handler=lambda json, data: ProductVersions.default_handler(vnumber, json, data), handlerdata=versions).wait()
+                        credentials=credentials, handler=functools.partial(ProductVersions.default_handler, vnumber), handlerdata=versions).wait()
 
         if remove_dates:
             _versions = {}
