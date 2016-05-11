@@ -2,29 +2,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import re
-import requests
+try:
+    import urllib.request as ur
+except:
+    import urllib as ur
+
+import json
 
 
 __versions = None
 
 
-def __getTemplateValue(url):
-    """Get version value from html file
-
-    Args:
-        url (str): the url of the html file
-
-    Returns:
-        int: the version number
-    """
-    version_regex = re.compile(".*<p>(.*)</p>.*")
-    template_page = str(requests.get(url).text.encode('utf-8')).replace('\n', '')
-    parsed_template = version_regex.match(template_page)
-    n = parsed_template.groups()[0]
-    if n.endswith('\\n'):
-        n = n[:-2]
-    return int(n)
+def __get_major(v):
+    return int(v.split('.')[0])
 
 
 def __getVersions():
@@ -33,13 +23,19 @@ def __getVersions():
     Returns:
         dict: versions for each channel
     """
-    base_url = 'https://wiki.mozilla.org/Template:%s_VERSION'
-    names = ['RELEASE', 'BETA', 'AURORA', 'CENTRAL']
-    versions = list(map(lambda name: __getTemplateValue(base_url % name), names))
-    return {'release': versions[0], 'beta': versions[1], 'aurora': versions[2], 'nightly': versions[3]}
+    url = 'https://product-details.mozilla.org/firefox_versions.json'
+    resp = ur.urlopen(url)
+    data = json.loads(resp.read().decode('utf-8'))
+    resp.close()
+    aurora = data['FIREFOX_AURORA']
+    nightly = '%d.0a1' % (__get_major(aurora) + 1)
+    return {'release': data['LATEST_FIREFOX_VERSION'],
+            'beta': data['LATEST_FIREFOX_RELEASED_DEVEL_VERSION'],
+            'aurora': str(aurora),
+            'nightly': nightly}
 
 
-def get():
+def get(base=False):
     """Get current version number by channel
 
     Returns:
@@ -48,5 +44,11 @@ def get():
     global __versions
     if not __versions:
         __versions = __getVersions()
+
+    if base:
+        res = {}
+        for k, v in __versions.items():
+            res[k] = __get_major(v)
+        return res
 
     return __versions

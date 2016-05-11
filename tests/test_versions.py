@@ -9,7 +9,7 @@ import clouseau.versions as versions
 class VersionsTest(unittest.TestCase):
 
     def test_versions(self):
-        v = versions.get()
+        v = versions.get(base=True)
         self.assertTrue(v['release'] < v['beta'] < v['aurora'] < v['nightly'])
 
 
