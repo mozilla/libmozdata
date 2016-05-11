@@ -27,6 +27,9 @@ class Query(object):
         self.handler = handler
         self.handlerdata = handlerdata
 
+    def __repr__(self):
+        return 'url: %s' % self.url
+
 
 class Connection(object):
     """Represents a connection to a server
