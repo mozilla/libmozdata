@@ -4,14 +4,15 @@
 
 import six
 from .connection import (Connection, Query)
+from . import config
 
 
 class Mercurial(Connection):
     """Mozilla mercurial connection: http://hg.mozilla.org
     """
 
-    HG_URL = 'https://hg.mozilla.org'
-    remote = True
+    HG_URL = config.get('Mercurial', 'URL', 'https://hg.mozilla.org')
+    remote = HG_URL == 'https://hg.mozilla.org'
 
     def __init__(self, queries, channel='nightly', credentials=None):
         """Constructor
@@ -53,19 +54,6 @@ class Mercurial(Connection):
             return Mercurial.HG_URL + '/' + Mercurial.get_repo(channel)
         else:
             return Mercurial.HG_URL
-
-    @staticmethod
-    def set_server(remote=True):
-        """Set the server (mainly for local use)
-
-        Args:
-            remote (Optional[bool]): if True https://hg.mozilla.org is used
-        """
-        Mercurial.remote = remote
-        if Mercurial.remote:
-            Mercurial.HG_URL = 'https://hg.mozilla.org'
-        else:
-            Mercurial.HG_URL = 'http://pandaroux:8000'
 
 
 class Revision(Mercurial):
