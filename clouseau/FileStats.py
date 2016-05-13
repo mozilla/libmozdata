@@ -10,6 +10,7 @@ import re
 
 from .HGFileInfo import HGFileInfo
 from .BZInfo import BZInfo
+from .modules import MozillaModules
 from . import utils
 
 
@@ -34,6 +35,7 @@ class FileStats(object):
         self.credentials = credentials
         self.hi = HGFileInfo(path, channel=channel, node=node, utc_ts=self.utc_ts, credentials=self.credentials)
         self.info = self.hi.get()[path]
+        self.module = MozillaModules().module_from_path(path)
 
     def get_info(self, dig_when_non_pertinent=True):
         """Get info
@@ -45,9 +47,15 @@ class FileStats(object):
         Returns:
             dict: info
         """
-        info = {'path': self.path,
-                'guilty': None,
-                'needinfo': None}
+        info = {
+            'path': self.path,
+            'guilty': None,
+            'needinfo': None,
+            'module': self.module['name'],
+            'components': self.module['bugzillaComponents'],
+            'owners': self.module['owners'],
+            'peers': self.module['peers'],
+        }
 
         c = self.__check_dates()
         if not c and not dig_when_non_pertinent:
@@ -79,8 +87,7 @@ class FileStats(object):
                 # find out the good person to query for a needinfo
                 info['needinfo'] = bi.get_best_collaborator()
                 comp_prod = bi.get_best_component_product()
-                info['component'] = comp_prod[0]
-                info['product'] = comp_prod[1]
+                info['components'].append(comp_prod[1] + '::' + comp_prod[0])
                 info['bugs'] = len(bugs)
 
         return info
