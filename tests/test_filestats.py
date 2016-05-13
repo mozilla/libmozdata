@@ -3,6 +3,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import unittest
+import six
 from clouseau.FileStats import FileStats
 
 
@@ -14,7 +15,7 @@ class FileStatsTest(unittest.TestCase):
         self.assertIsNot(info, None)
         self.assertEqual(info['path'], 'netwerk/protocol/http/nsHttpConnectionMgr.cpp')
         self.assertEqual(info['module'], 'Necko')
-        self.assertCountEqual(info['components'], ['Core::Networking', 'Core::Networking: Cache', 'Core::Networking: Cookies', 'Core::Networking: FTP', 'Core::Networking: File', 'Core::Networking: HTTP', 'Core::Networking: JAR', 'Core::Networking: Websockets'])
+        six.assertCountEqual(self, info['components'], ['Core::Networking', 'Core::Networking: Cache', 'Core::Networking: Cookies', 'Core::Networking: FTP', 'Core::Networking: File', 'Core::Networking: HTTP', 'Core::Networking: JAR', 'Core::Networking: Websockets'])
         self.assertGreater(len(info['owners']), 0)
         self.assertGreater(len(info['peers']), 0)
 
