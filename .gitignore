@@ -3,3 +3,4 @@
 *.pyo
 .coverage
 htmlcov/
+config.ini
