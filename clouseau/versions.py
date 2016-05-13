@@ -4,7 +4,7 @@
 
 try:
     import urllib.request as ur
-except:
+except ImportError:
     import urllib as ur
 
 import json
