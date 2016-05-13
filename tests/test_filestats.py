@@ -12,6 +12,11 @@ class FileStatsTest(unittest.TestCase):
         path = 'netwerk/protocol/http/nsHttpConnectionMgr.cpp'
         info = FileStats(path).get_info()
         self.assertIsNot(info, None)
+        self.assertEqual(info['path'], 'netwerk/protocol/http/nsHttpConnectionMgr.cpp')
+        self.assertEqual(info['module'], 'Necko')
+        self.assertCountEqual(info['components'], ['Core::Networking', 'Core::Networking: Cache', 'Core::Networking: Cookies', 'Core::Networking: FTP', 'Core::Networking: File', 'Core::Networking: HTTP', 'Core::Networking: JAR', 'Core::Networking: Websockets'])
+        self.assertGreater(len(info['owners']), 0)
+        self.assertGreater(len(info['peers']), 0)
 
 
 if __name__ == '__main__':
