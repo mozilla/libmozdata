@@ -17,6 +17,7 @@ class ModulesTest(unittest.TestCase):
         self.assertEqual(mm.module_from_path('xpcom/string/nsString.cpp')['name'], 'String')
         self.assertEqual(mm.module_from_path('xpcom/string/')['name'], 'String')
         self.assertEqual(mm.module_from_path('xpcom/string')['name'], 'String')
+        self.assertEqual(mm.module_from_path('tools/cvs2hg-import.py')['name'], 'Build Config')
         self.assertEqual(mm.module_from_path('doesntexist'), None)
 
     def test_module_info(self):
