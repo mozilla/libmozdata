@@ -12,13 +12,14 @@ from .HGFileInfo import HGFileInfo
 from .BZInfo import BZInfo
 from .modules import MozillaModules
 from . import utils
+from . import config
 
 
 class FileStats(object):
     """Stats about a file in the repo.
     """
 
-    def __init__(self, path, channel='nightly', node='tip', utc_ts=None, max_days=3, credentials=None):
+    def __init__(self, path, channel='nightly', node='tip', utc_ts=None, credentials=None):
         """Constructor
 
         Args:
@@ -26,12 +27,11 @@ class FileStats(object):
             channel (str): channel version of firefox
             node (Optional[str]): the node, by default 'tip'
             utc_ts (Optional[int]): UTC timestamp, file pushdate <= utc_ts
-            max_days (Optional[int]): use to find out the "guilty" patch, by default it's 3
             credentials (Optional[dict]): credentials to use
         """
         self.utc_ts = utc_ts if isinstance(utc_ts, numbers.Number) and utc_ts > 0 else None
         self.path = path
-        self.max_days = max_days
+        self.max_days = int(config.get('FileStats', 'MaxDays', 3))
         self.credentials = credentials
         self.hi = HGFileInfo(path, channel=channel, node=node, utc_ts=self.utc_ts, credentials=self.credentials)
         self.info = self.hi.get()[path]
@@ -115,12 +115,11 @@ if __name__ == '__main__':
     parser.add_argument('-n', '--node', action='store', default='tip', help='Mercurial node, by default \'tip\'')
     parser.add_argument('-c', '--channel', action='store', default='nightly', help='release channel')
     parser.add_argument('-d', '--date', action='store', default='today', help='max date for pushdate, format YYYY-mm-dd')
-    parser.add_argument('-m', '--maxdays', action='store', default=3, help='max days before date')
     parser.add_argument('-C', '--credentials', action='store', default='', help='credentials file to use')
 
     args = parser.parse_args()
 
     if args.path:
         credentials = utils.get_credentials(args.credentials) if args.credentials else None
-        fs = FileStats(args.path, args.channel, args.node, utils.get_timestamp(args.date), args.maxdays, credentials)
+        fs = FileStats(args.path, args.channel, args.node, utils.get_timestamp(args.date), credentials)
         pprint(fs.get_info())

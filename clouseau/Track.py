@@ -322,7 +322,7 @@ class Track(object):
                 if m:
                     filename = m.group(1)
                     node = m.group(2)
-                    fs = FileStats(path=filename, channel=self.channel, node=node, utc_ts=ts, max_days=3, credentials=self.credentials)
+                    fs = FileStats(path=filename, channel=self.channel, node=node, utc_ts=ts, credentials=self.credentials)
                     fileinfo = fs.get_info(dig_when_non_pertinent=False)
                     if fileinfo:
                         # hurrah \o/ we found a pertinent file !
@@ -360,7 +360,7 @@ class Track(object):
         Track.__get_url_stats(info)
 
         ts = utils.get_timestamp(self.first_date)
-        fs = FileStats(path=filename, channel=self.channel, node=node, utc_ts=ts, max_days=3, credentials=self.credentials)
+        fs = FileStats(path=filename, channel=self.channel, node=node, utc_ts=ts, credentials=self.credentials)
         # don't dig: if non-pertinent we'll try in the next function in the backtrace
         fileinfo = fs.get_info(dig_when_non_pertinent=False)
         if fileinfo and fileinfo['guilty']:
