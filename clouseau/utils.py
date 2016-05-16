@@ -193,13 +193,8 @@ def get_date_from_buildid(bid):
         date: date object
     """
     # 20160407164938 == 2016 04 07 16 49 38
-    if isinstance(bid, six.string_types):
-        year = int(bid[:4])
-        month = int(bid[4:6])
-        day = int(bid[6:8])
-    elif isinstance(bid, six.integer_types):
-        year = bid // 10000000000
-        month = bid // 100000000 - year * 100
-        day = bid // 1000000 - (year * 100 + month) * 100
+    year = int(str(bid)[:4])
+    month = int(str(bid)[4:6])
+    day = int(str(bid)[6:8])
 
     return datetime(year, month, day)
