@@ -435,5 +435,5 @@ if __name__ == '__main__':
 
     if args.signature:
         credentials = utils.get_credentials(args.credentials) if args.credentials else None
-        t = Track(signature=args.signature, start_date=args.startdate, duration=args.duration, channel=args.channel, product=args.product, credentials=credentials)
+        t = Track(signature=args.signature, start_date=args.startdate, duration=int(args.duration), channel=args.channel, product=args.product, credentials=credentials)
         pprint(t.get())
