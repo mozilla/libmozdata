@@ -94,6 +94,7 @@ class UtilsTest(unittest.TestCase):
 
     def test_get_date_from_buildid(self):
         self.assertEqual(utils.get_date_from_buildid('20160407164938'), datetime.datetime(2016, 4, 7, 0, 0))
+        self.assertEqual(utils.get_date_from_buildid(20160407164938), datetime.datetime(2016, 4, 7, 0, 0))
 
 if __name__ == '__main__':
     unittest.main()
