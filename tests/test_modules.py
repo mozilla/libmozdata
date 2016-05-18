@@ -20,6 +20,19 @@ class ModulesTest(unittest.TestCase):
         self.assertEqual(mm.module_from_path('tools/cvs2hg-import.py')['name'], 'Build Config')
         self.assertEqual(mm.module_from_path('doesntexist'), None)
 
+        # Test heuristics
+        self.assertEqual(mm.module_from_path('old-configure.in')['name'], 'Build Config')
+        self.assertEqual(mm.module_from_path('python/mach/mach/dispatcher.py')['name'], 'Build Config')
+
+        self.assertEqual(mm.module_from_path('js/public/GCPolicyAPI.h')['name'], 'JavaScript')
+
+        self.assertEqual(mm.module_from_path('security/certverifier/CertVerifier.cpp')['name'], 'security')
+        self.assertEqual(mm.module_from_path('security/pkix/lib/pkixnames.cpp')['name'], 'security')
+        self.assertEqual(mm.module_from_path('security/manager/')['name'], 'Security - Mozilla PSM Glue')
+
+        self.assertEqual(mm.module_from_path('tools/profiler/core/platform.h')['name'], 'Code Analysis and Debugging Tools')
+        self.assertEqual(mm.module_from_path('tools/update-packaging/')['name'], 'Build and Release Tools')
+
     def test_module_info(self):
         mm = modules.MozillaModules()
         self.assertEqual(mm.module_info('XPCOM')['name'], 'XPCOM')
