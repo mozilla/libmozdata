@@ -44,17 +44,17 @@ class MozillaModules(object):
 
         # If we couldn't pinpoint the module, use some heuristics.
         if maxCommon['module'] is None:
-          if path.endswith('configure.in') or path.endswith('moz.build') or path.endswith('client.mk') or path.endswith('moz.configure') or path.endswith('aclocal.m4') or path.endswith('Makefile.in') or path.startswith('python/mach'):
-            return self.module_info('Build Config')
+            if path.endswith('configure.in') or path.endswith('moz.build') or path.endswith('client.mk') or path.endswith('moz.configure') or path.endswith('aclocal.m4') or path.endswith('Makefile.in') or path.startswith('python/mach'):
+                return self.module_info('Build Config')
 
-          if path.startswith('js/'):
-            return self.module_info('JavaScript')
+            if path.startswith('js/'):
+                return self.module_info('JavaScript')
 
-          if path.startswith('security/'):
-            return self.module_info('security')
+            if path.startswith('security/'):
+                return self.module_info('security')
 
-          if path.startswith('tools/profiler/'):
-            return self.module_info('Code Analysis and Debugging Tools')
+            if path.startswith('tools/profiler/'):
+                return self.module_info('Code Analysis and Debugging Tools')
 
         return maxCommon['module']
 
