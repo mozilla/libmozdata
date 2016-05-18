@@ -27,6 +27,7 @@ class MozillaModules(object):
     def __init__(self):
         with open(os.path.join(os.path.dirname(__file__), 'modules.json')) as f:
             self.data = json.load(f)
+            self.MODULES = [module['name'] for module in self.data]
 
     def module_from_path(self, path):
         maxCommon = dict(
