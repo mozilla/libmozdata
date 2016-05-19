@@ -6,6 +6,7 @@ import unittest
 from clouseau.HGFileInfo import HGFileInfo
 from clouseau import utils
 
+
 class HGFileInfoTest(unittest.TestCase):
 
     def test_hgfileinfo(self):
