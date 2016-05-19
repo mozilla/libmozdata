@@ -34,61 +34,59 @@ class HGFileInfo(object):
         self.rev_pattern = re.compile('r=([a-zA-Z0-9]+)')
         self.__get_info()
 
-    def get(self):
+    def get(self, path):
         self.conn.wait()
 
-        info = {}
+        info = {
+            'authors': {},
+            'bugs': set(),
+            'last': None
+        }
 
-        for path in self.paths:
-            info[path] = {
-                'authors': {},
-                'bugs': set(),
-                'last': None
-            }
+        entries = self.data[path]
 
-            entries = self.data[path]
-
-            authors = info[path]['authors']
-            patches_found = False
-            patches = None
-            for entry in entries:
-                if self.utc_ts and not patches_found:
-                    # we get the last patches which have been pushed the same day
-                    utc_pushdate = entry['pushdate']
-                    if utc_pushdate:
-                        utc_pushdate = utc_pushdate[0]
-                        if utc_pushdate <= self.utc_ts:
-                            if patches:
-                                last_date = patches[-1]['pushdate'][0]
-                                last_date = datetime.utcfromtimestamp(last_date)
-                                push_date = datetime.utcfromtimestamp(utc_pushdate)
-                                if last_date.year == push_date.year and last_date.month == push_date.month and last_date.day == push_date.day:
-                                    patches.append(entry)
-                                else:
-                                    patches_found = True
+        authors = info['authors']
+        patches_found = False
+        patches = None
+        for entry in entries:
+            if self.utc_ts and not patches_found:
+                # we get the last patches which have been pushed the same day
+                utc_pushdate = entry['pushdate']
+                if utc_pushdate:
+                    utc_pushdate = utc_pushdate[0]
+                    if utc_pushdate <= self.utc_ts:
+                        if patches:
+                            last_date = patches[-1]['pushdate'][0]
+                            last_date = datetime.utcfromtimestamp(last_date)
+                            push_date = datetime.utcfromtimestamp(utc_pushdate)
+                            if last_date.year == push_date.year and last_date.month == push_date.month and last_date.day == push_date.day:
+                                patches.append(entry)
                             else:
-                                patches = [entry]
-                author = entry['author']
-                if author not in authors:
-                    authors[author] = {'count': 1, 'reviewers': {}}
-                else:
-                    authors[author]['count'] += 1
-
-                info_desc = self.__get_info_from_desc(entry['desc'])
-                starter = info_desc['starter']
-                if starter:
-                    info[path]['bugs'].add(info_desc['starter'])
-                reviewers = info_desc['reviewers']
-                if reviewers:
-                    _reviewers = authors[author]['reviewers']
-                    for reviewer in reviewers:
-                        if reviewer not in _reviewers:
-                            _reviewers[reviewer] = 1
+                                patches_found = True
                         else:
-                            _reviewers[reviewer] += 1
+                            patches = [entry]
 
-            if patches:
-                info[path]['last'] = patches
+            author = entry['author']
+            if author not in authors:
+                authors[author] = {'count': 1, 'reviewers': {}}
+            else:
+                authors[author]['count'] += 1
+
+            info_desc = self.__get_info_from_desc(entry['desc'])
+            starter = info_desc['starter']
+            if starter:
+                info['bugs'].add(info_desc['starter'])
+            reviewers = info_desc['reviewers']
+            if reviewers:
+                _reviewers = authors[author]['reviewers']
+                for reviewer in reviewers:
+                    if reviewer not in _reviewers:
+                        _reviewers[reviewer] = 1
+                    else:
+                        _reviewers[reviewer] += 1
+
+        if patches:
+            info['last'] = patches
 
         return info
 

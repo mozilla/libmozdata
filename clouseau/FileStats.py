@@ -34,7 +34,7 @@ class FileStats(object):
         self.max_days = int(config.get('FileStats', 'MaxDays', 3))
         self.credentials = credentials
         self.hi = HGFileInfo(path, channel=channel, node=node, utc_ts=self.utc_ts)
-        self.info = self.hi.get()
+        self.info = self.hi.get(path)
         self.module = MozillaModules().module_from_path(path)
 
     def get_info(self, dig_when_non_pertinent=True):
