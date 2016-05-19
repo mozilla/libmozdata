@@ -4,7 +4,6 @@
 
 import re
 import six
-from datetime import datetime
 from .connection import Query
 from . import hgmozilla
 
