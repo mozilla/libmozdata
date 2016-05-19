@@ -29,25 +29,69 @@ class HGFileInfo(object):
         self.channel = channel
         self.node = node
         self.utc_ts = utc_ts
-        self.info = {}
+        self.data = {}
         self.paths = [paths] if isinstance(paths, six.string_types) else paths
-        for path in self.paths:
-            self.info[path] = {'authors': {},
-                               'bugs': set(),
-                               'last': None}
-
         self.bug_pattern = re.compile('[\t ]*[Bb][Uu][Gg][\t ]*([0-9]+)')
         self.rev_pattern = re.compile('r=([a-zA-Z0-9]+)')
         self.__get_info()
 
     def get(self):
-        """Get the file info
-
-        Returns:
-            dict: info about files
-        """
         self.conn.wait()
-        return self.info
+
+        info = {}
+
+        for path in self.paths:
+            info[path] = {
+                'authors': {},
+                'bugs': set(),
+                'last': None
+            }
+
+            entries = self.data[path]
+
+            authors = info[path]['authors']
+            patches_found = False
+            patches = None
+            for entry in entries:
+                if self.utc_ts and not patches_found:
+                    # we get the last patches which have been pushed the same day
+                    utc_pushdate = entry['pushdate']
+                    if utc_pushdate:
+                        utc_pushdate = utc_pushdate[0]
+                        if utc_pushdate <= self.utc_ts:
+                            if patches:
+                                last_date = patches[-1]['pushdate'][0]
+                                last_date = datetime.utcfromtimestamp(last_date)
+                                push_date = datetime.utcfromtimestamp(utc_pushdate)
+                                if last_date.year == push_date.year and last_date.month == push_date.month and last_date.day == push_date.day:
+                                    patches.append(entry)
+                                else:
+                                    patches_found = True
+                            else:
+                                patches = [entry]
+                author = entry['author']
+                if author not in authors:
+                    authors[author] = {'count': 1, 'reviewers': {}}
+                else:
+                    authors[author]['count'] += 1
+
+                info_desc = self.__get_info_from_desc(entry['desc'])
+                starter = info_desc['starter']
+                if starter:
+                    info[path]['bugs'].add(info_desc['starter'])
+                reviewers = info_desc['reviewers']
+                if reviewers:
+                    _reviewers = authors[author]['reviewers']
+                    for reviewer in reviewers:
+                        if reviewer not in _reviewers:
+                            _reviewers[reviewer] = 1
+                        else:
+                            _reviewers[reviewer] += 1
+
+            if patches:
+                info[path]['last'] = patches
+
+        return info
 
     def get_utc_ts(self):
         """Get the utc timestamp
@@ -82,55 +126,14 @@ class HGFileInfo(object):
 
         return info
 
-    def __handler(self, json, info):
+    def __handler(self, json, path):
         """Handler
 
         Args:
             json (dict): json
             info (dict): info
         """
-        entries = json['entries']
-        authors = info['authors']
-        patchs_found = False
-        patchs = None
-        for entry in entries:
-            if self.utc_ts and not patchs_found:
-                # we get the last patches which have been pushed the same day
-                utc_pushdate = entry['pushdate']
-                if utc_pushdate:
-                    utc_pushdate = utc_pushdate[0]
-                    if utc_pushdate <= self.utc_ts:
-                        if patchs:
-                            last_date = patchs[-1]['pushdate'][0]
-                            last_date = datetime.utcfromtimestamp(last_date)
-                            push_date = datetime.utcfromtimestamp(utc_pushdate)
-                            if last_date.year == push_date.year and last_date.month == push_date.month and last_date.day == push_date.day:
-                                patchs.append(entry)
-                            else:
-                                patchs_found = True
-                        else:
-                            patchs = [entry]
-            author = entry['author']
-            if author not in authors:
-                authors[author] = {'count': 1, 'reviewers': {}}
-            else:
-                authors[author]['count'] += 1
-
-            info_desc = self.__get_info_from_desc(entry['desc'])
-            starter = info_desc['starter']
-            if starter:
-                info['bugs'].add(info_desc['starter'])
-            reviewers = info_desc['reviewers']
-            if reviewers:
-                _reviewers = authors[author]['reviewers']
-                for reviewer in reviewers:
-                    if reviewer not in _reviewers:
-                        _reviewers[reviewer] = 1
-                    else:
-                        _reviewers[reviewer] += 1
-
-        if patchs:
-            info['last'] = patchs
+        self.data[path] = json['entries']
 
     def __get_info(self):
         """Get info
@@ -148,6 +151,6 @@ class HGFileInfo(object):
         for path in self.paths:
             cparams = __base.copy()
             cparams['file'] = path
-            queries.append(Query(url, cparams, handler=self.__handler, handlerdata=self.info[path]))
+            queries.append(Query(url, cparams, handler=self.__handler, handlerdata=path))
 
         self.conn = hgmozilla.FileInfo(queries=queries)
