@@ -16,7 +16,7 @@ class HGFileInfo(object):
        The patches can be filtered according to pushdate.
     """
 
-    def __init__(self, paths, channel='nightly', node='tip', utc_ts=None, credentials=None):
+    def __init__(self, paths, channel='nightly', node='tip', utc_ts=None):
         """Constructor
 
         Args:
@@ -24,7 +24,6 @@ class HGFileInfo(object):
             channel (str): channel version of firefox
             node (Optional[str]): the node, by default 'tip'
             utc_ts (Optional[int]): UTC timestamp, file pushdate <= utc_ts
-            credentials (Optional[dict]): credentials to use
         """
         self.channel = channel
         self.node = node
