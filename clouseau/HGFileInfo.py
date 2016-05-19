@@ -34,7 +34,9 @@ class HGFileInfo(object):
     def get(self, path, utc_ts_from=None, utc_ts_to=None):
         if utc_ts_to is None:
             revision = hgmozilla.Revision.get_revision(self.channel, self.node)
-            utc_ts_to = revision.get('pushdate', None)[0]
+            assert 'pushdate' in revision
+            assert isinstance(revision['pushdate'], list)
+            utc_ts_to = revision['pushdate'][0]
 
         self.conn.wait()
 
@@ -45,6 +47,8 @@ class HGFileInfo(object):
         patches = []
 
         for entry in entries:
+            assert 'pushdate' in entry
+            assert isinstance(entry['pushdate'], list)
             utc_date = entry['pushdate'][0]
 
             if (utc_ts_from is not None and utc_ts_from > utc_date) or utc_ts_to < utc_date:
