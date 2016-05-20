@@ -3,7 +3,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import argparse
-from datetime import datetime
+from datetime import (datetime, timedelta)
 import numbers
 from pprint import pprint
 import re
@@ -30,19 +30,16 @@ class FileStats(object):
             credentials (Optional[dict]): credentials to use
         """
         self.utc_ts = utc_ts if isinstance(utc_ts, numbers.Number) and utc_ts > 0 else None
-        self.path = path
         self.max_days = int(config.get('FileStats', 'MaxDays', 3))
+        utc_ts_from = utils.get_timestamp(datetime.utcfromtimestamp(utc_ts) + timedelta(-self.max_days)) if isinstance(utc_ts, numbers.Number) and utc_ts > 0 else None
+        self.path = path
         self.credentials = credentials
-        self.hi = HGFileInfo(path, channel=channel, node=node, utc_ts=self.utc_ts)
-        self.info = self.hi.get(path)
+        self.hi = HGFileInfo(path, channel=channel, node=node)
+        self.info = self.hi.get(path, utc_ts_from, utc_ts)
         self.module = MozillaModules().module_from_path(path)
 
-    def get_info(self, dig_when_non_pertinent=True):
+    def get_info(self):
         """Get info
-
-        Args:
-            dig_when_non_pertinent (Optional[bool]): when True, even if the last patch is non-pertinent
-            (i.e. its push date isn't around utc_ts modulo max_days), the info about it are collected.
 
         Returns:
             dict: info
@@ -51,37 +48,35 @@ class FileStats(object):
             'path': self.path,
             'guilty': None,
             'needinfo': None,
-            'module': self.module['name'],
-            'components': set(self.module['bugzillaComponents']),
-            'owners': self.module['owners'],
-            'peers': self.module['peers'],
+            'components': set(),
         }
 
-        c = self.__check_dates()
-        if not c and not dig_when_non_pertinent:
-            return None
+        if self.module is not None:
+            info['module'] = self.module['name']
+            info['components'].update(self.module['bugzillaComponents'])
+            info['owners'] = self.module['owners']
+            info['peers'] = self.module['peers']
 
-        if isinstance(c, bool):
-            bugs = self.info['bugs']
-            bi = BZInfo(bugs, credentials=self.credentials) if bugs else None
-            if c:  # we have a 'guilty' set of patches
-                author_pattern = re.compile('<([^>]+>)')
-                stats = {}
-                last = self.info['last']
-                last_author = None
-                for patch in last:
-                    m = author_pattern.search(patch['author'])
-                    if m:
-                        author = m.group(1)
-                    else:
-                        author = patch['author']
-                    if not last_author:
-                        last_author = author
-                    stats[author] = stats[author] + 1 if author in stats else 1
+        bugs = self.info['bugs']
+        bi = BZInfo(bugs, credentials=self.credentials) if bugs else None
+        last = self.info['patches']
+        if len(last) > 0:  # we have a 'guilty' set of patches
+            author_pattern = re.compile('<([^>]+)>')
+            stats = {}
+            last_author = None
+            for patch in last:
+                m = author_pattern.search(patch['author'])
+                if m:
+                    author = m.group(1)
+                else:
+                    author = patch['author']
+                if not last_author:
+                    last_author = author
+                stats[author] = stats[author] + 1 if author in stats else 1
 
-                info['guilty'] = {'main_author': utils.get_best(stats) if stats else None,
-                                  'last_author': last_author,
-                                  'patches': last}
+            info['guilty'] = {'main_author': utils.get_best(stats) if stats else None,
+                              'last_author': last_author,
+                              'patches': last}
 
             if bi:
                 # find out the good person to query for a needinfo
@@ -91,22 +86,6 @@ class FileStats(object):
                 info['bugs'] = len(bugs)
 
         return info
-
-    def __check_dates(self):
-        """Check if the last patch has been pushed (cf pushdate) max_days before the utc_ts
-
-        Returns:
-            bool: a boolean
-        """
-        if self.hi.get_utc_ts():
-            # we get the last patch (according to utc_ts)
-            last = self.info['last']
-            if last:
-                date = datetime.utcfromtimestamp(self.hi.get_utc_ts())
-                pushdate = datetime.utcfromtimestamp(last[0]['pushdate'][0])
-                td = date - pushdate
-                return td.days <= self.max_days
-        return None
 
 
 if __name__ == '__main__':

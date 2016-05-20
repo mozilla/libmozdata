@@ -4,7 +4,6 @@
 
 import re
 import six
-from datetime import datetime
 from .connection import Query
 from . import hgmozilla
 
@@ -16,79 +15,75 @@ class HGFileInfo(object):
        The patches can be filtered according to pushdate.
     """
 
-    def __init__(self, paths, channel='nightly', node='tip', utc_ts=None):
+    def __init__(self, paths, channel='nightly', node='tip'):
         """Constructor
 
         Args:
             paths (List[str]): the paths
             channel (str): channel version of firefox
             node (Optional[str]): the node, by default 'tip'
-            utc_ts (Optional[int]): UTC timestamp, file pushdate <= utc_ts
         """
         self.channel = channel
         self.node = node
-        self.utc_ts = utc_ts
         self.data = {}
         self.paths = [paths] if isinstance(paths, six.string_types) else paths
         self.bug_pattern = re.compile('[\t ]*[Bb][Uu][Gg][\t ]*([0-9]+)')
         self.rev_pattern = re.compile('r=([a-zA-Z0-9]+)')
         self.__get_info()
 
-    def get(self, path):
-        self.conn.wait()
+    def get(self, path, utc_ts_from=None, utc_ts_to=None, author=None):
+        if utc_ts_to is None:
+            revision = hgmozilla.Revision.get_revision(self.channel, self.node)
+            assert 'pushdate' in revision
+            assert isinstance(revision['pushdate'], list)
+            utc_ts_to = revision['pushdate'][0]
 
-        info = {
-            'authors': {},
-            'bugs': set(),
-            'last': None
-        }
+        self.conn.wait()
 
         entries = self.data[path]
 
-        authors = info['authors']
-        patches_found = False
-        patches = None
-        for entry in entries:
-            if self.utc_ts and not patches_found:
-                # we get the last patches which have been pushed the same day
-                utc_pushdate = entry['pushdate']
-                if utc_pushdate:
-                    utc_pushdate = utc_pushdate[0]
-                    if utc_pushdate <= self.utc_ts:
-                        if patches:
-                            last_date = patches[-1]['pushdate'][0]
-                            last_date = datetime.utcfromtimestamp(last_date)
-                            push_date = datetime.utcfromtimestamp(utc_pushdate)
-                            if last_date.year == push_date.year and last_date.month == push_date.month and last_date.day == push_date.day:
-                                patches.append(entry)
-                            else:
-                                patches_found = True
-                        else:
-                            patches = [entry]
+        authors = {}
+        bugs = set()
+        patches = []
 
-            author = entry['author']
-            if author not in authors:
-                authors[author] = {'count': 1, 'reviewers': {}}
+        for entry in entries:
+            assert 'pushdate' in entry
+            assert isinstance(entry['pushdate'], list)
+            utc_date = entry['pushdate'][0]
+
+            if (utc_ts_from is not None and utc_ts_from > utc_date) or utc_ts_to < utc_date:
+                continue
+
+            patch_author = entry['author']
+            if author is not None and author != patch_author:
+                continue
+
+            if patch_author not in authors:
+                authors[patch_author] = {'count': 1, 'reviewers': {}}
             else:
-                authors[author]['count'] += 1
+                authors[patch_author]['count'] += 1
 
             info_desc = self.__get_info_from_desc(entry['desc'])
             starter = info_desc['starter']
             if starter:
-                info['bugs'].add(info_desc['starter'])
+                bugs.add(info_desc['starter'])
+
             reviewers = info_desc['reviewers']
             if reviewers:
-                _reviewers = authors[author]['reviewers']
+                _reviewers = authors[patch_author]['reviewers']
                 for reviewer in reviewers:
                     if reviewer not in _reviewers:
                         _reviewers[reviewer] = 1
                     else:
                         _reviewers[reviewer] += 1
 
-        if patches:
-            info['last'] = patches
+            patches.append(entry)
 
-        return info
+        return {
+            'authors': authors,
+            'bugs': bugs,
+            'patches': patches,
+        }
 
     def get_utc_ts(self):
         """Get the utc timestamp
@@ -135,12 +130,6 @@ class HGFileInfo(object):
     def __get_info(self):
         """Get info
         """
-        if not self.utc_ts:
-            revision = hgmozilla.Revision.get_revision(self.channel, self.node)
-            pushdate = revision.get('pushdate', None)
-            if pushdate:
-                self.utc_ts = pushdate[0]
-
         __base = {'node': self.node,
                   'file': None}
         queries = []
