@@ -31,11 +31,10 @@ class FileStats(object):
         """
         self.utc_ts = utc_ts if isinstance(utc_ts, numbers.Number) and utc_ts > 0 else None
         self.max_days = int(config.get('FileStats', 'MaxDays', 3))
-        utc_ts_from = utils.get_timestamp(datetime.utcfromtimestamp(utc_ts) + timedelta(-self.max_days)) if isinstance(utc_ts, numbers.Number) and utc_ts > 0 else None
+        self.utc_ts_from = utils.get_timestamp(datetime.utcfromtimestamp(utc_ts) + timedelta(-self.max_days)) if isinstance(utc_ts, numbers.Number) and utc_ts > 0 else None
         self.path = path
         self.credentials = credentials
         self.hi = HGFileInfo(path, channel=channel, node=node)
-        self.info = self.hi.get(path, utc_ts_from, utc_ts)
         self.module = MozillaModules().module_from_path(path)
 
     def get_info(self):
@@ -57,9 +56,7 @@ class FileStats(object):
             info['owners'] = self.module['owners']
             info['peers'] = self.module['peers']
 
-        bugs = self.info['bugs']
-        bi = BZInfo(bugs, credentials=self.credentials) if bugs else None
-        last = self.info['patches']
+        last = self.hi.get(self.path, self.utc_ts_from, self.utc_ts)['patches']
         if len(last) > 0:  # we have a 'guilty' set of patches
             author_pattern = re.compile('<([^>]+)>')
             stats = {}
@@ -78,6 +75,8 @@ class FileStats(object):
                               'last_author': last_author,
                               'patches': last}
 
+            bugs = self.hi.get(self.path)['bugs']
+            bi = BZInfo(bugs, credentials=self.credentials) if bugs else None
             if bi:
                 # find out the good person to query for a needinfo
                 info['needinfo'] = bi.get_best_collaborator()
