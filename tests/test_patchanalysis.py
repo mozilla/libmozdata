@@ -35,7 +35,7 @@ class PatchAnalysisTest(unittest.TestCase):
         self.assertEqual(info['backout_num'], 1)
         self.assertEqual(info['blocks'], 1)
         self.assertEqual(info['depends_on'], 2)
-        self.assertEqual(info['comments'], 23)
+        self.assertEqual(info['comments'], 24)
         self.assertEqual(info['changes_size'], 76)
         self.assertEqual(info['modules_num'], 3)
         self.assertEqual(info['r-ed_patches'], 0)
