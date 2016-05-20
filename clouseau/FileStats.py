@@ -53,7 +53,7 @@ class FileStats(object):
 
         if self.module is not None:
             info['module'] = self.module['name']
-            info['components'].add(self.module['bugzillaComponents'])
+            info['components'].update(self.module['bugzillaComponents'])
             info['owners'] = self.module['owners']
             info['peers'] = self.module['peers']
 
