@@ -61,7 +61,7 @@ class FileStats(object):
         bi = BZInfo(bugs, credentials=self.credentials) if bugs else None
         last = self.info['patches']
         if len(last) > 0:  # we have a 'guilty' set of patches
-            author_pattern = re.compile('<([^>]+>)')
+            author_pattern = re.compile('<([^>]+)>')
             stats = {}
             last_author = None
             for patch in last:
