@@ -48,11 +48,14 @@ class FileStats(object):
             'path': self.path,
             'guilty': None,
             'needinfo': None,
-            'module': self.module['name'],
-            'components': set(self.module['bugzillaComponents']),
-            'owners': self.module['owners'],
-            'peers': self.module['peers'],
+            'components': set(),
         }
+
+        if self.module is not None:
+            info['module'] = self.module['name']
+            info['components'].add(self.module['bugzillaComponents'])
+            info['owners'] = self.module['owners']
+            info['peers'] = self.module['peers']
 
         bugs = self.info['bugs']
         bi = BZInfo(bugs, credentials=self.credentials) if bugs else None
