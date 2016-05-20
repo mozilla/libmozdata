@@ -76,6 +76,19 @@ class HGFileInfoTest(unittest.TestCase):
         self.assertEqual(fi['patches'][0]['author'], 'Phil Ringnalda <philringnalda@gmail.com>')
         self.assertEqual(fi['patches'][1]['author'], 'hg@mozilla.com')
 
+    def test_hgfileinfo_author(self):
+        path = 'LICENSE'
+        hi = HGFileInfo(path)
+
+        fi = hi.get(path, author='hg@mozilla.com')
+        self.assertEqual(fi['authors']['hg@mozilla.com']['count'], 1)
+        self.assertEqual(fi['authors']['hg@mozilla.com']['reviewers'], {})
+        self.assertEqual(fi['bugs'], set())
+        self.assertEqual(len(fi['patches']), 1)
+        self.assertEqual(fi['patches'][0]['author'], 'hg@mozilla.com')
+
+        self.assertEqual(fi, hi.get(path, utils.get_timestamp('2008-01-01'), utils.get_timestamp('2012-01-01'), author='hg@mozilla.com'))
+
     def test_hgfileinfo_multiple(self):
         path1 = 'netwerk/protocol/http/nsHttpConnectionMgr.cpp'
         path2 = 'LICENSE'
