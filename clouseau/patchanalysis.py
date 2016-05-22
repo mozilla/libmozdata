@@ -120,8 +120,8 @@ def bug_analysis(bug_id):
 
             mozreview_raw_diff_url = 'https://reviewboard.mozilla.org/r/' + review_num + '/diff/raw/'
 
-            with urlopen(mozreview_raw_diff_url) as response:
-                data = response.read().decode('ascii', 'ignore')
+            response = urlopen(mozreview_raw_diff_url)
+            data = response.read().decode('ascii', 'ignore')
 
         if data is not None:
             info.update(patch_analysis(data))
