@@ -9,28 +9,11 @@ import weakref
 import whatthepatch
 from .HGFileInfo import HGFileInfo
 from .bugzilla import Bugzilla
+from .CrashInfo import CrashInfo
 from . import modules
 from . import utils
 
 hginfos = weakref.WeakValueDictionary()
-
-
-def check_module(path, used_modules):
-    module = modules.module_from_path(path)
-    if module and module['name'] not in used_modules:
-        used_modules[module['name']] = 1
-
-
-def churn(path):
-    if path in hginfos:
-        hi = hginfos[path]
-    else:
-        hi = hginfos[path] = HGFileInfo(path)
-
-    return {
-        'overall': len(hi.get(path)['patches']),
-        'last_3_releases': len(hi.get(path, utc_ts_from=utils.get_timestamp(date.today() + timedelta(-3 * 6 * 7)))['patches']),
-    }
 
 
 def patch_analysis(patch):
@@ -43,10 +26,10 @@ def patch_analysis(patch):
         # 'developer_familiarity_last_3_releases': 0,
         # 'reviewer_familiarity_overall': 0,
         # 'developer_familiarity_last_3_releases': 0,
+        'crashes': 0,
     }
 
-    used_modules = {}
-
+    paths = []
     for diff in whatthepatch.parse_patch(patch):
         info['changes_size'] += len(diff.changes)
 
@@ -54,22 +37,31 @@ def patch_analysis(patch):
         new_path = diff.header.new_path[2:] if diff.header.new_path.startswith('b/') else diff.header.new_path
 
         if old_path != '/dev/null' and old_path != new_path:
-            check_module(old_path, used_modules)
-            code_churn = churn(old_path)
-            info['code_churn_overall'] += code_churn['overall']
-            info['code_churn_last_3_releases'] += code_churn['last_3_releases']
+            paths.append(old_path)
 
         if new_path != '/dev/null':
-            check_module(old_path, used_modules)
-            code_churn = churn(old_path)
-            info['code_churn_overall'] += code_churn['overall']
-            info['code_churn_last_3_releases'] += code_churn['last_3_releases']
+            paths.append(new_path)
+
+    used_modules = {}
+    ci = CrashInfo(paths).get()
+    for path in paths:
+        info['crashes'] += ci[path]['crashes']
+
+        module = modules.module_from_path(path)
+        if module and module['name'] not in used_modules:
+            used_modules[module['name']] = 1
+
+        if path in hginfos:
+            hi = hginfos[path]
+        else:
+            hi = hginfos[path] = HGFileInfo(path)
+
+        info['code_churn_overall'] += len(hi.get(path)['patches'])
+        info['code_churn_last_3_releases'] += len(hi.get(path, utc_ts_from=utils.get_timestamp(date.today() + timedelta(-3 * 6 * 7)))['patches'])
 
         # TODO: Add number of times the file was modified by the developer or the reviewer.
 
     info['modules_num'] = sum(used_modules.values())
-
-    # TODO: Add number of times the modified functions appear in crash signatures.
 
     # TODO: Add coverage info before and after the patch.
 
