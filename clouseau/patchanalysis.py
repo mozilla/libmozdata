@@ -15,6 +15,12 @@ from . import utils
 hginfos = weakref.WeakValueDictionary()
 
 
+def check_module(path, used_modules):
+    module = MozillaModules().module_from_path(path)
+    if module and module['name'] not in used_modules:
+        used_modules[module['name']] = 1
+
+
 def patch_analysis(patch):
     info = {
         'changes_size': 0,
@@ -27,7 +33,6 @@ def patch_analysis(patch):
         # 'developer_familiarity_last_3_releases': 0,
     }
 
-    mm = MozillaModules()
     used_modules = {}
 
     for diff in whatthepatch.parse_patch(patch):
@@ -37,16 +42,10 @@ def patch_analysis(patch):
         new_path = diff.header.new_path[2:] if diff.header.new_path.startswith('b/') else diff.header.new_path
 
         if old_path != '/dev/null':
-            module = mm.module_from_path(old_path)
-            if module and module['name'] not in used_modules:
-                info['modules_num'] += 1
-                used_modules[module['name']] = 1
+            check_module(old_path, used_modules)
 
         if new_path != '/dev/null':
-            module = mm.module_from_path(new_path)
-            if module and module['name'] not in used_modules:
-                info['modules_num'] += 1
-                used_modules[module['name']] = 1
+            check_module(old_path, used_modules)
 
         path = new_path if new_path != '/dev/null' else old_path
         if path in hginfos:
@@ -54,10 +53,12 @@ def patch_analysis(patch):
         else:
             hi = hginfos[path] = HGFileInfo(path)
 
-        info['code_churn_overall'] += len(hi.get(new_path)['patches'])
-        info['code_churn_last_3_releases'] += len(hi.get(new_path, utc_ts_from=utils.get_timestamp(date.today() + timedelta(-3 * 6 * 7)))['patches'])
+        info['code_churn_overall'] += len(hi.get(path)['patches'])
+        info['code_churn_last_3_releases'] += len(hi.get(path, utc_ts_from=utils.get_timestamp(date.today() + timedelta(-3 * 6 * 7)))['patches'])
 
         # TODO: Add number of times the file was modified by the developer or the reviewer.
+
+    info['modules_num'] = sum(used_modules.values())
 
     # TODO: Add number of times the modified functions appear in crash signatures.
 
