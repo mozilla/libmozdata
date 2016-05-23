@@ -17,8 +17,8 @@ class PatchAnalysisTest(unittest.TestCase):
         self.assertEqual(info['changes_size'], 640)
         self.assertEqual(info['modules_num'], 1)
         self.assertEqual(info['r-ed_patches'], 0)
-        self.assertTrue(info['code_churn_overall'] >= 182)
-        self.assertTrue(info['code_churn_last_3_releases'] >= 0)
+        self.assertGreaterEqual(info['code_churn_overall'], 182)
+        self.assertGreaterEqual(info['code_churn_last_3_releases'], 0)
 
         info = patchanalysis.bug_analysis(647570)
         self.assertEqual(info['backout_num'], 1)
@@ -28,8 +28,8 @@ class PatchAnalysisTest(unittest.TestCase):
         self.assertEqual(info['changes_size'], 485)
         self.assertEqual(info['modules_num'], 3)
         self.assertEqual(info['r-ed_patches'], 3)
-        self.assertTrue(info['code_churn_overall'] >= 240)
-        self.assertTrue(info['code_churn_last_3_releases'] >= 0)
+        self.assertGreaterEqual(info['code_churn_overall'], 240)
+        self.assertGreaterEqual(info['code_churn_last_3_releases'], 0)
 
         info = patchanalysis.bug_analysis(1271794)
         self.assertEqual(info['backout_num'], 1)
@@ -39,8 +39,8 @@ class PatchAnalysisTest(unittest.TestCase):
         self.assertEqual(info['changes_size'], 76)
         self.assertEqual(info['modules_num'], 3)
         self.assertEqual(info['r-ed_patches'], 0)
-        self.assertTrue(info['code_churn_overall'] >= 125)
-        self.assertTrue(info['code_churn_last_3_releases'] >= 0)
+        self.assertGreaterEqual(info['code_churn_overall'], 125)
+        self.assertGreaterEqual(info['code_churn_last_3_releases'], 0)
 
 if __name__ == '__main__':
     unittest.main()
