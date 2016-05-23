@@ -81,7 +81,8 @@ class FileStats(object):
                 # find out the good person to query for a needinfo
                 info['needinfo'] = bi.get_best_collaborator()
                 comp_prod = bi.get_best_component_product()
-                info['components'].add(comp_prod[1] + '::' + comp_prod[0])
+                if comp_prod:
+                    info['components'].add(comp_prod[1] + '::' + comp_prod[0])
                 info['bugs'] = len(bugs)
 
         return info
