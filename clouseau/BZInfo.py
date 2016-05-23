@@ -95,15 +95,13 @@ class BZInfo(Bugzilla):
             (tuple): a pair containing 'best' component & product
         """
         comps_prods = {}
+
         for info in self.get().values():
             if info['authorized']:
                 comp_prod = (info['component'], info['product'])
                 comps_prods[comp_prod] = comps_prods[comp_prod] + 1 if comp_prod in comps_prods else 1
 
-        if comps_prods:
-            return utils.get_best(comps_prods)
-        else:
-            return None
+        return utils.get_best(comps_prods)
 
     def __bug_handler(self, bug, data):
         """Handler to use with the bug retrieved from bugzilla
