@@ -20,7 +20,9 @@ class BZInfoTest(unittest.TestCase):
         self.assertEqual(info['product'], 'MailNews Core')
 
     def test_bzinfo_unauthorized(self):
-        info = BZInfo(1269839).get()
+        bzi = BZInfo(1269839)
+
+        info = bzi.get()
 
         self.assertTrue('1269839' in info)
         info = info['1269839']
@@ -29,6 +31,8 @@ class BZInfoTest(unittest.TestCase):
         self.assertEqual(info['commenters'], {})
         self.assertEqual(info['reviewers'], set())
 
+        self.assertIsNone(bzi.get_best_collaborator())
+        self.assertIsNone(bzi.get_best_component_product())
 
 if __name__ == '__main__':
     unittest.main()
