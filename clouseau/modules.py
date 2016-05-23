@@ -7,6 +7,10 @@ import json
 import fnmatch
 import argparse
 
+with open(os.path.join(os.path.dirname(__file__), 'modules.json')) as f:
+    data = json.load(f)
+    MODULES = [module['name'] for module in data]
+
 
 def match(path, pattern):
     pattern = os.path.normpath(pattern)
@@ -23,45 +27,40 @@ def match(path, pattern):
         return fnmatch.fnmatch(path, pattern + '*')
 
 
-class MozillaModules(object):
-    def __init__(self):
-        with open(os.path.join(os.path.dirname(__file__), 'modules.json')) as f:
-            self.data = json.load(f)
-            self.MODULES = [module['name'] for module in self.data]
+def module_from_path(path):
+    maxCommon = dict(
+        module=None,
+        directory=''
+    )
 
-    def module_from_path(self, path):
-        maxCommon = dict(
-            module=None,
-            directory=''
-        )
+    for module in data:
+        for directory in module['sourceDirs']:
+            if (len(os.path.commonprefix([path, directory])) > len(os.path.commonprefix([path, maxCommon['directory']]))) and\
+               match(path, directory):
+                maxCommon['module'] = module
+                maxCommon['directory'] = directory
 
-        for module in self.data:
-            for directory in module['sourceDirs']:
-                if (len(os.path.commonprefix([path, directory])) > len(os.path.commonprefix([path, maxCommon['directory']]))) and\
-                   match(path, directory):
-                    maxCommon['module'] = module
-                    maxCommon['directory'] = directory
+    # If we couldn't pinpoint the module, use some heuristics.
+    if maxCommon['module'] is None:
+        if path.endswith('configure.in') or path.endswith('moz.build') or path.endswith('client.mk') or path.endswith('moz.configure') or path.endswith('aclocal.m4') or path.endswith('Makefile.in') or path.startswith('python/mach'):
+            return module_info('Build Config')
 
-        # If we couldn't pinpoint the module, use some heuristics.
-        if maxCommon['module'] is None:
-            if path.endswith('configure.in') or path.endswith('moz.build') or path.endswith('client.mk') or path.endswith('moz.configure') or path.endswith('aclocal.m4') or path.endswith('Makefile.in') or path.startswith('python/mach'):
-                return self.module_info('Build Config')
+        if path.startswith('js/'):
+            return module_info('JavaScript')
 
-            if path.startswith('js/'):
-                return self.module_info('JavaScript')
+        if path.startswith('security/'):
+            return module_info('security')
 
-            if path.startswith('security/'):
-                return self.module_info('security')
+        if path.startswith('tools/profiler/'):
+            return module_info('Code Analysis and Debugging Tools')
 
-            if path.startswith('tools/profiler/'):
-                return self.module_info('Code Analysis and Debugging Tools')
+    return maxCommon['module']
 
-        return maxCommon['module']
 
-    def module_info(self, moduleName):
-        for module in self.data:
-            if module['name'].lower() == moduleName.lower():
-                return module
+def module_info(moduleName):
+    for module in data:
+        if module['name'].lower() == moduleName.lower():
+            return module
 
 
 if __name__ == '__main__':
@@ -71,11 +70,9 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    mm = MozillaModules()
-
     if args.path:
-        print(mm.module_from_path(args.path))
+        print(module_from_path(args.path))
     elif args.module:
-        print(mm.module_info(args.module))
+        print(module_info(args.module))
     else:
         parser.print_help()

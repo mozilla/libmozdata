@@ -10,7 +10,7 @@ import re
 
 from .HGFileInfo import HGFileInfo
 from .BZInfo import BZInfo
-from .modules import MozillaModules
+from . import modules
 from . import utils
 from . import config
 
@@ -35,7 +35,7 @@ class FileStats(object):
         self.path = path
         self.credentials = credentials
         self.hi = HGFileInfo(path, channel=channel, node=node)
-        self.module = MozillaModules().module_from_path(path)
+        self.module = modules.module_from_path(path)
 
     def get_info(self):
         """Get info

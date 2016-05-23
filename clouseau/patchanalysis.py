@@ -9,14 +9,14 @@ import weakref
 import whatthepatch
 from .HGFileInfo import HGFileInfo
 from .bugzilla import Bugzilla
-from .modules import MozillaModules
+from . import modules
 from . import utils
 
 hginfos = weakref.WeakValueDictionary()
 
 
 def check_module(path, used_modules):
-    module = MozillaModules().module_from_path(path)
+    module = modules.module_from_path(path)
     if module and module['name'] not in used_modules:
         used_modules[module['name']] = 1
 
@@ -28,9 +28,10 @@ def churn(path):
         hi = hginfos[path] = HGFileInfo(path)
 
     return {
-       'overall': len(hi.get(path)['patches']),
-       'last_3_releases': len(hi.get(path, utc_ts_from=utils.get_timestamp(date.today() + timedelta(-3 * 6 * 7)))['patches']),
+        'overall': len(hi.get(path)['patches']),
+        'last_3_releases': len(hi.get(path, utc_ts_from=utils.get_timestamp(date.today() + timedelta(-3 * 6 * 7)))['patches']),
     }
+
 
 def patch_analysis(patch):
     info = {
