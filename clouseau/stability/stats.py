@@ -42,7 +42,7 @@ def __super_search_handler(json, data):
 
 
 def __rate(n, adi):
-    return float('nan') if adi == 0 else float(n) / float(adi) * 100.
+    return utils.rate(n, adi) * 100.
 
 
 def get(channel, versions=None, product='Firefox', start_date=None, end_date='today', duration=30, platforms=None, credentials=None):
