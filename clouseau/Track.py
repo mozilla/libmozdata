@@ -4,7 +4,7 @@
 
 import argparse
 from urlparse import urlparse
-from datetime import (date, datetime, timedelta)
+from datetime import timedelta
 from pprint import pprint
 import utils
 import math
@@ -381,8 +381,7 @@ class Track(object):
             search_date = ['>=' + start_date]
         else:
             end_date = self.date + timedelta(self.duration)
-            today = date.today()
-            today = datetime(today.year, today.month, today.day)
+            today = utils.get_date_ymd('today')
             if end_date > today:
                 search_date = ['>=' + start_date]
             else:
