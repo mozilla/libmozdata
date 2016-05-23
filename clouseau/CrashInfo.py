@@ -33,10 +33,9 @@ class CrashInfo(Connection):
     def __get_info(self):
         header = {'Auth-Token': self.__get_apikey()}
         for path in self.paths:
-            filename = os.path.basename(path)
             self.results.append(self.session.get(self.SUPERSEARCH_URL,
                                                  params={'product': 'Firefox',
-                                                         'topmost_filenames': filename,
+                                                         'topmost_filenames': '~' + path,
                                                          '_results_number': 0,
                                                          '_facets': 'product',
                                                          '_facets_size': 1},
