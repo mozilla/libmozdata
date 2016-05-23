@@ -1,4 +1,3 @@
-import os
 from .connection import Connection
 
 
