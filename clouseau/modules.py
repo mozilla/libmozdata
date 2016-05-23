@@ -12,7 +12,7 @@ with open(os.path.join(os.path.dirname(__file__), 'modules.json')) as f:
     MODULES = [module['name'] for module in data]
 
 
-def match(path, pattern):
+def __match(path, pattern):
     pattern = os.path.normpath(pattern)
     path = os.path.normpath(path)
 
@@ -36,7 +36,7 @@ def module_from_path(path):
     for module in data:
         for directory in module['sourceDirs']:
             if (len(os.path.commonprefix([path, directory])) > len(os.path.commonprefix([path, maxCommon['directory']]))) and\
-               match(path, directory):
+               __match(path, directory):
                 maxCommon['module'] = module
                 maxCommon['directory'] = directory
 
