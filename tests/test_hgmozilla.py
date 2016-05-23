@@ -14,22 +14,29 @@ class RevisionTest(unittest.TestCase):
         self.assertIsNot(rev, None)
 
     def test_revisions(self):
-        data1 = {}
+        data1 = {
+          'first': {},
+          'second': {},
+        }
         data2 = {}
 
         def handler1(json, data):
-            data.update(json)
+            if 'tip' in json['tags']:
+              data['first'].update(json)
+            else:
+              data['second'].update(json)
 
         def handler2(json, data):
             data.update(json)
 
         hgmozilla.Revision(queries=[
-            Query(hgmozilla.Revision.get_url('nightly'), {'node': 'tip'}, handler1, data1),
+            Query(hgmozilla.Revision.get_url('nightly'), [{'node': 'tip'}, {'node': '1584ba8c1b86'}], handler1, data1),
             Query(hgmozilla.Revision.get_url('nightly'), {'node': 'tip'}, handler2, data2),
         ]).wait()
 
-        self.assertIsNot(data1, None)
-        self.assertIsNot(data2, None)
+        self.assertTrue(data1['first'])
+        self.assertTrue(data1['second']['node'].startswith('1584ba8c1b86'))
+        self.assertTrue(data2)
 
 class FileInfoTest(unittest.TestCase):
 
