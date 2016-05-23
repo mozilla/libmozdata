@@ -198,3 +198,16 @@ def get_date_from_buildid(bid):
     day = int(str(bid)[6:8])
 
     return datetime(year, month, day)
+
+
+def rate(x, y):
+    """ Compute a rate
+
+    Args:
+        x (num): numerator
+        y (num): denominator
+
+    Returns:
+        float: x / y or Nan if y == 0
+    """
+    return float(x) / float(y) if y else float('nan')
