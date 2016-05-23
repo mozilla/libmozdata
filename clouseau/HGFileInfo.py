@@ -8,8 +8,6 @@ from .connection import Query
 from . import hgmozilla
 
 
-from pprint import pprint
-
 class HGFileInfo(object):
     """File info from Mercurial
 
