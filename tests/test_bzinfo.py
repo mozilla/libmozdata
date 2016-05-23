@@ -19,6 +19,16 @@ class BZInfoTest(unittest.TestCase):
         self.assertEqual(info['component'], 'Backend')
         self.assertEqual(info['product'], 'MailNews Core')
 
+    def test_bzinfo_unauthorized(self):
+        info = BZInfo(1269839).get()
+
+        self.assertTrue('1269839' in info)
+        info = info['1269839']
+        self.assertFalse(info['authorized'])
+        self.assertEqual(info['ownership'], [])
+        self.assertEqual(info['commenters'], {})
+        self.assertEqual(info['reviewers'], set())
+
 
 if __name__ == '__main__':
     unittest.main()
