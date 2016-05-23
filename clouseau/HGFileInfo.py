@@ -85,14 +85,6 @@ class HGFileInfo(object):
             'patches': patches,
         }
 
-    def get_utc_ts(self):
-        """Get the utc timestamp
-
-        Returns:
-            int: the utc timestamp
-        """
-        return self.utc_ts
-
     def __get_info_from_desc(self, desc):
         """Get some information from the patch description
 
