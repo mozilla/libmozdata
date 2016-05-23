@@ -20,6 +20,17 @@ class FileStatsTest(unittest.TestCase):
         self.assertGreater(len(info['owners']), 0)
         self.assertGreater(len(info['peers']), 0)
 
+    def test_filestats_no_bugs(self):
+        path = 'LEGAL'
+        info = FileStats(path).get_info()
+        self.assertEqual(info['components'], set())
+        self.assertEqual(info['needinfo'], None)
+        self.assertEqual(info['path'], path)
+        self.assertEqual(len(info['guilty']['patches']), 1)
+        self.assertEqual(info['guilty']['main_author'], 'hg@mozilla.com')
+        self.assertEqual(info['guilty']['last_author'], 'hg@mozilla.com')
+        self.assertFalse('bugs' in info)
+
     def test_filestats_date(self):
         path = 'LICENSE'
         info = FileStats(path, utc_ts=utils.get_timestamp('today')).get_info()
@@ -27,6 +38,7 @@ class FileStatsTest(unittest.TestCase):
         self.assertEqual(info['needinfo'], None)
         self.assertEqual(info['path'], path)
         self.assertEqual(info['guilty'], None)
+        self.assertFalse('bugs' in info)
 
         info = FileStats(path, utc_ts=utils.get_timestamp('2010-04-06')).get_info()
         self.assertEqual(info['components'], set(['Core::General']))
@@ -45,6 +57,7 @@ class FileStatsTest(unittest.TestCase):
         self.assertEqual(info['needinfo'], None)
         self.assertEqual(info['path'], path)
         self.assertEqual(info['guilty'], None)
+        self.assertFalse('bugs' in info)
 
         info = FileStats(path, utc_ts=utils.get_timestamp('2008-03-21')).get_info()
         self.assertEqual(info['components'], set(['Core::General']))
