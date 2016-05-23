@@ -21,6 +21,17 @@ def check_module(path, used_modules):
         used_modules[module['name']] = 1
 
 
+def churn(path):
+    if path in hginfos:
+        hi = hginfos[path]
+    else:
+        hi = hginfos[path] = HGFileInfo(path)
+
+    return {
+       'overall': len(hi.get(path)['patches']),
+       'last_3_releases': len(hi.get(path, utc_ts_from=utils.get_timestamp(date.today() + timedelta(-3 * 6 * 7)))['patches']),
+    }
+
 def patch_analysis(patch):
     info = {
         'changes_size': 0,
@@ -41,20 +52,17 @@ def patch_analysis(patch):
         old_path = diff.header.old_path[2:] if diff.header.old_path.startswith('a/') else diff.header.old_path
         new_path = diff.header.new_path[2:] if diff.header.new_path.startswith('b/') else diff.header.new_path
 
-        if old_path != '/dev/null':
+        if old_path != '/dev/null' and old_path != new_path:
             check_module(old_path, used_modules)
+            code_churn = churn(old_path)
+            info['code_churn_overall'] += code_churn['overall']
+            info['code_churn_last_3_releases'] += code_churn['last_3_releases']
 
         if new_path != '/dev/null':
             check_module(old_path, used_modules)
-
-        path = new_path if new_path != '/dev/null' else old_path
-        if path in hginfos:
-            hi = hginfos[path]
-        else:
-            hi = hginfos[path] = HGFileInfo(path)
-
-        info['code_churn_overall'] += len(hi.get(path)['patches'])
-        info['code_churn_last_3_releases'] += len(hi.get(path, utc_ts_from=utils.get_timestamp(date.today() + timedelta(-3 * 6 * 7)))['patches'])
+            code_churn = churn(old_path)
+            info['code_churn_overall'] += code_churn['overall']
+            info['code_churn_last_3_releases'] += code_churn['last_3_releases']
 
         # TODO: Add number of times the file was modified by the developer or the reviewer.
 
