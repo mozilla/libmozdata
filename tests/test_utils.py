@@ -12,8 +12,8 @@ from clouseau import utils
 class UtilsTest(unittest.TestCase):
 
     def test_get_best(self):
-        self.assertEqual(utils.get_best(None), None)
-        self.assertEqual(utils.get_best({}), None)
+        self.assertIsNone(utils.get_best(None))
+        self.assertIsNone(utils.get_best({}))
         self.assertEqual(utils.get_best({'key1': 7, 'key2': 99, 'key3': 4}), 'key2')
 
     def test_get_timestamp(self):
@@ -57,9 +57,9 @@ class UtilsTest(unittest.TestCase):
         self.assertGreater(utils.get_now_timestamp(), utils.get_timestamp(date))
 
     def test_is64(self):
-        self.assertEqual(utils.is64('64bit'), True)
-        self.assertEqual(utils.is64('A 64 bit machine'), True)
-        self.assertEqual(utils.is64('A 32 bit machine'), False)
+        self.assertTrue(utils.is64('64bit'))
+        self.assertTrue(utils.is64('A 64 bit machine'))
+        self.assertFalse(utils.is64('A 32 bit machine'))
 
     def test_percent(self):
         self.assertEqual(utils.percent(0.23), '23%')

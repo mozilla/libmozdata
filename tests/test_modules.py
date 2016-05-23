@@ -18,7 +18,7 @@ class ModulesTest(unittest.TestCase):
         self.assertEqual(mm.module_from_path('xpcom/string/')['name'], 'String')
         self.assertEqual(mm.module_from_path('xpcom/string')['name'], 'String')
         self.assertEqual(mm.module_from_path('tools/cvs2hg-import.py')['name'], 'Build Config')
-        self.assertEqual(mm.module_from_path('doesntexist'), None)
+        self.assertIsNone(mm.module_from_path('doesntexist'))
 
         # Test heuristics
         self.assertEqual(mm.module_from_path('old-configure.in')['name'], 'Build Config')
@@ -37,7 +37,7 @@ class ModulesTest(unittest.TestCase):
         mm = modules.MozillaModules()
         self.assertEqual(mm.module_info('XPCOM')['name'], 'XPCOM')
         self.assertEqual(mm.module_info('xpcom')['name'], 'XPCOM')
-        self.assertEqual(mm.module_info('DoesntExist'), None)
+        self.assertIsNone(mm.module_info('DoesntExist'))
 
 if __name__ == '__main__':
     unittest.main()

@@ -38,7 +38,7 @@ class ConfigTest(unittest.TestCase):
 
     def test_config_doesnt_exist(self):
         from clouseau import config
-        self.assertEqual(config.get('Section', 'Option'), None)
+        self.assertIsNone(config.get('Section', 'Option'))
         self.assertEqual(config.get('Section', 'Option', 'Default'), 'Default')
 
     def test_config_exists(self):
@@ -59,7 +59,7 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual(config.get('Section', 'Option2', 'Default'), 'Value2')
         self.assertEqual(config.get('Section2', 'Option'), 'Value3')
         self.assertEqual(config.get('Section2', 'Option', 'Default'), 'Value3')
-        self.assertEqual(config.get('Section', 'Option3'), None)
+        self.assertIsNone(config.get('Section', 'Option3'))
         self.assertEqual(config.get('Section', 'Option3', 'Default'), 'Default')
 
 

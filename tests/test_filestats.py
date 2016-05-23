@@ -13,7 +13,7 @@ class FileStatsTest(unittest.TestCase):
     def test_filestats(self):
         path = 'netwerk/protocol/http/nsHttpConnectionMgr.cpp'
         info = FileStats(path).get_info()
-        self.assertIsNot(info, None)
+        self.assertIsNotNone(info)
         self.assertEqual(info['path'], 'netwerk/protocol/http/nsHttpConnectionMgr.cpp')
         self.assertEqual(info['module'], 'Necko')
         six.assertCountEqual(self, info['components'], ['Core::Networking', 'Core::Networking: Cache', 'Core::Networking: Cookies', 'Core::Networking: FTP', 'Core::Networking: File', 'Core::Networking: HTTP', 'Core::Networking: JAR', 'Core::Networking: Websockets'])
@@ -24,21 +24,21 @@ class FileStatsTest(unittest.TestCase):
         path = 'LEGAL'
         info = FileStats(path).get_info()
         self.assertEqual(info['components'], set())
-        self.assertEqual(info['needinfo'], None)
+        self.assertIsNone(info['needinfo'])
         self.assertEqual(info['path'], path)
         self.assertEqual(len(info['guilty']['patches']), 1)
         self.assertEqual(info['guilty']['main_author'], 'hg@mozilla.com')
         self.assertEqual(info['guilty']['last_author'], 'hg@mozilla.com')
-        self.assertFalse('bugs' in info)
+        self.assertNotIn('bugs', info)
 
     def test_filestats_date(self):
         path = 'LICENSE'
         info = FileStats(path, utc_ts=utils.get_timestamp('today')).get_info()
         self.assertEqual(info['components'], set())
-        self.assertEqual(info['needinfo'], None)
+        self.assertIsNone(info['needinfo'])
         self.assertEqual(info['path'], path)
-        self.assertEqual(info['guilty'], None)
-        self.assertFalse('bugs' in info)
+        self.assertIsNone(info['guilty'])
+        self.assertNotIn('bugs', info)
 
         info = FileStats(path, utc_ts=utils.get_timestamp('2010-04-06')).get_info()
         self.assertEqual(info['components'], set(['Core::General']))
@@ -54,10 +54,10 @@ class FileStatsTest(unittest.TestCase):
 
         info = FileStats(path, utc_ts=utils.get_timestamp('2010-04-09')).get_info()
         self.assertEqual(info['components'], set())
-        self.assertEqual(info['needinfo'], None)
+        self.assertIsNone(info['needinfo'])
         self.assertEqual(info['path'], path)
-        self.assertEqual(info['guilty'], None)
-        self.assertFalse('bugs' in info)
+        self.assertIsNone(info['guilty'])
+        self.assertNotIn('bugs', info)
 
         info = FileStats(path, utc_ts=utils.get_timestamp('2008-03-21')).get_info()
         self.assertEqual(info['components'], set(['Core::General']))

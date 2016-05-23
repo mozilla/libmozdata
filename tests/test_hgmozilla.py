@@ -11,7 +11,7 @@ class RevisionTest(unittest.TestCase):
 
     def test_revision(self):
         rev = hgmozilla.Revision.get_revision()
-        self.assertIsNot(rev, None)
+        self.assertIsNotNone(rev)
 
     def test_revisions(self):
         data1 = {
@@ -45,23 +45,23 @@ class FileInfoTest(unittest.TestCase):
         path = 'netwerk/protocol/http/nsHttpConnectionMgr.cpp'
         info = hgmozilla.FileInfo.get(path)
 
-        self.assertIsNot(info, None)
-        self.assertIsNot(info['netwerk/protocol/http/nsHttpConnectionMgr.cpp'], None)
+        self.assertIsNotNone(info)
+        self.assertIsNotNone(info['netwerk/protocol/http/nsHttpConnectionMgr.cpp'])
 
     def test_fileinfo_multiple_files(self):
         paths = ['netwerk/protocol/http/nsHttpConnectionMgr.cpp', 'netwerk/protocol/http/nsHttpConnectionMgr.h']
         info = hgmozilla.FileInfo.get(paths)
 
-        self.assertIsNot(info, None)
-        self.assertIsNot(info['netwerk/protocol/http/nsHttpConnectionMgr.cpp'], None)
-        self.assertIsNot(info['netwerk/protocol/http/nsHttpConnectionMgr.h'], None)
+        self.assertIsNotNone(info)
+        self.assertIsNotNone(info['netwerk/protocol/http/nsHttpConnectionMgr.cpp'])
+        self.assertIsNotNone(info['netwerk/protocol/http/nsHttpConnectionMgr.h'])
 
     def test_fileinfo_release_channel(self):
         path = 'netwerk/protocol/http/nsHttpConnectionMgr.cpp'
         info = hgmozilla.FileInfo.get(path, 'release')
 
-        self.assertIsNot(info, None)
-        self.assertIsNot(info['netwerk/protocol/http/nsHttpConnectionMgr.cpp'], None)
+        self.assertIsNotNone(info)
+        self.assertIsNotNone(info['netwerk/protocol/http/nsHttpConnectionMgr.cpp'])
 
 
 if __name__ == '__main__':

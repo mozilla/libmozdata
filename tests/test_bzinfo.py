@@ -11,11 +11,11 @@ class BZInfoTest(unittest.TestCase):
     def test_bzinfo(self):
         info = BZInfo(12345).get()
 
-        self.assertTrue('12345' in info)
+        self.assertIn('12345', info)
         info = info['12345']
         self.assertTrue(info['authorized'])
         self.assertEqual(info['owner'], u'jefft@formerly-netscape.com.tld')
-        self.assertTrue(u'jefft@formerly-netscape.com.tld' in info['commenters'])
+        self.assertIn(u'jefft@formerly-netscape.com.tld', info['commenters'])
         self.assertEqual(info['component'], 'Backend')
         self.assertEqual(info['product'], 'MailNews Core')
 
@@ -24,7 +24,7 @@ class BZInfoTest(unittest.TestCase):
 
         info = bzi.get()
 
-        self.assertTrue('1269839' in info)
+        self.assertIn('1269839', info)
         info = info['1269839']
         self.assertFalse(info['authorized'])
         self.assertEqual(info['ownership'], [])
