@@ -12,6 +12,7 @@ class UtilsTest(unittest.TestCase):
 
     def test_get_best(self):
         self.assertEqual(utils.get_best(None), None)
+        self.assertEqual(utils.get_best({}), None)
         self.assertEqual(utils.get_best({'key1': 7, 'key2': 99, 'key3': 4}), 'key2')
 
     def test_get_timestamp(self):
