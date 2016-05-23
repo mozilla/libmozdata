@@ -15,16 +15,16 @@ class RevisionTest(unittest.TestCase):
 
     def test_revisions(self):
         data1 = {
-          'first': {},
-          'second': {},
+            'first': {},
+            'second': {},
         }
         data2 = {}
 
         def handler1(json, data):
             if 'tip' in json['tags']:
-              data['first'].update(json)
+                data['first'].update(json)
             else:
-              data['second'].update(json)
+                data['second'].update(json)
 
         def handler2(json, data):
             data.update(json)
@@ -37,6 +37,7 @@ class RevisionTest(unittest.TestCase):
         self.assertTrue(data1['first'])
         self.assertTrue(data1['second']['node'].startswith('1584ba8c1b86'))
         self.assertTrue(data2)
+
 
 class FileInfoTest(unittest.TestCase):
 
