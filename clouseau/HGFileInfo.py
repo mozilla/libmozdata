@@ -8,12 +8,16 @@ from .connection import Query
 from . import hgmozilla
 
 
+from pprint import pprint
+
 class HGFileInfo(object):
     """File info from Mercurial
 
        We collect the different authors, reviewers and related bugs from the patches which touched to the file.
        The patches can be filtered according to pushdate.
     """
+
+    MAX_REV_COUNT = 255
 
     def __init__(self, paths, channel='nightly', node='tip'):
         """Constructor
@@ -27,9 +31,12 @@ class HGFileInfo(object):
         self.node = node
         self.data = {}
         self.paths = [paths] if isinstance(paths, six.string_types) else paths
+        for p in self.paths:
+            self.data[p] = []
         self.bug_pattern = re.compile('[\t ]*[Bb][Uu][Gg][\t ]*([0-9]+)')
         self.rev_pattern = re.compile('r=([a-zA-Z0-9]+)')
-        self.__get_info()
+        self.results = []
+        self.__get_info(self.paths, self.node)
 
     def get(self, path, utc_ts_from=None, utc_ts_to=None, author=None):
         if utc_ts_to is None:
@@ -38,7 +45,8 @@ class HGFileInfo(object):
             assert isinstance(revision['pushdate'], list)
             utc_ts_to = revision['pushdate'][0]
 
-        self.conn.wait()
+        for result in self.results:
+            result.wait()
 
         entries = self.data[path]
 
@@ -125,18 +133,26 @@ class HGFileInfo(object):
             json (dict): json
             info (dict): info
         """
-        self.data[path] = json['entries']
+        entries = json['entries']
+        if entries:
+            if len(entries) == HGFileInfo.MAX_REV_COUNT + 1:
+                self.data[path].extend(entries[:-1])
+                last_node = entries[-1]['node']
+                self.__get_info([path], last_node)
+            else:
+                self.data[path].extend(entries)
 
-    def __get_info(self):
+    def __get_info(self, paths, node):
         """Get info
         """
-        __base = {'node': self.node,
-                  'file': None}
+        __base = {'node': node,
+                  'file': None,
+                  'revcount': HGFileInfo.MAX_REV_COUNT + 1}
         queries = []
         url = hgmozilla.FileInfo.get_url(self.channel)
-        for path in self.paths:
+        for path in paths:
             cparams = __base.copy()
             cparams['file'] = path
             queries.append(Query(url, cparams, handler=self.__handler, handlerdata=path))
 
-        self.conn = hgmozilla.FileInfo(queries=queries)
+        self.results.append(hgmozilla.FileInfo(queries=queries))

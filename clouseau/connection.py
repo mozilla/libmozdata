@@ -5,6 +5,7 @@
 import multiprocessing
 from requests.adapters import HTTPAdapter
 from requests_futures.sessions import FuturesSession
+from requests.packages.urllib3.util.retry import Retry
 
 
 class Query(object):
@@ -36,9 +37,12 @@ class Connection(object):
     """
 
     TIMEOUT = 60
-    MAX_RETRIES = 5
+    MAX_RETRIES = 16
     MAX_WORKERS = multiprocessing.cpu_count()
     CHUNK_SIZE = 32
+
+    # Error 429 is for 'Too many requests' => we retry
+    STATUS_FORCELIST = [429]
 
     def __init__(self, base_url, queries=None, credentials=None):
         """Constructor
@@ -48,8 +52,10 @@ class Connection(object):
             queries (Optional[Query]): the queries
             credentials (Optional[dict]): the credentials to use with this connection
         """
+
         self.session = FuturesSession(max_workers=self.MAX_WORKERS)
-        self.session.mount(base_url, HTTPAdapter(max_retries=self.MAX_RETRIES))
+        retries = Retry(total=Connection.MAX_RETRIES, backoff_factor=1, status_forcelist=Connection.STATUS_FORCELIST)
+        self.session.mount(base_url, HTTPAdapter(max_retries=retries))
         self.results = []
         self.credentials = credentials
         self.queries = queries

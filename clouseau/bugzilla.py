@@ -57,7 +57,7 @@ class Bugzilla(Connection):
             self.got_data = False
 
     def get_header(self):
-        return {'X-Bugzilla-API-Key': self.get_apikey(Bugzilla.URL)}
+        return {'X-Bugzilla-API-Key': self.get_apikey(Bugzilla.URL), 'User-Agent': 'clouseau'}
 
     def put(self, data):
         """Put some data in bugs
@@ -229,6 +229,11 @@ class Bugzilla(Connection):
         if res.status_code == 200:
             for bug in res.json()['bugs']:
                 self.bughandler(bug, self.bugdata)
+        else:
+            print('Bugzilla connection error:')
+            print('   url: %s' % res.url)
+            print('   status_code: %d' % res.status_code)
+            print('   text: %s' % res.text)
 
     def __get_bugs(self):
         """Get the bugs
@@ -260,6 +265,11 @@ class Bugzilla(Connection):
             if res.status_code == 200:
                 for bug in res.json()['bugs']:
                     _list.add(bug['id'])
+            else:
+                print('Bugzilla connection error:')
+                print('   url: %s' % res.url)
+                print('   status_code: %d' % res.status_code)
+                print('   text: %s' % res.text)
 
         results = []
         url = Bugzilla.API_URL + '?'
@@ -286,6 +296,11 @@ class Bugzilla(Connection):
             if 'bugs' in json and json['bugs']:
                 history = json['bugs'][0]
                 self.historyhandler(history, self.historydata)
+        else:
+            print('Bugzilla connection error:')
+            print('   url: %s' % res.url)
+            print('   status_code: %d' % res.status_code)
+            print('   text: %s' % res.text)
 
     def __get_history(self):
         """Get the bug history
@@ -313,6 +328,11 @@ class Bugzilla(Connection):
                             comments = bugs[key]
                             self.commenthandler(comments, key, self.commentdata)
                             break
+        else:
+            print('Bugzilla connection error:')
+            print('   url: %s' % res.url)
+            print('   status_code: %d' % res.status_code)
+            print('   text: %s' % res.text)
 
     def __get_comment(self):
         """Get the bug comment
@@ -340,6 +360,11 @@ class Bugzilla(Connection):
                             attachments = bugs[key]
                             self.attachmenthandler(attachments, key, self.attachmentdata)
                             break
+        else:
+            print('Bugzilla connection error:')
+            print('   url: %s' % res.url)
+            print('   status_code: %d' % res.status_code)
+            print('   text: %s' % res.text)
 
     def __get_attachment(self):
         """Get the bug attachment
