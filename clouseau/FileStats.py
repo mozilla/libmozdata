@@ -58,15 +58,10 @@ class FileStats(object):
 
         last = self.hi.get(self.path, self.utc_ts_from, self.utc_ts)['patches']
         if len(last) > 0:  # we have a 'guilty' set of patches
-            author_pattern = re.compile('<([^>]+)>')
             stats = {}
             last_author = None
             for patch in last:
-                m = author_pattern.search(patch['author'])
-                if m:
-                    author = m.group(1)
-                else:
-                    author = patch['author']
+                author = patch['author']
                 if not last_author:
                     last_author = author
                 stats[author] = stats[author] + 1 if author in stats else 1

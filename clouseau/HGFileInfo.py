@@ -40,6 +40,8 @@ class HGFileInfo(object):
 
         self.conn.wait()
 
+        author_pattern = re.compile('<([^>]+)>')
+
         entries = self.data[path]
 
         authors = {}
@@ -54,6 +56,9 @@ class HGFileInfo(object):
             if (utc_ts_from is not None and utc_ts_from > utc_date) or utc_ts_to < utc_date:
                 continue
 
+            m = author_pattern.search(entry['author'])
+            if m:
+                entry['author'] = m.group(1)
             patch_author = entry['author']
             if author is not None and author != patch_author:
                 continue
