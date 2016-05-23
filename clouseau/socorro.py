@@ -55,10 +55,22 @@ class SuperSearch(Socorro):
             super(SuperSearch, self).__init__(queries, credentials)
         else:
             url = SuperSearch.URL
+            unredacted = False
             if '_facets' in params:
                 facets = params['_facets']
                 if 'url' in facets or 'email' in facets:
                     url = SuperSearch.URL_UNREDACTED
+                    unredacted = True
+            if not unredacted and '_columns' in params:
+                columns = params['_columns']
+                if 'url' in columns or 'email' in columns:
+                    url = SuperSearch.URL_UNREDACTED
+            if not unredacted:
+                for k, v in params.items():
+                    if k.startswith('_histogram') and ('url' in v or 'email' in v):
+                        url = SuperSearch.URL_UNREDACTED
+                        unredacted = True
+                        break
             super(SuperSearch, self).__init__(Query(url, params, handler, handlerdata), credentials)
 
     @staticmethod
