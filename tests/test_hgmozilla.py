@@ -4,6 +4,7 @@
 
 import unittest
 from clouseau import hgmozilla
+from clouseau.connection import Query
 
 
 class RevisionTest(unittest.TestCase):
@@ -12,6 +13,23 @@ class RevisionTest(unittest.TestCase):
         rev = hgmozilla.Revision.get_revision()
         self.assertIsNot(rev, None)
 
+    def test_revisions(self):
+        data1 = {}
+        data2 = {}
+
+        def handler1(json, data):
+            data.update(json)
+
+        def handler2(json, data):
+            data.update(json)
+
+        hgmozilla.Revision(queries=[
+            Query(hgmozilla.Revision.get_url('nightly'), {'node': 'tip'}, handler1, data1),
+            Query(hgmozilla.Revision.get_url('nightly'), {'node': 'tip'}, handler2, data2),
+        ]).wait()
+
+        self.assertIsNot(data1, None)
+        self.assertIsNot(data2, None)
 
 class FileInfoTest(unittest.TestCase):
 
