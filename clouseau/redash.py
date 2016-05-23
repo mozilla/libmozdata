@@ -4,7 +4,9 @@
 
 import six
 import functools
+from datetime import timedelta
 from .connection import (Connection, Query)
+import utils
 
 
 class Redash(Connection):
@@ -60,3 +62,95 @@ class Redash(Connection):
             Redash(queries=queries, credentials=credentials).wait()
 
         return data
+
+    @staticmethod
+    def get_khours(start_date, end_date, channel, versions, product, credentials=None):
+        """Get the results for query 346, 387: https://sql.telemetry.mozilla.org/queries/346
+                                               https://sql.telemetry.mozilla.org/queries/387
+        Args:
+            start_date (datetime.datetime): start date
+            end_date (datetime.datetime): end date
+            channel (str): the channel
+            versions (List[str]): the versions
+            product (str): the product
+            credentials (dict): credentials to use with re:dash
+
+        Returns:
+            dict: containing result in json for each query
+        """
+        qid = '387' if product == 'FennecAndroid' else '346'
+
+        khours = Redash.get(qid, credentials=credentials)
+        rows = khours[qid]['query_result']['data']['rows']
+        res = {}
+
+        # init the data
+        duration = (end_date - start_date).days
+        for i in range(duration + 1):
+            res[start_date + timedelta(i)] = 0.
+
+        if channel == 'beta':
+            versions = set([v[:-2] for v in versions])
+        else:
+            versions = set(versions)
+
+        for row in rows:
+            if row['channel'] == channel:
+                v = row['build_version']
+                if v in versions:
+                    d = utils.get_date_ymd(row['activity_date'])
+                    if d >= start_date and d <= end_date:
+                        res[d] += row['usage_khours']
+
+        return res
+
+    @staticmethod
+    def get_number_of_crash(start_date, end_date, channel, versions, product, credentials=None):
+        """Get the results for query 399, 400: https://sql.telemetry.mozilla.org/queries/399
+                                               https://sql.telemetry.mozilla.org/queries/400
+        Args:
+            start_date (datetime.datetime): start date
+            end_date (datetime.datetime): end date
+            channel (str): the channel
+            versions (List[str]): the versions
+            product (str): the product
+            credentials (dict): credentials to use with re:dash
+
+        Returns:
+            dict: containing result in json for each query
+        """
+        qid = '400' if product == 'FennecAndroid' else '399'
+
+        crashes = Redash.get(qid, credentials=credentials)
+        rows = crashes[qid]['query_result']['data']['rows']
+        res = {}
+        stats = {'m+c': 0.,
+                 'main': 0.,
+                 'content': 0.,
+                 'plugin': 0.,
+                 'all': 0.}
+
+        # init the data
+        duration = (end_date - start_date).days
+        for i in range(duration + 1):
+            res[start_date + timedelta(i)] = stats.copy()
+
+        if channel == 'beta':
+            versions = set([v[:-2] for v in versions])
+        else:
+            versions = set(versions)
+
+        for row in rows:
+            if row['channel'] == channel:
+                v = row['build_version']
+                if v in versions:
+                    d = utils.get_date_ymd(row['date'])
+                    if d >= start_date and d <= end_date:
+                        stats = res[d]
+                        stats['m+c'] = row['main'] + row['content']
+                        stats['main'] = row['main']
+                        stats['content'] = row['content']
+                        stats['plugin'] = row['plugin'] + row['gmplugin']
+                        stats['all'] = row['total']
+
+        return res

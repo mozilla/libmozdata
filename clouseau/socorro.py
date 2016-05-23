@@ -4,6 +4,7 @@
 
 import six
 import functools
+from operator import itemgetter
 try:
     from urllib.parse import urlparse
 except ImportError:
@@ -302,58 +303,134 @@ class ProductVersions(Socorro):
             ffs = json['hits']
             for ff in ffs:
                 build_type = ff['build_type'].lower()  # release, beta, aurora, nightly
+                start_date = ff['start_date']
+                throttle = ff['throttle']
                 version = ff['version']  # 45.x
                 version_n = ProductVersions.__get_version(version)
                 # take only the latest versions, e.g. if 45.x and 44.x are "release"
                 # then 45.x is only considered
                 if number:
                     if number == version_n:
+                        vst = (version, start_date, throttle)
                         if build_type in _data:
-                            _data[build_type][1].append((ff['start_date'], version))
+                            _data[build_type][1].append(vst)
                         else:
-                            _data[build_type] = (version_n, [(ff['start_date'], version)])
+                            _data[build_type] = (version_n, [vst])
                 else:
+                    vst = (version, start_date, throttle)
                     if build_type in _data:
                         t = _data[build_type]
                         if version_n == t[0]:
-                            t[1].append((ff['start_date'], version))
+                            t[1].append(vst)
                         elif version_n > t[0]:
-                            _data[build_type] = (version_n, [(ff['start_date'], version)])
+                            _data[build_type] = (version_n, [vst])
                     else:
-                        _data[build_type] = (version_n, [(ff['start_date'], version)])
+                        _data[build_type] = (version_n, [vst])
 
             for k, v in _data.items():
                 versions = v[1]
                 if len(versions) > 1:
-                    sorted(versions, key=lambda t: utils.get_date_ymd(t[0]))
+                    sorted(versions, key=lambda t: utils.get_date_ymd(t[1]))
                 data[k] = versions
 
     @staticmethod
-    def get_active(product='Firefox', vnumber=None, is_rapid_beta=False, remove_dates=True, credentials=None):
+    def get_active(product='Firefox', vnumber=None, active=True, is_rapid_beta=False, remove_dates=True, remove_throttle=True, credentials=None):
         """Get the active versions
 
         Args:
             product (Optional[str]): product to use, by default 'Firefox'
             vnumber (Optional[int]): a version number 45, 46, ...
             is_rapid_beta (Optional[bool]): for version which are rapid beta, by default False
+            remove_dates (Optional[bool]): if True, the date info are removed
+            remove_throttle (Optional[bool]): if True, the throttle info are removed
             credentials (Optional[dict]): credentials to use with Socorro
 
         Returns:
             dict: versions
         """
         versions = {}
-        ProductVersions(params={'active': True,
+        ProductVersions(params={'active': active,
                                 'product': product,
                                 'is_rapid_beta': is_rapid_beta},
                         credentials=credentials, handler=functools.partial(ProductVersions.default_handler, vnumber), handlerdata=versions).wait()
 
-        if remove_dates:
+        index = [0]
+        if not remove_dates:
+            index.append(1)
+        if not remove_throttle:
+            index.append(2)
+
+        if index != [0, 1, 2]:
             _versions = {}
             for k, v in versions.items():
-                _versions[k] = list(map(lambda p: p[1], v))
+                _versions[k] = list(map(lambda p: itemgetter(*index)(p), v))
             return _versions
 
         return versions
+
+    @staticmethod
+    def get_throttle(versions, product='Firefox', remove_dates=True, credentials=None):
+        """Get the throttle for versions
+
+        Args:
+            versions (List[str]): versions
+            product (Optional[str]): product to use, by default 'Firefox'
+            remove_dates (Optional[bool]): if True, the date info are removed
+            credentials (Optional[dict]): credentials to use with Socorro
+
+        Returns:
+            dict: throttle info for each versions
+        """
+        def handler(json, data):
+            for hit in json['hits']:
+                if remove_dates:
+                    data[hit['version']] = hit['throttle']
+                else:
+                    data[hit['version']] = (hit['start_date'], hit['throttle'])
+
+        data = {}
+        ProductVersions(params={'version': versions,
+                                'product': product},
+                        credentials=credentials, handler=handler, handlerdata=data).wait()
+
+        return data
+
+    @staticmethod
+    def get_version_info(versions, channel='', product='Firefox', credentials=None):
+        """Get the throttle for versions
+
+        Args:
+            versions (List[str]): versions
+            channel (Optional[str]): the channel
+            product (Optional[str]): product to use, by default 'Firefox'
+            credentials (Optional[dict]): credentials to use with Socorro
+
+        Returns:
+            dict: version info
+        """
+        if not isinstance(versions, list):
+            versions = [versions]
+
+        info = {}
+        if versions:
+            v_without_throttle = []
+            for v in versions:
+                if isinstance(v, six.integer_types) or (isinstance(v, six.string_types) and '.' not in v):
+                    vs = ProductVersions.get_active(vnumber=int(v), product=product, active=None, remove_dates=False, remove_throttle=False, credentials=credentials)[channel]
+                    for v in vs:
+                        info[v[0]] = v[1:]
+                elif isinstance(v, six.string_types):
+                    v_without_throttle.append(v)
+
+            if v_without_throttle:
+                t = ProductVersions.get_throttle(v_without_throttle, product=product, remove_dates=False, credentials=credentials)
+                info.update(t)
+        else:
+            vs = ProductVersions.get_active(product=product, active=None, remove_dates=False, remove_throttle=False, credentials=credentials)[channel]
+            for v in vs:
+                info[v[0]] = v[1:]
+
+        return info
 
 
 class TCBS(Socorro):
@@ -556,8 +633,13 @@ class ADI(Socorro):
                 return None
 
         data = {}
-        start_date = utils.get_date(end_date, duration)
+        start_date = utils.get_date(end_date, duration - 1)
         end_date = utils.get_date(end_date)
+
+        start_date_dt = utils.get_date_ymd(start_date)
+        for i in range(duration):
+            data[start_date_dt + timedelta(i)] = 0
+
         ADI(params={'product': product,
                     'versions': version,
                     'start_date': start_date,
