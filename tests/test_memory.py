@@ -19,6 +19,8 @@ class MemoryTest(unittest.TestCase):
         self.assertTrue(memory.isweird('0xffff', '32'))
         self.assertFalse(memory.isweird('0xdeadbeef', '64'))
         self.assertFalse(memory.isweird('0xdeadbeef', '32'))
+        self.assertFalse(memory.isweird('0xAAAAAAAAAAAB0000', '64'))
+        self.assertFalse(memory.isweird('0xfffffffffffB0000', '64'))
         self.assertTrue(memory.isweird('0xffffffffffff0000', '64'))
         self.assertTrue(memory.isweird('0xffff0000', '32'))
         self.assertTrue(memory.isweird('0xffffffffffffaaaa', '64'))

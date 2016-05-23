@@ -95,15 +95,13 @@ class BZInfo(Bugzilla):
             (tuple): a pair containing 'best' component & product
         """
         comps_prods = {}
+
         for info in self.get().values():
             if info['authorized']:
                 comp_prod = (info['component'], info['product'])
                 comps_prods[comp_prod] = comps_prods[comp_prod] + 1 if comp_prod in comps_prods else 1
 
-        if comps_prods:
-            return utils.get_best(comps_prods)
-        else:
-            return None
+        return utils.get_best(comps_prods)
 
     def __bug_handler(self, bug, data):
         """Handler to use with the bug retrieved from bugzilla
@@ -178,21 +176,21 @@ class BZInfo(Bugzilla):
             bug (dict): json data
             data (dict): the container which will receive the data
         """
-        commenters = {}
-        if 'comments' in bug:
-            comments = bug['comments']
-            authors = []
-            for comment in comments:
-                text = comment['text']
-                if not self.dupbug_pattern.match(text):
-                    author = comment['author']
-                    authors.append(author)
-                    if author not in commenters:
-                        commenters[author] = []
+        assert 'comments' in bug
 
-                    for m in self.reply_pattern.finditer(comment['raw_text']):
-                        n = int(m.group(1))
-                        if n >= 1 and n <= len(authors):
-                            commenters[authors[n - 1]].append(author)
+        commenters = {}
+        authors = []
+        for comment in bug['comments']:
+            text = comment['text']
+            if not self.dupbug_pattern.match(text):
+                author = comment['author']
+                authors.append(author)
+                if author not in commenters:
+                    commenters[author] = []
+
+                for m in self.reply_pattern.finditer(comment['raw_text']):
+                    n = int(m.group(1))
+                    if n >= 1 and n <= len(authors):
+                        commenters[authors[n - 1]].append(author)
 
             self.info[bugid].update({'commenters': commenters})

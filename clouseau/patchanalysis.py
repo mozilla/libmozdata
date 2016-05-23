@@ -9,10 +9,28 @@ import weakref
 import whatthepatch
 from .HGFileInfo import HGFileInfo
 from .bugzilla import Bugzilla
-from .modules import MozillaModules
+from . import modules
 from . import utils
 
 hginfos = weakref.WeakValueDictionary()
+
+
+def check_module(path, used_modules):
+    module = modules.module_from_path(path)
+    if module and module['name'] not in used_modules:
+        used_modules[module['name']] = 1
+
+
+def churn(path):
+    if path in hginfos:
+        hi = hginfos[path]
+    else:
+        hi = hginfos[path] = HGFileInfo(path)
+
+    return {
+        'overall': len(hi.get(path)['patches']),
+        'last_3_releases': len(hi.get(path, utc_ts_from=utils.get_timestamp(date.today() + timedelta(-3 * 6 * 7)))['patches']),
+    }
 
 
 def patch_analysis(patch):
@@ -27,7 +45,6 @@ def patch_analysis(patch):
         # 'developer_familiarity_last_3_releases': 0,
     }
 
-    mm = MozillaModules()
     used_modules = {}
 
     for diff in whatthepatch.parse_patch(patch):
@@ -36,28 +53,21 @@ def patch_analysis(patch):
         old_path = diff.header.old_path[2:] if diff.header.old_path.startswith('a/') else diff.header.old_path
         new_path = diff.header.new_path[2:] if diff.header.new_path.startswith('b/') else diff.header.new_path
 
-        if old_path != '/dev/null':
-            module = mm.module_from_path(old_path)
-            if module and module['name'] not in used_modules:
-                info['modules_num'] += 1
-                used_modules[module['name']] = 1
+        if old_path != '/dev/null' and old_path != new_path:
+            check_module(old_path, used_modules)
+            code_churn = churn(old_path)
+            info['code_churn_overall'] += code_churn['overall']
+            info['code_churn_last_3_releases'] += code_churn['last_3_releases']
 
         if new_path != '/dev/null':
-            module = mm.module_from_path(new_path)
-            if module and module['name'] not in used_modules:
-                info['modules_num'] += 1
-                used_modules[module['name']] = 1
-
-        path = new_path if new_path != '/dev/null' else old_path
-        if path in hginfos:
-            hi = hginfos[path]
-        else:
-            hi = hginfos[path] = HGFileInfo(path)
-
-        info['code_churn_overall'] += len(hi.get(new_path)['patches'])
-        info['code_churn_last_3_releases'] += len(hi.get(new_path, utc_ts_from=utils.get_timestamp(date.today() + timedelta(-3 * 6 * 7)))['patches'])
+            check_module(old_path, used_modules)
+            code_churn = churn(old_path)
+            info['code_churn_overall'] += code_churn['overall']
+            info['code_churn_last_3_releases'] += code_churn['last_3_releases']
 
         # TODO: Add number of times the file was modified by the developer or the reviewer.
+
+    info['modules_num'] = sum(used_modules.values())
 
     # TODO: Add number of times the modified functions appear in crash signatures.
 
@@ -70,6 +80,7 @@ MOZREVIEW_URL_PATTERN = 'https://reviewboard.mozilla.org/r/([0-9]+)/diff/#index_
 MOZREVIEW_URL_PATTERN2 = 'https://reviewboard.mozilla.org/r/([0-9]+)/'
 
 
+# TODO: Consider feedback+ and feedback- as review+ and review-
 def bug_analysis(bug_id):
     bug = {}
 

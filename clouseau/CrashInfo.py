@@ -1,5 +1,5 @@
 import os
-from connection import Connection
+from .connection import Connection
 
 
 class CrashInfo(Connection):

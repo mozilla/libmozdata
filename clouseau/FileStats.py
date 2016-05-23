@@ -6,11 +6,10 @@ import argparse
 from datetime import (datetime, timedelta)
 import numbers
 from pprint import pprint
-import re
 
 from .HGFileInfo import HGFileInfo
 from .BZInfo import BZInfo
-from .modules import MozillaModules
+from . import modules
 from . import utils
 from . import config
 
@@ -35,7 +34,7 @@ class FileStats(object):
         self.path = path
         self.credentials = credentials
         self.hi = HGFileInfo(path, channel=channel, node=node)
-        self.module = MozillaModules().module_from_path(path)
+        self.module = modules.module_from_path(path)
 
     def get_info(self):
         """Get info
@@ -58,15 +57,10 @@ class FileStats(object):
 
         last = self.hi.get(self.path, self.utc_ts_from, self.utc_ts)['patches']
         if len(last) > 0:  # we have a 'guilty' set of patches
-            author_pattern = re.compile('<([^>]+)>')
             stats = {}
             last_author = None
             for patch in last:
-                m = author_pattern.search(patch['author'])
-                if m:
-                    author = m.group(1)
-                else:
-                    author = patch['author']
+                author = patch['author']
                 if not last_author:
                     last_author = author
                 stats[author] = stats[author] + 1 if author in stats else 1
@@ -81,7 +75,8 @@ class FileStats(object):
                 # find out the good person to query for a needinfo
                 info['needinfo'] = bi.get_best_collaborator()
                 comp_prod = bi.get_best_component_product()
-                info['components'].add(comp_prod[1] + '::' + comp_prod[0])
+                if comp_prod:
+                    info['components'].add(comp_prod[1] + '::' + comp_prod[0])
                 info['bugs'] = len(bugs)
 
         return info

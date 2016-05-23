@@ -18,7 +18,7 @@ class SuperSearchTest(unittest.TestCase):
                             handler=lambda j, d: d.update(j),
                             handlerdata=data).wait()
 
-        self.assertIsNot(data, None)
+        self.assertIsNotNone(data)
 
 
 class ProcessedCrashTest(unittest.TestCase):
@@ -35,36 +35,36 @@ class ProcessedCrashTest(unittest.TestCase):
 
         self.assertEqual(len(uuid), 2)
         processed = socorro.ProcessedCrash.get_processed(uuid)
-        self.assertIsNot(processed, None)
+        self.assertIsNotNone(processed)
 
 
 class PlatformsTest(unittest.TestCase):
 
     def test_platforms(self):
         platforms = socorro.Platforms.get_all()
-        self.assertIsNot(platforms, None)
+        self.assertIsNotNone(platforms)
 
     def test_cached_platforms(self):
         platforms = socorro.Platforms.get_cached_all()
-        self.assertIsNot(platforms, None)
+        self.assertIsNotNone(platforms)
 
 
 class ProductVersionsTest(unittest.TestCase):
 
     def test_versions(self):
         versions = socorro.ProductVersions.get_active()
-        self.assertIsNot(versions, None)
+        self.assertIsNotNone(versions)
 
     def test_cached_versions(self):
         cached_versions = socorro.ProductVersions.get_cached_versions()
-        self.assertIsNot(cached_versions, None)
+        self.assertIsNotNone(cached_versions)
 
 
 class TCBSTest(unittest.TestCase):
 
     def test_tcbs(self):
         tc = socorro.TCBS.get_firefox_topcrashes(channel='nightly', limit=1)
-        self.assertIsNot(tc, None)
+        self.assertIsNotNone(tc)
 
 
 class SignatureTrendTest(unittest.TestCase):
@@ -80,14 +80,14 @@ class SignatureTrendTest(unittest.TestCase):
 
         self.assertEqual(len(signature), 2)
         trend = socorro.SignatureTrend.get_trend(signature, channel='nightly')
-        self.assertIsNot(trend, None)
+        self.assertIsNotNone(trend)
 
 
 class ADITest(unittest.TestCase):
 
     def test_adi(self):
         adis = socorro.ADI.get(channel='nightly')
-        self.assertIsNot(adis, None)
+        self.assertIsNotNone(adis)
 
 
 class SignatureURLsTest(unittest.TestCase):
@@ -103,7 +103,7 @@ class SignatureURLsTest(unittest.TestCase):
 
         self.assertEqual(len(signature), 2)
         urls = socorro.SignatureURLs.get_urls(signature, channel='nightly')
-        self.assertIsNot(urls, None)
+        self.assertIsNotNone(urls)
 
 
 class BugsTest(unittest.TestCase):
@@ -119,7 +119,7 @@ class BugsTest(unittest.TestCase):
 
         self.assertEqual(len(signature), 2)
         bugs = socorro.Bugs.get_bugs(signature)
-        self.assertIsNot(bugs, None)
+        self.assertIsNotNone(bugs)
 
 
 if __name__ == '__main__':
