@@ -6,7 +6,6 @@ import argparse
 from datetime import (datetime, timedelta)
 import numbers
 from pprint import pprint
-import re
 
 from .HGFileInfo import HGFileInfo
 from .BZInfo import BZInfo
