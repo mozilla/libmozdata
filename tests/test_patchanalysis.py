@@ -19,6 +19,8 @@ class PatchAnalysisTest(unittest.TestCase):
         self.assertEqual(info['r-ed_patches'], 0)
         self.assertGreaterEqual(info['code_churn_overall'], 182)
         self.assertGreaterEqual(info['code_churn_last_3_releases'], 0)
+        self.assertGreaterEqual(info['developer_familiarity_overall'], 55)
+        self.assertGreaterEqual(info['developer_familiarity_last_3_releases'], 0)
         self.assertGreater(info['crashes'], 0)
 
         info = patchanalysis.bug_analysis(647570)
@@ -31,6 +33,8 @@ class PatchAnalysisTest(unittest.TestCase):
         self.assertEqual(info['r-ed_patches'], 3)
         self.assertGreaterEqual(info['code_churn_overall'], 240)
         self.assertGreaterEqual(info['code_churn_last_3_releases'], 0)
+        self.assertGreaterEqual(info['developer_familiarity_overall'], 10)
+        self.assertGreaterEqual(info['developer_familiarity_last_3_releases'], 0)
         self.assertGreater(info['crashes'], 0)
 
         info = patchanalysis.bug_analysis(1271794)
@@ -43,6 +47,8 @@ class PatchAnalysisTest(unittest.TestCase):
         self.assertEqual(info['r-ed_patches'], 0)
         self.assertGreaterEqual(info['code_churn_overall'], 125)
         self.assertGreaterEqual(info['code_churn_last_3_releases'], 0)
+        self.assertGreaterEqual(info['developer_familiarity_overall'], 0)
+        self.assertGreaterEqual(info['developer_familiarity_last_3_releases'], 0)
         self.assertGreaterEqual(info['crashes'], 0)
 
 if __name__ == '__main__':

@@ -16,14 +16,14 @@ from . import utils
 hginfos = weakref.WeakValueDictionary()
 
 
-def patch_analysis(patch):
+def patch_analysis(patch, author):
     info = {
         'changes_size': 0,
         'modules_num': 0,
         'code_churn_overall': 0,
         'code_churn_last_3_releases': 0,
-        # 'developer_familiarity_overall': 0,
-        # 'developer_familiarity_last_3_releases': 0,
+        'developer_familiarity_overall': 0,
+        'developer_familiarity_last_3_releases': 0,
         # 'reviewer_familiarity_overall': 0,
         # 'developer_familiarity_last_3_releases': 0,
         'crashes': 0,
@@ -58,6 +58,8 @@ def patch_analysis(patch):
 
         info['code_churn_overall'] += len(hi.get(path)['patches'])
         info['code_churn_last_3_releases'] += len(hi.get(path, utc_ts_from=utils.get_timestamp(date.today() + timedelta(-3 * 6 * 7)))['patches'])
+        info['developer_familiarity_overall'] += len(hi.get(path, author=author)['patches'])
+        info['developer_familiarity_last_3_releases'] += len(hi.get(path, author=author, utc_ts_from=utils.get_timestamp(date.today() + timedelta(-3 * 6 * 7)))['patches'])
 
         # TODO: Add number of times the file was modified by the developer or the reviewer.
 
@@ -127,7 +129,9 @@ def bug_analysis(bug_id):
             data = response.read().decode('ascii', 'ignore')
 
         if data is not None:
-            info.update(patch_analysis(data))
+            info.update(patch_analysis(data, attachment['creator']))
+            # XXX: The creator of the attachment isn't always the developer of the patch (and sometimes it is, but with a different email). For example, in bug 1271794.
+            # Using the landing comment with the hg revision instead of reading the attachments would be better.
 
     # TODO: Use a more clever way to check if the patch was backed out.
     for comment in bug['comments']:
