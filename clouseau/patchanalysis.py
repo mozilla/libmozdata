@@ -70,6 +70,7 @@ MOZREVIEW_URL_PATTERN = 'https://reviewboard.mozilla.org/r/([0-9]+)/diff/#index_
 MOZREVIEW_URL_PATTERN2 = 'https://reviewboard.mozilla.org/r/([0-9]+)/'
 
 
+# TODO: Consider feedback+ and feedback- as review+ and review-
 def bug_analysis(bug_id):
     bug = {}
 
