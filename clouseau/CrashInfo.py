@@ -1,3 +1,4 @@
+import os
 from .connection import Connection
 
 
@@ -34,7 +35,7 @@ class CrashInfo(Connection):
         for path in self.paths:
             self.results.append(self.session.get(self.SUPERSEARCH_URL,
                                                  params={'product': 'Firefox',
-                                                         'topmost_filenames': '~' + path,
+                                                         'topmost_filenames': '~' + os.path.basename(path).lower(),
                                                          '_results_number': 0,
                                                          '_facets': 'product',
                                                          '_facets_size': 1},
