@@ -5,6 +5,7 @@
 import unittest
 import datetime
 import json
+import math
 from clouseau import utils
 
 
@@ -96,6 +97,12 @@ class UtilsTest(unittest.TestCase):
     def test_get_date_from_buildid(self):
         self.assertEqual(utils.get_date_from_buildid('20160407164938'), datetime.datetime(2016, 4, 7, 0, 0))
         self.assertEqual(utils.get_date_from_buildid(20160407164938), datetime.datetime(2016, 4, 7, 0, 0))
+
+    def test_rate(self):
+        self.assertEqual(utils.rate(1.0, 2.0), 0.5)
+        self.assertEqual(utils.rate(0.0, 2.0), 0.0)
+        self.assertTrue(math.isnan(utils.rate(1.0, 0.0)))
+        self.assertTrue(math.isnan(utils.rate(0.0, 0.0)))
 
 if __name__ == '__main__':
     unittest.main()
