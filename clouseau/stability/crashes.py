@@ -152,7 +152,7 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tcbs_limit
             'release_channel': channel,
             '_results_number': 0,
             '_histogram.date': ['signature'],
-            '_facets_size': 1}
+            '_histogram_interval': 1}
 
     queries = []
     for sgns in Connection.chunks(list(map(lambda sgn: '=' + sgn, signatures.keys())), 10):
