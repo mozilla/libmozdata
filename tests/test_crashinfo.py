@@ -14,7 +14,7 @@ class CrashInfoTest(unittest.TestCase):
 
         ci = CrashInfo(path).get()
 
-        self.assertGreaterEqual(ci[path]['crashes'], 189102)
+        self.assertGreaterEqual(ci[path], 150000)
 
     def test_multiple(self):
         path1 = 'toolkit/components/terminator/nsterminator.cpp'
@@ -22,8 +22,8 @@ class CrashInfoTest(unittest.TestCase):
 
         ci = CrashInfo([path1, path2]).get()
 
-        self.assertGreaterEqual(ci[path1]['crashes'], 189102)
-        self.assertGreaterEqual(ci[path2]['crashes'], 9850)
+        self.assertGreaterEqual(ci[path1], 150000)
+        self.assertGreaterEqual(ci[path2], 9000)
 
     def test_not_lower(self):
         path = 'toolkit/components/terminator/nsTerminator.cpp'
@@ -31,7 +31,7 @@ class CrashInfoTest(unittest.TestCase):
         ci = CrashInfo(path).get()
         ci2 = CrashInfo(path.lower()).get()
 
-        self.assertEqual(ci[path]['crashes'], ci2[path.lower()]['crashes'])
+        self.assertEqual(ci[path], ci2[path.lower()])
 
     def test_basename(self):
         path = 'toolkit/components/terminator/nsTerminator.cpp'
@@ -39,4 +39,4 @@ class CrashInfoTest(unittest.TestCase):
         ci = CrashInfo(path).get()
         ci2 = CrashInfo(os.path.basename(path)).get()
 
-        self.assertEqual(ci[path]['crashes'], ci2[os.path.basename(path)]['crashes'])
+        self.assertEqual(ci[path], ci2[os.path.basename(path)])

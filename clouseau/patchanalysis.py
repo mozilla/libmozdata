@@ -45,7 +45,7 @@ def patch_analysis(patch, author):
     used_modules = {}
     ci = CrashInfo(paths).get()
     for path in paths:
-        info['crashes'] += ci[path]['crashes']
+        info['crashes'] += ci[path]
 
         module = modules.module_from_path(path)
         if module and module['name'] not in used_modules:
