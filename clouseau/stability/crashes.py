@@ -126,7 +126,7 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tcbs_limit
             'o1': 'substring',
             'include_fields': ['resolution', 'id']}
     queries = []
-    for sgn in signatures.iterkeys():
+    for sgn in signatures.keys():
         cparams = base.copy()
         cparams['v1'] = sgn
         _list = []
@@ -135,8 +135,8 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tcbs_limit
     res_bugs = Bugzilla(queries=queries, credentials=credentials)
 
     # we have stats by signature in self.signatures
-    # for each signature get the number of crashes on the last 7 days (7 is just an example)
-    # so get the siganture trend
+    # for each signature get the number of crashes on the last X days
+    # so get the signature trend
     trends = {}
     default_trend = {}
     for i in range(duration):
@@ -155,7 +155,7 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tcbs_limit
             '_facets_size': 1}
 
     queries = []
-    for sgns in Connection.chunks(map(lambda sgn: '=' + sgn, signatures.iterkeys()), 10):
+    for sgns in Connection.chunks(list(map(lambda sgn: '=' + sgn, signatures.keys())), 10):
         cparams = base.copy()
         cparams['signature'] = sgns
         queries.append(Query(socorro.SuperSearch.URL, cparams, functools.partial(__trend_handler, default_trend), trends))
@@ -208,7 +208,7 @@ if __name__ == "__main__":
     parser.add_argument('-d', '--date', action='store', default='yesterday', help='the end date')
     parser.add_argument('-D', '--duration', action='store', default=11, help='the duration')
     parser.add_argument('-v', '--versions', action='store', nargs='+', help='the Firefox versions')
-    parser.add_argument('-t', '--tcbslimit', action='store', default=50, help='number of crash to retrieve in Top Crash')
+    parser.add_argument('-t', '--tcbslimit', action='store', default=50, help='number of crashes to retrieve in Top Crash')
     parser.add_argument('-C', '--credentials', action='store', default='', help='credentials file to use')
 
     args = parser.parse_args()
