@@ -133,6 +133,10 @@ def bug_analysis(bug_id):
             # XXX: The creator of the attachment isn't always the developer of the patch (and sometimes it is, but with a different email). For example, in bug 1271794.
             # Using the landing comment with the hg revision instead of reading the attachments would be better.
 
+    # TODO: Add number of crashes with signatures from the bug (also before/after the patch?).
+
+    # TODO: Add number of days since the landing (to check if the patch baked a little on nightly or not).
+
     # TODO: Use a more clever way to check if the patch was backed out.
     for comment in bug['comments']:
         if 'backed out' in comment['text'].lower():
