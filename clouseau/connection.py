@@ -95,7 +95,7 @@ class Connection(object):
         Returns:
             str: the api key
         """
-        if self.credentials and url:
+        if self.credentials and url and url in self.credentials['tokens']:
             return self.credentials['tokens'][url]
         else:
             return ''
