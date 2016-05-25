@@ -6,7 +6,7 @@ import six
 import functools
 from datetime import timedelta
 from .connection import (Connection, Query)
-import utils
+from . import utils
 
 
 class Redash(Connection):
