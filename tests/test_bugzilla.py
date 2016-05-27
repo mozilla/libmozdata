@@ -50,6 +50,21 @@ class BugIDTest(unittest.TestCase):
         self.assertEqual(bugs[12345]['id'], 12345)
         self.assertEqual(bugs[12346]['id'], 12346)
 
+    def test_search_multiple(self):
+
+        def bughandler(bug, data):
+            data[bug['id']] = bug
+
+        bugs = {}
+        bugzilla.Bugzilla(['bug_id=12345%2C12346%2C12347&resolution=FIXED', 'bug_id=12348%2C12349%2C12350&resolution=FIXED'], bughandler=bughandler, bugdata=bugs, paging=1).get_data().wait()
+
+        self.assertEqual(bugs[12345]['id'], 12345)
+        self.assertEqual(bugs[12346]['id'], 12346)
+        self.assertEqual(bugs[12347]['id'], 12347)
+        self.assertEqual(bugs[12348]['id'], 12348)
+        self.assertEqual(bugs[12349]['id'], 12349)
+        self.assertEqual(bugs[12350]['id'], 12350)
+
 
 class BugCommentHistoryTest(unittest.TestCase):
 
