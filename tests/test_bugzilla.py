@@ -56,7 +56,7 @@ class BugIDTest(unittest.TestCase):
             data[bug['id']] = bug
 
         bugs = {}
-        bugzilla.Bugzilla(['bug_id=12345%2C12346%2C12347&resolution=FIXED', 'bug_id=12348%2C12349%2C12350&resolution=FIXED'], bughandler=bughandler, bugdata=bugs).get_data().wait()
+        bugzilla.Bugzilla(['bug_id=12345%2C12346%2C12347', 'bug_id=12348%2C12349%2C12350'], bughandler=bughandler, bugdata=bugs).get_data().wait()
 
         self.assertEqual(bugs[12345]['id'], 12345)
         self.assertEqual(bugs[12346]['id'], 12346)
