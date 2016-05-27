@@ -68,8 +68,7 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tcbs_limit
         crash_type = [crash_type]
 
     throttle = set(map(lambda p: p[1], versions_info.values()))
-    diff_throttle = len(throttle) != 1
-    if not diff_throttle:
+    if len(throttle) == 1:
         throttle = throttle.pop()
     else:
         return
