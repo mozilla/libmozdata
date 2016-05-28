@@ -30,3 +30,25 @@ class ESBugzilla(Elasticsearch):
                 "sort": ["bug_version_num"]
             }
         )
+
+    def get_bug_comments(self, bug_id):
+        return self.search(
+            index="public_comments",
+            body={
+                "query": {
+                    "filtered": {
+                        "query": {
+                            "match_all": {}
+                        },
+                        "filter": {
+                            "term": {
+                                "bug_id": bug_id
+                            }
+                        }
+                    }
+                },
+                "from": 0,
+                "size": 2000,
+                "sort": ["comment_id"]
+            }
+        )

@@ -14,3 +14,7 @@ class BugHistoryTest(unittest.TestCase):
         self.assertEqual(last_change['field_name'], 'attachments.isobsolete')
         self.assertEqual(last_change['new_value'], '1')
         self.assertEqual(last_change['old_value'], '0')
+
+    def test_comments(self):
+        comments = ESBugzilla().get_bug_comments(12345)
+        self.assertEqual(comments['hits']['hits'][-1]['_source']['comment'], 'Oops, sorry.')
