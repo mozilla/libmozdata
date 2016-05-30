@@ -6,8 +6,9 @@ from elasticsearch import Elasticsearch
 
 
 class ESBugzilla(Elasticsearch):
+
     def __init__(self):
-        super(ESBugzilla, self).__init__(['https://esfrontline.bugzilla.mozilla.org:443'])
+        super(ESBugzilla, self).__init__(['https://esfrontline.bugzilla.mozilla.org:443'], verify_certs=True)
 
     def get_bug_history(self, bug_id):
         return self.search(
