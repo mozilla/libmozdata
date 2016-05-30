@@ -57,7 +57,7 @@ class Bugzilla(Connection):
             self.got_data = False
 
     def get_header(self):
-        return {'X-Bugzilla-API-Key': self.get_apikey(Bugzilla.URL), 'User-Agent': 'clouseau'}
+        return {'X-Bugzilla-API-Key': self.get_apikey(), 'User-Agent': 'clouseau'}
 
     def put(self, data):
         """Put some data in bugs
