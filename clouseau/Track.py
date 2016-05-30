@@ -21,7 +21,7 @@ class Track(object):
     Track a crash
     """
 
-    def __init__(self, signature, start_date, duration=-1, channel='nightly', product='Firefox', credentials=None):
+    def __init__(self, signature, start_date, duration=-1, channel='nightly', product='Firefox'):
         """Constructor
 
         Args:
@@ -29,12 +29,10 @@ class Track(object):
             start_date (str): a date with format '%Y-%m-%d' used to define the start of the crashes to retrieve
             duration (int): for crashes to retrieve
             channel (Optional[str]): release channel, by default 'nightly'
-            credentials (Optional[dict]): credentials to use with Socorro
         """
         self.duration = duration
         self.channel = channel
         self.product = product
-        self.credentials = credentials
         self.signature = signature
         self.info = {}
         self.date = utils.get_date_ymd(start_date)
@@ -197,19 +195,18 @@ class Track(object):
         return (bts, common_part)
 
     @staticmethod
-    def __get_bt_stats(info, credentials):
+    def __get_bt_stats(info):
         """Get stats about backtrace
 
         Args:
             info (dict): data
-            credentials (Optional[dict]): credentials to use
 
         Returns:
             dict: stats for each backtraces
         """
         hits = info['hits']
         uuids = [hit['uuid'] for hit in hits]
-        bt_info = backtrace.get_infos(uuids, fraction=1, credentials=credentials)
+        bt_info = backtrace.get_infos(uuids, fraction=1)
         total = 0
         rec = 0.
         weird_address = {}
@@ -313,7 +310,7 @@ class Track(object):
         uuid = max(backtraces.items(), key=lambda x: x[1][1])[1][0]
 
         fileinfo = None
-        bt = backtrace.get_files(uuid, common=bt_common_part, credentials=self.credentials)
+        bt = backtrace.get_files(uuid, common=bt_common_part)
         if len(bt) >= 2:
             ts = utils.get_timestamp(self.first_date)
             # remove the first (already done)
@@ -322,7 +319,7 @@ class Track(object):
                 if m:
                     filename = m.group(1)
                     node = m.group(2)
-                    fs = FileStats(path=filename, channel=self.channel, node=node, utc_ts=ts, credentials=self.credentials)
+                    fs = FileStats(path=filename, channel=self.channel, node=node, utc_ts=ts)
                     fileinfo = fs.get_info(dig_when_non_pertinent=False)
                     if fileinfo:
                         # hurrah \o/ we found a pertinent file !
@@ -355,12 +352,12 @@ class Track(object):
         self.info['reason'] = Track.__get_stats(info, 'reason')
         self.info['system_memory_use'] = Track.__get_mean_stddev(info, 'system_memory_use_percentage', prettyfy=lambda x: utils.simple_percent(round(x, 0)))
         self.info['uptime'] = Track.__get_mean_stddev(info, 'uptime', prettyfy=lambda x: str(x) + 's')
-        self.info['btinfo'] = Track.__get_bt_stats(info, self.credentials)
+        self.info['btinfo'] = Track.__get_bt_stats(info)
 
         Track.__get_url_stats(info)
 
         ts = utils.get_timestamp(self.first_date)
-        fs = FileStats(path=filename, channel=self.channel, node=node, utc_ts=ts, credentials=self.credentials)
+        fs = FileStats(path=filename, channel=self.channel, node=node, utc_ts=ts)
         # don't dig: if non-pertinent we'll try in the next function in the backtrace
         fileinfo = fs.get_info(dig_when_non_pertinent=False)
         if fileinfo and fileinfo['guilty']:
@@ -393,8 +390,7 @@ class Track(object):
                                     'date': search_date,
                                     'release_channel': self.channel,
                                     '_results_number': 0},
-                            handler=lambda json, data: nb_hits.append(json['total']),
-                            credentials=self.credentials).wait()
+                            handler=lambda json, data: nb_hits.append(json['total'])).wait()
 
         if nb_hits[0] > 1000:
             nb_hits[0] = 1000
@@ -417,8 +413,7 @@ class Track(object):
                                                               'url'],
                                                   '_facets_size': nb_hits[0],
                                                   '_results_number': nb_hits[0]},
-                                          handler=self.__handler,
-                                          credentials=self.credentials)
+                                          handler=self.__handler)
 
 
 if __name__ == '__main__':
@@ -428,11 +423,9 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--duration', action='store', default=-1, help='the number of day after the start date')
     parser.add_argument('-c', '--channel', action='store', default='nightly', help='release channel')
     parser.add_argument('-p', '--product', action='store', default='Firefox', help='the product, by default Firefox')
-    parser.add_argument('-C', '--credentials', action='store', default='', help='credentials file to use')
 
     args = parser.parse_args()
 
     if args.signature:
-        credentials = utils.get_credentials(args.credentials) if args.credentials else None
-        t = Track(signature=args.signature, start_date=args.startdate, duration=int(args.duration), channel=args.channel, product=args.product, credentials=credentials)
+        t = Track(signature=args.signature, start_date=args.startdate, duration=int(args.duration), channel=args.channel, product=args.product)
         pprint(t.get())

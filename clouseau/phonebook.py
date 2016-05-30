@@ -5,25 +5,25 @@
 import argparse
 import re
 from connection import (Connection, Query)
-import utils
 from pprint import pprint
+from . import config
 
 
 class Phonebook(Connection):
     """Mozilla phonebook class
     """
 
-    URL = 'https://phonebook.mozilla.org'
+    URL = config.get('Phonebook', 'URL', 'https://phonebook.mozilla.org')
     SEARCH_URL = URL + '/search.php'
 
-    def __init__(self, query='*', credentials=None):
+    def __init__(self, query='*'):
         """Constructor
 
         Args:
             query (Optional[str]): the query to pass to phonebook
-            credentials (Optional[dict]): the credentials to use with phonebook
         """
-        super(Phonebook, self).__init__(Phonebook.URL, credentials=credentials)
+        # TODO: fix credential problem
+        super(Phonebook, self).__init__(Phonebook.URL)
         self.entries = {}
         self.exec_queries(Query(Phonebook.SEARCH_URL, params={'query': query, 'format': 'fligtar'}, handler=self.default_handler, handlerdata=self.entries))
 
@@ -76,9 +76,6 @@ class Phonebook(Connection):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Mozilla\'s phonebook')
     parser.add_argument('-q', '--query', action='store', default='*', help='query to pass to phonebook, by default \'*\'')
-    parser.add_argument('-C', '--credentials', action='store', default='', help='credentials file to use')
 
     args = parser.parse_args()
-
-    if args.credentials:
-        pprint(Phonebook(args.query, utils.get_credentials(args.credentials)).get())
+    pprint(Phonebook(args.query).get())

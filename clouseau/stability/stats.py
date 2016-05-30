@@ -45,12 +45,12 @@ def __rate(n, adi):
     return utils.rate(n, adi) * 100.
 
 
-def get(channel, versions=None, product='Firefox', start_date=None, end_date='today', duration=30, platforms=None, credentials=None):
+def get(channel, versions=None, product='Firefox', start_date=None, end_date='today', duration=30, platforms=None):
     if not isinstance(versions, list):
         if isinstance(versions, numbers.Number):
-            versions = socorro.ProductVersions.get_active(vnumber=versions, product=product, credentials=credentials)
+            versions = socorro.ProductVersions.get_active(vnumber=versions, product=product)
         else:
-            versions = socorro.ProductVersions.get_active(product=product, credentials=credentials)
+            versions = socorro.ProductVersions.get_active(product=product)
         versions = versions[channel.lower()]
 
     if start_date:
@@ -58,7 +58,7 @@ def get(channel, versions=None, product='Firefox', start_date=None, end_date='to
         _edate = utils.get_date_ymd(end_date)
         duration = (_edate - _sdate).days
 
-    adi = socorro.ADI.get(version=versions, product=product, end_date=end_date, duration=duration, platforms=platforms, credentials=credentials)
+    adi = socorro.ADI.get(version=versions, product=product, end_date=end_date, duration=duration, platforms=platforms)
 
     data = {}
     for d, n in adi.items():
@@ -75,8 +75,7 @@ def get(channel, versions=None, product='Firefox', start_date=None, end_date='to
                                 '_facets_size': 2,  # 2 is for a facet on plugin and on content
                                 '_histogram.date': ['process_type']},
                         handler=__super_search_handler,
-                        handlerdata=data,
-                        credentials=credentials).wait()
+                        handlerdata=data).wait()
 
     return data
 
@@ -88,10 +87,10 @@ def reformat_data(data):
     return _data
 
 
-def tocsv(filename, channel, versions=None, product='Firefox', start_date=None, end_date='today', duration=30, platforms=None, credentials=None):
+def tocsv(filename, channel, versions=None, product='Firefox', start_date=None, end_date='today', duration=30, platforms=None):
     with open(filename, 'w') as Out:
         writer = csv.writer(Out, delimiter=',')
-        data = get(channel, versions, product, start_date, end_date, duration, platforms, credentials)
+        data = get(channel, versions, product, start_date, end_date, duration, platforms)
         data = [(utils.get_date_str(d), data[d]) for d in sorted(data)]
         head = ['date', 'adi', 'browser', 'content', 'b+c', 'plugin', 'browser_rate', 'content_rate', 'b+c_rate', 'plugin_rate']
         writer.writerow(head)
@@ -101,9 +100,9 @@ def tocsv(filename, channel, versions=None, product='Firefox', start_date=None, 
             writer.writerow(row)
 
 
-def tojson(filename, channel, versions=None, product='Firefox', start_date=None, end_date='today', duration=30, platforms=None, credentials=None):
+def tojson(filename, channel, versions=None, product='Firefox', start_date=None, end_date='today', duration=30, platforms=None):
     with open(filename, 'w') as Out:
-        data = get(channel, versions, product, start_date, end_date, duration, platforms, credentials)
+        data = get(channel, versions, product, start_date, end_date, duration, platforms)
         json.dump(reformat_data(data), Out)
 
 if __name__ == '__main__':
@@ -115,16 +114,14 @@ if __name__ == '__main__':
     parser.add_argument('-v', '--version', action='store', default=0, help='the base version, e.g. 46')
     parser.add_argument('-c', '--channel', action='store', default='beta', help='release channel')
     parser.add_argument('-p', '--product', action='store', default='Firefox', help='the product, by default Firefox')
-    parser.add_argument('-C', '--credentials', action='store', default='', help='credentials file to use')
 
     args = parser.parse_args()
 
-    credentials = utils.get_credentials(args.credentials) if args.credentials else None
     if args.output:
         if args.format == 'csv':
-            tocsv(args.output, args.channel, versions=int(args.version), product=args.product, start_date=args.startdate, end_date=args.enddate, credentials=credentials)
+            tocsv(args.output, args.channel, versions=int(args.version), product=args.product, start_date=args.startdate, end_date=args.enddate)
         else:  # json
-            tojson(args.output, args.channel, versions=int(args.version), product=args.product, start_date=args.startdate, end_date=args.enddate, credentials=credentials)
+            tojson(args.output, args.channel, versions=int(args.version), product=args.product, start_date=args.startdate, end_date=args.enddate)
     else:
-        data = get(args.channel, versions=int(args.version), product=args.product, start_date=args.startdate, end_date=args.enddate, credentials=credentials)
+        data = get(args.channel, versions=int(args.version), product=args.product, start_date=args.startdate, end_date=args.enddate)
         pprint(reformat_data(data))

@@ -7,26 +7,27 @@ import functools
 from datetime import timedelta
 from .connection import (Connection, Query)
 from . import utils
+from . import config
 
 
 class Redash(Connection):
     """re:dash connection: https://sql.telemetry.mozilla.org
     """
 
-    RE_DASH_URL = 'https://sql.telemetry.mozilla.org'
+    RE_DASH_URL = config.get('Re:dash', 'URL', 'https://sql.telemetry.mozilla.org')
     API_URL = RE_DASH_URL + '/api/queries'
+    TOKEN = config.get('Re:dash', 'token', '')
 
-    def __init__(self, queries, credentials=None):
+    def __init__(self, queries):
         """Constructor
 
         Args:
             queries (List[Query]): queries to pass to re:dash
-            credentials (Optional[dict]): credentials to use with re:dash
         """
-        super(Redash, self).__init__(self.RE_DASH_URL, queries=queries, credentials=credentials)
+        super(Redash, self).__init__(self.RE_DASH_URL, queries=queries)
 
     def get_header(self):
-        return {'Authorization': 'Key %s' % self.get_apikey(self.RE_DASH_URL)}
+        return {'Authorization': 'Key %s' % self.get_apikey()}
 
     @staticmethod
     def default_handler(query_id, json, data):
@@ -40,12 +41,11 @@ class Redash(Connection):
         data[query_id] = json
 
     @staticmethod
-    def get(query_ids, credentials=None):
+    def get(query_ids):
         """Get queries results in json format
 
         Args:
             query_ids (List[str]): query id
-            credentials (Optional[dict]): credentials to use with re:dash
 
         Returns:
             dict: containing result in json for each query
@@ -53,18 +53,18 @@ class Redash(Connection):
         data = {}
         if isinstance(query_ids, six.string_types):
             url = Redash.API_URL + '/' + query_ids + '/results.json'
-            Redash(Query(url, None, functools.partial(Redash.default_handler, query_ids), data), credentials=credentials).wait()
+            Redash(Query(url, None, functools.partial(Redash.default_handler, query_ids), data)).wait()
         else:
             queries = []
             url = Redash.API_URL + '/%s/results.json'
             for query_id in query_ids:
                 queries.append(Query(url % query_id, None, functools.partial(Redash.default_handler, query_id), data))
-            Redash(queries=queries, credentials=credentials).wait()
+            Redash(queries=queries).wait()
 
         return data
 
     @staticmethod
-    def get_khours(start_date, end_date, channel, versions, product, credentials=None):
+    def get_khours(start_date, end_date, channel, versions, product):
         """Get the results for query 346, 387: https://sql.telemetry.mozilla.org/queries/346
                                                https://sql.telemetry.mozilla.org/queries/387
         Args:
@@ -73,14 +73,13 @@ class Redash(Connection):
             channel (str): the channel
             versions (List[str]): the versions
             product (str): the product
-            credentials (dict): credentials to use with re:dash
 
         Returns:
             dict: containing result in json for each query
         """
         qid = '387' if product == 'FennecAndroid' else '346'
 
-        khours = Redash.get(qid, credentials=credentials)
+        khours = Redash.get(qid)
         rows = khours[qid]['query_result']['data']['rows']
         res = {}
 
@@ -105,7 +104,7 @@ class Redash(Connection):
         return res
 
     @staticmethod
-    def get_number_of_crash(start_date, end_date, channel, versions, product, credentials=None):
+    def get_number_of_crash(start_date, end_date, channel, versions, product):
         """Get the results for query 399, 400: https://sql.telemetry.mozilla.org/queries/399
                                                https://sql.telemetry.mozilla.org/queries/400
         Args:
@@ -114,14 +113,13 @@ class Redash(Connection):
             channel (str): the channel
             versions (List[str]): the versions
             product (str): the product
-            credentials (dict): credentials to use with re:dash
 
         Returns:
             dict: containing result in json for each query
         """
         qid = '400' if product == 'FennecAndroid' else '399'
 
-        crashes = Redash.get(qid, credentials=credentials)
+        crashes = Redash.get(qid)
         rows = crashes[qid]['query_result']['data']['rows']
         res = {}
         stats = {'m+c': 0.,

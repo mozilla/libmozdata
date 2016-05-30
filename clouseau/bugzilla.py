@@ -4,23 +4,23 @@
 
 import six
 from .connection import (Connection)
+from . import config
 
 
 class Bugzilla(Connection):
     """Connection to bugzilla.mozilla.org
     """
 
-    URL = 'https://bugzilla.mozilla.org'
-    # URL = 'https://bugzilla-dev.allizom.org'
+    URL = config.get('Bugzilla', 'URL', 'https://bugzilla.mozilla.org')
     API_URL = URL + '/rest/bug'
+    TOKEN = config.get('Bugzilla', 'token', '')
 
-    def __init__(self, bugids=None, include_fields='_default', credentials=None, bughandler=None, bugdata=None, historyhandler=None, historydata=None, commenthandler=None, commentdata=None, attachmenthandler=None, attachmentdata=None, queries=None):
+    def __init__(self, bugids=None, include_fields='_default', bughandler=None, bugdata=None, historyhandler=None, historydata=None, commenthandler=None, commentdata=None, attachmenthandler=None, attachmentdata=None, queries=None):
         """Constructor
 
         Args:
             bugids (List[str]): list of bug ids or search query
             include_fields (List[str]): list of include fields
-            credentials (Optional[dict]): credentials to use with bugzilla
             bughandler (Optional[function]): the handler to use with each retrieved bug
             bugdata (Optional): the data to use with the bug handler
             historyhandler (Optional[function]): the handler to use with each retrieved bug history
@@ -32,9 +32,9 @@ class Bugzilla(Connection):
             queries (List[Query]): queries rather than single query
         """
         if queries:
-            super(Bugzilla, self).__init__(Bugzilla.URL, queries=queries, credentials=credentials)
+            super(Bugzilla, self).__init__(Bugzilla.URL, queries=queries)
         else:
-            super(Bugzilla, self).__init__(Bugzilla.URL, credentials=credentials)
+            super(Bugzilla, self).__init__(Bugzilla.URL)
             if isinstance(bugids, six.string_types):
                 self.bugids = [bugids]
             elif isinstance(bugids, int):
@@ -119,12 +119,11 @@ class Bugzilla(Connection):
             r.result()
 
     @staticmethod
-    def follow_dup(bugids, credentials=None):
+    def follow_dup(bugids):
         """Follow the duplicated bugs
 
         Args:
             bugids (List[str]): list of bug ids
-            credentials (Optional[dict]): credentials to use with bugzilla
 
         Returns:
             dict: each bug in entry is mapped to the last bug in the duplicate chain (None if there's no dup and 'cycle' if a cycle is detected)
@@ -141,7 +140,7 @@ class Bugzilla(Connection):
                 dup[str(bug['id'])] = [dupeofid]
                 _set.add(dupeofid)
 
-        bz = Bugzilla(bugids=bugids, include_fields=include_fields, bughandler=bughandler, credentials=credentials).get_data()
+        bz = Bugzilla(bugids=bugids, include_fields=include_fields, bughandler=bughandler).get_data()
         bz.wait_bugs()
 
         def bughandler2(bug, data):
@@ -345,7 +344,7 @@ class Bugzilla(Connection):
         """Get the bug attachment
         """
         url = Bugzilla.API_URL + '/%s/attachment'
-        req_params = {'api_key': self.get_apikey(Bugzilla.URL)}
+        req_params = {'api_key': self.get_apikey()}
         for bugid in self.bugids:
             self.attachment_results.append(self.session.get(url % bugid,
                                                             params=req_params,

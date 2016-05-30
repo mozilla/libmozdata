@@ -71,21 +71,6 @@ class UtilsTest(unittest.TestCase):
         self.assertEqual(utils.simple_percent(3.0), '3%')
         self.assertEqual(utils.simple_percent(3.5), '3.5%')
 
-    def test_get_credentials(self):
-        with self.assertRaises(Exception):
-            utils.get_credentials('doesntexist')
-
-        with open('/tmp/afile', 'w') as f:
-            f.write('nothing')
-
-        with self.assertRaises(Exception):
-            utils.get_credentials('/tmp/afile')
-
-        with open('/tmp/afile', 'w') as f:
-            json.dump({'key': 'value'}, f)
-
-        self.assertEqual(utils.get_credentials('/tmp/afile'), {'key': 'value'})
-
     def test_get_sample(self):
         arr = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         self.assertEqual(utils.get_sample(arr, -7), arr)

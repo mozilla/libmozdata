@@ -18,7 +18,7 @@ class FileStats(object):
     """Stats about a file in the repo.
     """
 
-    def __init__(self, path, channel='nightly', node='tip', utc_ts=None, credentials=None):
+    def __init__(self, path, channel='nightly', node='tip', utc_ts=None):
         """Constructor
 
         Args:
@@ -26,13 +26,11 @@ class FileStats(object):
             channel (str): channel version of firefox
             node (Optional[str]): the node, by default 'tip'
             utc_ts (Optional[int]): UTC timestamp, file pushdate <= utc_ts
-            credentials (Optional[dict]): credentials to use
         """
         self.utc_ts = utc_ts if isinstance(utc_ts, numbers.Number) and utc_ts > 0 else None
         self.max_days = int(config.get('FileStats', 'MaxDays', 3))
         self.utc_ts_from = utils.get_timestamp(datetime.utcfromtimestamp(utc_ts) + timedelta(-self.max_days)) if isinstance(utc_ts, numbers.Number) and utc_ts > 0 else None
         self.path = path
-        self.credentials = credentials
         self.hi = HGFileInfo(path, channel=channel, node=node)
         self.module = modules.module_from_path(path)
 
@@ -70,7 +68,7 @@ class FileStats(object):
                               'patches': last}
 
             bugs = self.hi.get(self.path)['bugs']
-            bi = BZInfo(bugs, credentials=self.credentials) if bugs else None
+            bi = BZInfo(bugs) if bugs else None
             if bi:
                 # find out the good person to query for a needinfo
                 info['needinfo'] = bi.get_best_collaborator()
@@ -88,11 +86,9 @@ if __name__ == '__main__':
     parser.add_argument('-n', '--node', action='store', default='tip', help='Mercurial node, by default \'tip\'')
     parser.add_argument('-c', '--channel', action='store', default='nightly', help='release channel')
     parser.add_argument('-d', '--date', action='store', default='today', help='max date for pushdate, format YYYY-mm-dd')
-    parser.add_argument('-C', '--credentials', action='store', default='', help='credentials file to use')
 
     args = parser.parse_args()
 
     if args.path:
-        credentials = utils.get_credentials(args.credentials) if args.credentials else None
-        fs = FileStats(args.path, args.channel, args.node, utils.get_timestamp(args.date), credentials)
+        fs = FileStats(args.path, args.channel, args.node, utils.get_timestamp(args.date))
         pprint(fs.get_info())

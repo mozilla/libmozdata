@@ -7,7 +7,6 @@ import operator
 import calendar
 from datetime import (datetime, date, timedelta)
 import math
-import json
 import random
 
 
@@ -152,19 +151,6 @@ def simple_percent(x):
     if math.floor(x) == x:
         x = int(x)
     return str(x) + '%'
-
-
-def get_credentials(path):
-    """Get credentials from a json file
-
-    Args:
-        path (str): the path of the file which contains json data with credentials for the differents sources
-
-    Returns:
-        dict: a json dict
-    """
-    with open(path) as In:
-        return json.load(In)
 
 
 def get_sample(data, fraction):

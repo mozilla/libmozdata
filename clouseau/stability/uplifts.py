@@ -87,7 +87,7 @@ def __analyze(signatures, status_flags, tracking_flags):
     return result
 
 
-def get(date='today', product='Firefox', versions=None, duration=7, tcbs_limit=50, crash_type='all', credentials=None):
+def get(date='today', product='Firefox', versions=None, duration=7, tcbs_limit=50, crash_type='all'):
     """Get crashes info
 
     Args:
@@ -97,7 +97,6 @@ def get(date='today', product='Firefox', versions=None, duration=7, tcbs_limit=5
         duration (Optional[int]): the duration to retrieve the data
         tcbs_limit (Optional[int]): the number of crashes to get from tcbs
         crash_type (Optional[str]): 'all' (default) or 'browser' or 'content' or 'plugin'
-        credentials (Optional[dict]): credentials
 
     Returns:
         dict: contains all the info about how to update flags
@@ -113,7 +112,7 @@ def get(date='today', product='Firefox', versions=None, duration=7, tcbs_limit=5
         channel.append('esr')
 
     if not versions:
-        _versions = socorro.ProductVersions.get_active(product=product, remove_dates=True, credentials=credentials)
+        _versions = socorro.ProductVersions.get_active(product=product, remove_dates=True)
         # get the last version
         versions = {}
         for k, v in _versions.iteritems():
@@ -146,7 +145,7 @@ def get(date='today', product='Firefox', versions=None, duration=7, tcbs_limit=5
                 cparams['crash_type'] = ct
                 queries.append(Query(socorro.TCBS.URL, cparams, __tcbs_handler, _list))
 
-    socorro.TCBS(queries=queries, credentials=credentials).wait()
+    socorro.TCBS(queries=queries).wait()
 
     # structure the data by signatures
     signatures = {}
@@ -169,13 +168,13 @@ def get(date='today', product='Firefox', versions=None, duration=7, tcbs_limit=5
                         signatures[signature] = {'bug': None, 'original_bug': None, 'info': [_info]}
 
     # get the bugs for each signatures
-    bugs_by_signature = socorro.Bugs.get_bugs(signatures.keys(), credentials=credentials)
+    bugs_by_signature = socorro.Bugs.get_bugs(signatures.keys())
     bugs = set()
     for b in bugs_by_signature.itervalues():
         bugs.update(b)
 
     # get the bugs in following the duplicate
-    dups = Bugzilla.follow_dup(bugs, credentials=credentials)
+    dups = Bugzilla.follow_dup(bugs)
 
     # put the bug info for each signature
     bugs.clear()
@@ -218,7 +217,7 @@ def get(date='today', product='Firefox', versions=None, duration=7, tcbs_limit=5
         tracking_flags[c] = f2
 
     bug_info = {}
-    Bugzilla(list(bugs), include_fields=include_fields, credentials=credentials, bughandler=__bug_handler, bugdata=bug_info).get_data().wait()
+    Bugzilla(list(bugs), include_fields=include_fields, bughandler=__bug_handler, bugdata=bug_info).get_data().wait()
 
     for info in signatures.itervalues():
         bug = info['bug']
@@ -241,10 +240,8 @@ if __name__ == "__main__":
     parser.add_argument('-D', '--duration', action='store', default=7, help='the duration')
     parser.add_argument('-v', '--versions', action='store', nargs='+', default=None, help='the Firefox versions')
     parser.add_argument('-t', '--tcbslimit', action='store', default=50, help='the Firefox versions')
-    parser.add_argument('-C', '--credentials', action='store', default='', help='credentials file to use')
 
     args = parser.parse_args()
 
-    credentials = utils.get_credentials(args.credentials) if args.credentials else None
-    info = get(date=args.date, product=args.product, versions=args.versions, duration=int(args.duration), tcbs_limit=int(args.tcbslimit), crash_type=args.crashtype, credentials=credentials)
+    info = get(date=args.date, product=args.product, versions=args.versions, duration=int(args.duration), tcbs_limit=int(args.tcbslimit), crash_type=args.crashtype)
     pprint(info)

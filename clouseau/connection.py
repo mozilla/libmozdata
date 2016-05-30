@@ -40,24 +40,23 @@ class Connection(object):
     MAX_RETRIES = 256
     MAX_WORKERS = multiprocessing.cpu_count()
     CHUNK_SIZE = 32
+    TOKEN = ''
 
     # Error 429 is for 'Too many requests' => we retry
     STATUS_FORCELIST = [429]
 
-    def __init__(self, base_url, queries=None, credentials=None):
+    def __init__(self, base_url, queries=None):
         """Constructor
 
         Args:
             base_url (str): the server's url
             queries (Optional[Query]): the queries
-            credentials (Optional[dict]): the credentials to use with this connection
         """
 
         self.session = FuturesSession(max_workers=self.MAX_WORKERS)
         retries = Retry(total=Connection.MAX_RETRIES, backoff_factor=1, status_forcelist=Connection.STATUS_FORCELIST)
         self.session.mount(base_url, HTTPAdapter(max_retries=retries))
         self.results = []
-        self.credentials = credentials
         self.queries = queries
         self.exec_queries()
 
@@ -86,19 +85,13 @@ class Connection(object):
         for r in self.results:
             r.result()
 
-    def get_apikey(self, url):
-        """Get the api key from the credentials
-
-        Args:
-            url (str): the api key to get for the url
+    def get_apikey(self):
+        """Get the api key
 
         Returns:
             str: the api key
         """
-        if self.credentials and url and url in self.credentials['tokens']:
-            return self.credentials['tokens'][url]
-        else:
-            return ''
+        return self.TOKEN
 
     def get_header(self):
         """Get the header to use each query

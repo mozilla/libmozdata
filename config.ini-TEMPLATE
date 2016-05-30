@@ -1,0 +1,20 @@
+[FileStats]
+MaxDays = 3
+
+[Mercurial]
+URL = https://hg.mozilla.org
+
+[Socorro]
+URL = https://crash-stats.mozilla.com
+token =
+
+[Bugzilla]
+URL = https://bugzilla.mozilla.org
+token =
+
+[Re:dash]
+URL = https://sql.telemetry.mozilla.org
+token =
+
+[Phonebook]
+URL = https://phonebook.mozilla.org

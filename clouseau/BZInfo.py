@@ -11,15 +11,13 @@ class BZInfo(Bugzilla):
     """Information relative to bugs data in bugzilla
     """
 
-    def __init__(self, bugids, credentials=None):
+    def __init__(self, bugids):
         """Constructor
 
         Args:
             bugids (List[str]): list of bug ids or search query
-            credentials (Optional[dict]): credentials to use with bugzilla
         """
         super(BZInfo, self).__init__(bugids,
-                                     credentials=credentials,
                                      bughandler=self.__bug_handler,
                                      historyhandler=self.__history_handler,
                                      commenthandler=self.__comment_handler)

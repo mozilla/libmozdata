@@ -5,7 +5,7 @@ from .socorro import SuperSearch
 
 class CrashInfo(SuperSearch):
 
-    def __init__(self, paths, credentials=None):
+    def __init__(self, paths):
         self.info = {}
 
         paths = [paths] if type(paths) == str else paths
@@ -20,7 +20,7 @@ class CrashInfo(SuperSearch):
                                  handler=self.__handler,
                                  handlerdata=path))
 
-        super(CrashInfo, self).__init__(queries=queries, credentials=credentials)
+        super(CrashInfo, self).__init__(queries=queries)
 
     def get(self):
         self.wait()

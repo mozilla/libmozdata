@@ -7,14 +7,13 @@ from connection import Query
 import socorro
 
 
-def get_files(uuid, common=None, remove_dup=True, credentials=None):
+def get_files(uuid, common=None, remove_dup=True):
     """Get the files which appears in a backtrace
 
     Args:
         uuid (str): crash uuid
         common (list[str]): common part of the different backtraces
         remove_dup (bool): if True, remove the duplicate files
-        credentials (Optional[dict]): credentials to use with Socorro
 
     Returns:
         List[str]: a list of the files which appears in the backtrace
@@ -39,17 +38,16 @@ def get_files(uuid, common=None, remove_dup=True, credentials=None):
                     n -= 1
 
     files = []
-    socorro.ProcessedCrash(params={'crash_id': uuid}, handler=handler, handlerdata=files, credentials=credentials).wait()
+    socorro.ProcessedCrash(params={'crash_id': uuid}, handler=handler, handlerdata=files).wait()
     return files
 
 
-def get_infos(uuids, fraction=0.3, credentials=None):
+def get_infos(uuids, fraction=0.3):
     """Get info from different backtraces
 
     Args:
         uuids (List[str]): crash uuids
         fraction (float): the fraction of all the uuids to look in
-        credentials (Optional[dict]): credentials to use with Socorro
 
     Returns:
         dict: info about the different backtraces
@@ -87,7 +85,7 @@ def get_infos(uuids, fraction=0.3, credentials=None):
         info[uuid] = data
         queries.append(Query(socorro.ProcessedCrash.URL, params={'crash_id': uuid}, handler=handler, handlerdata=data))
 
-    socorro.ProcessedCrash(queries=queries, credentials=credentials).wait()
+    socorro.ProcessedCrash(queries=queries).wait()
 
     return info
 

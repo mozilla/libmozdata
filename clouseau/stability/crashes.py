@@ -43,7 +43,7 @@ def __bug_handler(json, data):
         data.append({'id': bug['id'], 'resolution': bug['resolution']})
 
 
-def get(channel, date, versions=None, product='Firefox', duration=11, tcbs_limit=50, crash_type='all', credentials=None):
+def get(channel, date, versions=None, product='Firefox', duration=11, tcbs_limit=50, crash_type='all'):
     """Get crashes info
 
     Args:
@@ -54,15 +54,14 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tcbs_limit
         duration (Optional[int]): the duration to retrieve the data
         tcbs_limit (Optional[int]): the number of crashes to get from tcbs
         crash_type (Optional[str]): 'all' (default) or 'browser' or 'content' or 'plugin'
-        credentials (Optional[dict]): credentials
 
     Returns:
         dict: contains all the info relative to the crashes
     """
     channel = channel.lower()
-    versions_info = socorro.ProductVersions.get_version_info(versions, channel=channel, product=product, credentials=credentials)
+    versions_info = socorro.ProductVersions.get_version_info(versions, channel=channel, product=product)
     versions = versions_info.keys()
-    platforms = socorro.Platforms.get_cached_all(credentials=credentials)
+    platforms = socorro.Platforms.get_cached_all()
 
     if crash_type and isinstance(crash_type, six.string_types):
         crash_type = [crash_type]
@@ -80,7 +79,7 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tcbs_limit
     signatures = {}
 
     # First, we get the ADI
-    adi = socorro.ADI.get(version=versions, product=product, end_date=end_date, duration=duration, platforms=platforms, credentials=credentials)
+    adi = socorro.ADI.get(version=versions, product=product, end_date=end_date, duration=duration, platforms=platforms)
     adi = [adi[key] for key in sorted(adi.keys(), reverse=True)]
 
     # Second we get info from TCBS (Top Crash By Signature)
@@ -102,7 +101,7 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tcbs_limit
         cparams['version'] = v
         queries.append(Query(socorro.TCBS.URL, cparams, __tcbs_handler, _dict))
 
-    socorro.TCBS(queries=queries, credentials=credentials).wait()
+    socorro.TCBS(queries=queries).wait()
 
     # aggregate the results from the different versions
     for tc in tcbs.values():
@@ -115,7 +114,7 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tcbs_limit
                 signatures[sgn] = count
 
     # get the khours
-    khours = Redash.get_khours(utils.get_date_ymd(start_date), utils.get_date_ymd(end_date), channel, versions, product, credentials=credentials)
+    khours = Redash.get_khours(utils.get_date_ymd(start_date), utils.get_date_ymd(end_date), channel, versions, product)
     khours = [khours[key] for key in sorted(khours.keys(), reverse=True)]
 
     # TODO: too many requests... should be improved with chunks
@@ -131,7 +130,7 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tcbs_limit
         _list = []
         bugs[sgn] = _list
         queries.append(Query(Bugzilla.API_URL, cparams, __bug_handler, _list))
-    res_bugs = Bugzilla(queries=queries, credentials=credentials)
+    res_bugs = Bugzilla(queries=queries)
 
     # we have stats by signature in self.signatures
     # for each signature get the number of crashes on the last X days
@@ -159,7 +158,7 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tcbs_limit
         cparams['signature'] = sgns
         queries.append(Query(socorro.SuperSearch.URL, cparams, functools.partial(__trend_handler, default_trend), trends))
 
-    socorro.SuperSearch(queries=queries, credentials=credentials).wait()
+    socorro.SuperSearch(queries=queries).wait()
 
     for sgn, trend in trends.items():
         signatures[sgn] = (signatures[sgn], [trend[key] for key in sorted(trend.keys(), reverse=True)])
@@ -208,10 +207,8 @@ if __name__ == "__main__":
     parser.add_argument('-D', '--duration', action='store', default=11, help='the duration')
     parser.add_argument('-v', '--versions', action='store', nargs='+', help='the Firefox versions')
     parser.add_argument('-t', '--tcbslimit', action='store', default=50, help='number of crashes to retrieve in Top Crash')
-    parser.add_argument('-C', '--credentials', action='store', default='', help='credentials file to use')
 
     args = parser.parse_args()
 
-    credentials = utils.get_credentials(args.credentials) if args.credentials else None
-    stats = get(args.channel, args.date, versions=args.versions, duration=int(args.duration), tcbs_limit=int(args.tcbslimit), credentials=credentials)
+    stats = get(args.channel, args.date, versions=args.versions, duration=int(args.duration), tcbs_limit=int(args.tcbslimit))
     pprint(stats)

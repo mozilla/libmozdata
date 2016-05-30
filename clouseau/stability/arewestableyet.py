@@ -39,7 +39,7 @@ def __crash_handler(throttle, json, data):
         info['all'] += total
 
 
-def get(channel, date, versions=None, product='Firefox', duration=1, credentials=None):
+def get(channel, date, versions=None, product='Firefox', duration=1):
     """Get stability info
 
     Args:
@@ -48,14 +48,13 @@ def get(channel, date, versions=None, product='Firefox', duration=1, credentials
         versions (Optional[List[str]]): the versions to treat
         product (Optional[str]): the product
         duration (Optional[int]): the duration to retrieve the data
-        credentials (Optional[dict]): credentials
 
     Returns:
         dict: contains all the info relative to stability
     """
     channel = channel.lower()
     cycle = duration <= 0
-    versions_info = socorro.ProductVersions.get_version_info(versions, channel=channel, product=product, credentials=credentials)
+    versions_info = socorro.ProductVersions.get_version_info(versions, channel=channel, product=product)
 
     versions = versions_info.keys()
     throttle = set(map(lambda p: p[1], versions_info.values()))
@@ -64,7 +63,7 @@ def get(channel, date, versions=None, product='Firefox', duration=1, credentials
     if not diff_throttle:
         throttle = throttle.pop()
 
-    platforms = socorro.Platforms.get_cached_all(credentials=credentials)
+    platforms = socorro.Platforms.get_cached_all()
 
     end_date_dt = utils.get_date_ymd(date)
     if cycle:
@@ -78,15 +77,15 @@ def get(channel, date, versions=None, product='Firefox', duration=1, credentials
     end_date_str = utils.get_date_str(end_date_dt)
 
     # First, we get the ADI
-    adi = socorro.ADI.get(version=versions, product=product, end_date=end_date_str, duration=duration, platforms=platforms, credentials=credentials)
+    adi = socorro.ADI.get(version=versions, product=product, end_date=end_date_str, duration=duration, platforms=platforms)
     adi = [adi[key] for key in sorted(adi.keys(), reverse=False)]
 
     # Get the khours
-    khours = Redash.get_khours(start_date_dt, end_date_dt, channel, versions, product, credentials=credentials)
+    khours = Redash.get_khours(start_date_dt, end_date_dt, channel, versions, product)
     khours = [khours[key] for key in sorted(khours.keys(), reverse=False)]
 
     # Get the # of crashes (crash pings)
-    crash_pings = Redash.get_number_of_crash(start_date_dt, end_date_dt, channel, versions, product, credentials=credentials)
+    crash_pings = Redash.get_number_of_crash(start_date_dt, end_date_dt, channel, versions, product)
 
     crashes = {}
     stats = {'m+c': 0.,
@@ -128,7 +127,7 @@ def get(channel, date, versions=None, product='Firefox', duration=1, credentials
         cparams['_histogram.date'].append('uptime')
         queries.append(Query(socorro.SuperSearch.URL, cparams, functools.partial(__crash_handler, throttle), crashes))
 
-    socorro.SuperSearch(queries=queries, credentials=credentials).wait()
+    socorro.SuperSearch(queries=queries).wait()
     crashes = [crashes[key] for key in sorted(crashes.keys(), reverse=False)]
 
     # Now we compute the rates and the averages
@@ -212,15 +211,13 @@ if __name__ == "__main__":
     parser.add_argument('-D', '--duration', action='store', default=1, type=int, help='the duration')
     parser.add_argument('-p', '--product', action='store', default='Firefox', help='the product')
     parser.add_argument('-v', '--versions', action='store', nargs='+', help='the Firefox versions')
-    parser.add_argument('-C', '--credentials', action='store', default='', help='credentials file to use')
     parser.add_argument('--cycle', action='store_true', help='duration is computed to take into account all the cycle')
 
     args = parser.parse_args()
 
-    credentials = utils.get_credentials(args.credentials) if args.credentials else None
     if args.startdate:
         duration = (utils.get_date_ymd(args.enddate) - utils.get_date_ymd(args.startdate)).days + 1
     else:
         duration = -1 if args.cycle else args.duration
-    stats = get(args.channel, args.enddate, product=args.product, versions=args.versions, duration=duration, credentials=credentials)
+    stats = get(args.channel, args.enddate, product=args.product, versions=args.versions, duration=duration)
     pprint(stats)

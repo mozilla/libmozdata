@@ -10,13 +10,7 @@ from clouseau.stability import crashes
 class CrashesTest(unittest.TestCase):
 
     def test_crashes(self):
-        credentials = {
-            'tokens': {
-                'https://sql.telemetry.mozilla.org': os.environ.get('API_KEY_346', ''),
-            }
-        }
-
-        stats = crashes.get('release', 'yesterday', versions=46, duration=11, tcbs_limit=50, credentials=credentials)
+        stats = crashes.get('release', 'yesterday', versions=46, duration=11, tcbs_limit=50)
 
         self.assertIn('start_date', stats)
         self.assertIn('end_date', stats)

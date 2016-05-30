@@ -14,15 +14,14 @@ class Mercurial(Connection):
     HG_URL = config.get('Mercurial', 'URL', 'https://hg.mozilla.org')
     remote = HG_URL == 'https://hg.mozilla.org'
 
-    def __init__(self, queries, channel='nightly', credentials=None):
+    def __init__(self, queries, channel='nightly'):
         """Constructor
 
         Args:
             queries (List[Query]): queries to pass to mercurial server
             channel (Optional[str]): the channel, by default 'nightly'
-            credentials (Optional[dict]): credentials to use with mercurial
         """
-        super(Mercurial, self).__init__(self.HG_URL, queries, credentials)
+        super(Mercurial, self).__init__(self.HG_URL, queries)
         self.channel = channel
 
     @staticmethod
@@ -60,7 +59,7 @@ class Revision(Mercurial):
     """Connection to get a revision
     """
 
-    def __init__(self, channel='nightly', params=None, handler=None, handlerdata=None, credentials=None, queries=None):
+    def __init__(self, channel='nightly', params=None, handler=None, handlerdata=None, queries=None):
         """Constructor
 
         Args:
@@ -68,13 +67,12 @@ class Revision(Mercurial):
             params (Optional[dict]): the params for the query
             handler (Optional[function]): handler to use with the result of the query
             handlerdata (Optional): data used in second argument of the handler
-            credentials (Optional[dict]): credentials to use with mercurial
             queries (List[Query]): queries to pass to mercurial server
         """
         if queries:
-            super(Revision, self).__init__(queries, credentials)
+            super(Revision, self).__init__(queries)
         else:
-            super(Revision, self).__init__(Query(Revision.get_url(channel), params, handler, handlerdata), credentials)
+            super(Revision, self).__init__(Query(Revision.get_url(channel), params, handler, handlerdata))
 
     @staticmethod
     def get_url(channel):
@@ -99,19 +97,18 @@ class Revision(Mercurial):
         data.update(json)
 
     @staticmethod
-    def get_revision(channel='nightly', node='tip', credentials=None):
+    def get_revision(channel='nightly', node='tip'):
         """Get the revision for a node
 
         Args:
             channel (str): channel version of firefox
             node (Optional[str]): the node, by default 'tip'
-            credentials (Optional[dict]): credentials to use with mercurial
 
         Returns:
             dict: the revision corresponding to the node
         """
         data = {}
-        Revision(channel, {'node': node}, Revision.default_handler, data, credentials).wait()
+        Revision(channel, {'node': node}, Revision.default_handler, data).wait()
         return data
 
 
@@ -119,7 +116,7 @@ class FileInfo(Mercurial):
     """Connection to get file info
     """
 
-    def __init__(self, channel='nightly', params=None, handler=None, handlerdata=None, credentials=None, queries=None):
+    def __init__(self, channel='nightly', params=None, handler=None, handlerdata=None, queries=None):
         """Constructor
 
         Args:
@@ -127,13 +124,12 @@ class FileInfo(Mercurial):
             params (Optional[dict]): the params for the query
             handler (Optional[function]): handler to use with the result of the query
             handlerdata (Optional): data used in second argument of the handler
-            credentials (Optional[dict]): credentials to use with mercurial
             queries (List[Query]): queries to pass to mercurial server
         """
         if queries:
-            super(FileInfo, self).__init__(queries, credentials)
+            super(FileInfo, self).__init__(queries)
         else:
-            super(FileInfo, self).__init__(Query(FileInfo.get_url(channel), params, handler, handlerdata), credentials)
+            super(FileInfo, self).__init__(Query(FileInfo.get_url(channel), params, handler, handlerdata))
 
     @staticmethod
     def get_url(channel):
@@ -158,14 +154,13 @@ class FileInfo(Mercurial):
         data.update(json)
 
     @staticmethod
-    def get(paths, channel='nightly', node='tip', credentials=None):
+    def get(paths, channel='nightly', node='tip'):
         """Get the file info for several paths
 
         Args:
             paths (List[str]): the paths
             channel (str): channel version of firefox
             node (Optional[str]): the node, by default 'tip'
-            credentials (Optional[dict]): credentials to use with mercurial
 
         Returns:
             dict: the files info
@@ -179,7 +174,7 @@ class FileInfo(Mercurial):
             __base['file'] = paths
             _dict = {}
             data[paths] = _dict
-            FileInfo(channel=channel, params=__base, handler=FileInfo.default_handler, handlerdata=_dict, credentials=credentials).wait()
+            FileInfo(channel=channel, params=__base, handler=FileInfo.default_handler, handlerdata=_dict).wait()
         else:
             url = FileInfo.get_url(channel)
             queries = []
@@ -189,6 +184,6 @@ class FileInfo(Mercurial):
                 _dict = {}
                 data[path] = _dict
                 queries.append(Query(url, cparams, FileInfo.default_handler, _dict))
-            FileInfo(queries=queries, credentials=credentials).wait()
+            FileInfo(queries=queries).wait()
 
         return data

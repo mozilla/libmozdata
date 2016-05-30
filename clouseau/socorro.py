@@ -12,26 +12,27 @@ except ImportError:
 from .connection import (Connection, Query)
 from . import utils
 from datetime import timedelta
+from . import config
 
 
 class Socorro(Connection):
     """Socorro connection: https://crash-stats.mozilla.com
     """
 
-    CRASH_STATS_URL = 'https://crash-stats.mozilla.com'
+    CRASH_STATS_URL = config.get('Socorro', 'URL', 'https://crash-stats.mozilla.com')
     API_URL = CRASH_STATS_URL + '/api'
+    TOKEN = config.get('Socorro', 'token', '')
 
-    def __init__(self, queries, credentials=None):
+    def __init__(self, queries):
         """Constructor
 
         Args:
             queries (List[Query]): queries to pass to Socorro
-            credentials (Optional[dict]): credentials to use with Socorro
         """
-        super(Socorro, self).__init__(self.CRASH_STATS_URL, queries=queries, credentials=credentials)
+        super(Socorro, self).__init__(self.CRASH_STATS_URL, queries=queries)
 
     def get_header(self):
-        return {'Auth-Token': self.get_apikey(self.CRASH_STATS_URL)}
+        return {'Auth-Token': self.get_apikey()}
 
 
 class SuperSearch(Socorro):
@@ -41,18 +42,17 @@ class SuperSearch(Socorro):
     URL = Socorro.API_URL + '/SuperSearch'
     URL_UNREDACTED = URL + 'Unredacted'
 
-    def __init__(self, params=None, handler=None, handlerdata=None, credentials=None, queries=None):
+    def __init__(self, params=None, handler=None, handlerdata=None, queries=None):
         """Constructor
 
         Args:
             params (Optional[dict]): the params for the query
             handler (Optional[function]): handler to use with the result of the query
             handlerdata (Optional): data used in second argument of the handler
-            credentials (Optional[dict]): credentials to use with Socorro
             queries (Optional[List[Query]]): queries to execute
         """
         if queries:
-            super(SuperSearch, self).__init__(queries, credentials)
+            super(SuperSearch, self).__init__(queries)
         else:
             url = SuperSearch.URL
             unredacted = False
@@ -67,11 +67,12 @@ class SuperSearch(Socorro):
                     url = SuperSearch.URL_UNREDACTED
             if not unredacted:
                 for k, v in params.items():
-                    if k.startswith('_histogram') and ('url' in v or 'email' in v):
+                    if 'url' in k or 'email' in k or ((isinstance(v, list) or isinstance(v, six.string_types)) and ('url' in v or 'email' in v)):
                         url = SuperSearch.URL_UNREDACTED
                         unredacted = True
                         break
-            super(SuperSearch, self).__init__(Query(url, params, handler, handlerdata), credentials)
+
+            super(SuperSearch, self).__init__(Query(url, params, handler, handlerdata))
 
     @staticmethod
     def get_search_date(start, end):
@@ -101,20 +102,19 @@ class ProcessedCrash(Socorro):
 
     URL = Socorro.API_URL + '/ProcessedCrash'
 
-    def __init__(self, params=None, handler=None, handlerdata=None, credentials=None, queries=None):
+    def __init__(self, params=None, handler=None, handlerdata=None, queries=None):
         """Constructor
 
         Args:
             params (Optional[dict]): the params for the query
             handler (Optional[function]): handler to use with the result of the query
             handlerdata (Optional): data used in second argument of the handler
-            credentials (Optional[dict]): credentials to use with Socorro
             queries (Optional[List[Query]]): queries to execute
         """
         if queries:
-            super(ProcessedCrash, self).__init__(queries, credentials)
+            super(ProcessedCrash, self).__init__(queries)
         else:
-            super(ProcessedCrash, self).__init__(Query(ProcessedCrash.URL, params, handler, handlerdata), credentials)
+            super(ProcessedCrash, self).__init__(Query(ProcessedCrash.URL, params, handler, handlerdata))
 
     @staticmethod
     def default_handler(json, data):
@@ -127,12 +127,11 @@ class ProcessedCrash(Socorro):
         data.update(json)
 
     @staticmethod
-    def get_processed(crashids, credentials=None):
+    def get_processed(crashids):
         """Get processed crashes
 
         Args:
             crashids (Optional[list[str]]): the crash ids
-            credentials (Optional[dict]): credentials to use with Socorro
 
         Returns:
             dict: the processed crashes
@@ -146,7 +145,7 @@ class ProcessedCrash(Socorro):
             __base['crash_id'] = crashids
             _dict = {}
             data[crashids] = _dict
-            ProcessedCrash(params=__base, credentials=credentials, handler=ProcessedCrash.default_handler, handlerdata=_dict).wait()
+            ProcessedCrash(params=__base, handler=ProcessedCrash.default_handler, handlerdata=_dict).wait()
         else:
             queries = []
             for crashid in crashids:
@@ -155,7 +154,7 @@ class ProcessedCrash(Socorro):
                 _dict = {}
                 data[crashid] = _dict
                 queries.append(Query(ProcessedCrash.URL, cparams, ProcessedCrash.default_handler, _dict))
-            ProcessedCrash(queries=queries, credentials=credentials).wait()
+            ProcessedCrash(queries=queries).wait()
 
         return data
 
@@ -167,30 +166,26 @@ class Platforms(Socorro):
     URL = Socorro.API_URL + '/Platforms'
     __cached_platforms = None
 
-    def __init__(self, params=None, handler=None, handlerdata=None, credentials=None):
+    def __init__(self, params=None, handler=None, handlerdata=None):
         """Constructor
 
         Args:
             params (Optional[dict]): the params for the query
             handler (Optional[function]): handler to use with the result of the query
             handlerdata (Optional): data used in second argument of the handler
-            credentials (Optional[dict]): credentials to use with Socorro
             queries (Optional[List[Query]]): queries to execute
         """
-        super(Platforms, self).__init__(Query(Platforms.URL, params, handler, handlerdata), credentials)
+        super(Platforms, self).__init__(Query(Platforms.URL, params, handler, handlerdata))
 
     @staticmethod
-    def get_cached_all(credentials=None):
+    def get_cached_all():
         """Get all the platforms
-
-        Args:
-            credentials (Optional[dict]): credentials to use with Socorro
 
         Returns:
             List[str]: the different platforms
         """
         if not Platforms.__cached_platforms:
-            Platforms.__cached_platforms = Platforms.get_all(credentials)
+            Platforms.__cached_platforms = Platforms.get_all()
 
         return Platforms.__cached_platforms
 
@@ -206,17 +201,14 @@ class Platforms(Socorro):
             data.append(code['name'])
 
     @staticmethod
-    def get_all(credentials=None):
+    def get_all():
         """Get all the platforms
-
-        Args:
-            credentials (Optional[dict]): credentials to use with Socorro
 
         Returns:
             List[str]: the different platforms
         """
         platforms = []
-        Platforms(credentials=credentials, handler=Platforms.default_handler, handlerdata=platforms).wait()
+        Platforms(handler=Platforms.default_handler, handlerdata=platforms).wait()
         return platforms
 
 
@@ -227,60 +219,56 @@ class ProductVersions(Socorro):
     URL = Socorro.API_URL + '/ProductVersions'
     __cached_versions = {}
 
-    def __init__(self, params=None, handler=None, handlerdata=None, credentials=None):
+    def __init__(self, params=None, handler=None, handlerdata=None):
         """Constructor
 
         Args:
             params (Optional[dict]): the params for the query
             handler (Optional[function]): handler to use with the result of the query
             handlerdata (Optional): data used in second argument of the handler
-            credentials (Optional[dict]): credentials to use with Socorro
         """
-        super(ProductVersions, self).__init__(Query(ProductVersions.URL, params, handler, handlerdata), credentials)
+        super(ProductVersions, self).__init__(Query(ProductVersions.URL, params, handler, handlerdata))
 
     @staticmethod
-    def get_cached_versions(product='Firefox', credentials=None):
+    def get_cached_versions(product='Firefox'):
         """Get the versions (which has been put in a cache)
 
         Args:
             product (Optional[str]): product to use, by default 'Firefox'
-            credentials (Optional[dict]): credentials to use with Socorro
 
         Returns:
             dict: versions
         """
         if product not in ProductVersions.__cached_versions:
-            ProductVersions.__cached_versions[product] = ProductVersions.get_active(product, credentials=credentials)
+            ProductVersions.__cached_versions[product] = ProductVersions.get_active(product)
         return ProductVersions.__cached_versions[product]
 
     @staticmethod
-    def get_last_version(channel, product='Firefox', credentials=None):
+    def get_last_version(channel, product='Firefox'):
         """Get last version for a channel
 
         Args:
             channel (str): 'nightly', 'aurora', 'beta' or 'release'
             product (Optional[str]): product to use, by default 'Firefox'
-            credentials (Optional[dict]): credentials to use with Socorro
 
         Returns:
             str: the last version corresponding to the channel
         """
-        return ProductVersions.get_versions(channel, product, credentials)[0]
+        return ProductVersions.get_versions(channel, product)[0]
 
     @staticmethod
-    def get_versions(channel, product='Firefox', credentials=None):
+    def get_versions(channel, product='Firefox'):
         """Get last version for a channel
 
         Args:
             channel (str): 'nightly', 'aurora', 'beta' or 'release'
             product (Optional[str]): product to use, by default 'Firefox'
-            credentials (Optional[dict]): credentials to use with Socorro
 
         Returns:
             str: the last version corresponding to the channel
         """
         if channel:
-            return [p[1] for p in ProductVersions.get_cached_versions(product, credentials)[channel.lower()]]
+            return [p[1] for p in ProductVersions.get_cached_versions(product)[channel.lower()]]
         else:
             return None
 
@@ -346,7 +334,7 @@ class ProductVersions(Socorro):
                 data[k] = versions
 
     @staticmethod
-    def get_active(product='Firefox', vnumber=None, active=True, is_rapid_beta=False, remove_dates=True, remove_throttle=True, credentials=None):
+    def get_active(product='Firefox', vnumber=None, active=True, is_rapid_beta=False, remove_dates=True, remove_throttle=True):
         """Get the active versions
 
         Args:
@@ -355,7 +343,6 @@ class ProductVersions(Socorro):
             is_rapid_beta (Optional[bool]): for version which are rapid beta, by default False
             remove_dates (Optional[bool]): if True, the date info are removed
             remove_throttle (Optional[bool]): if True, the throttle info are removed
-            credentials (Optional[dict]): credentials to use with Socorro
 
         Returns:
             dict: versions
@@ -364,7 +351,7 @@ class ProductVersions(Socorro):
         ProductVersions(params={'active': active,
                                 'product': product,
                                 'is_rapid_beta': is_rapid_beta},
-                        credentials=credentials, handler=functools.partial(ProductVersions.default_handler, vnumber), handlerdata=versions).wait()
+                        handler=functools.partial(ProductVersions.default_handler, vnumber), handlerdata=versions).wait()
 
         index = [0]
         if not remove_dates:
@@ -381,14 +368,13 @@ class ProductVersions(Socorro):
         return versions
 
     @staticmethod
-    def get_throttle(versions, product='Firefox', remove_dates=True, credentials=None):
+    def get_throttle(versions, product='Firefox', remove_dates=True):
         """Get the throttle for versions
 
         Args:
             versions (List[str]): versions
             product (Optional[str]): product to use, by default 'Firefox'
             remove_dates (Optional[bool]): if True, the date info are removed
-            credentials (Optional[dict]): credentials to use with Socorro
 
         Returns:
             dict: throttle info for each versions
@@ -403,19 +389,18 @@ class ProductVersions(Socorro):
         data = {}
         ProductVersions(params={'version': versions,
                                 'product': product},
-                        credentials=credentials, handler=handler, handlerdata=data).wait()
+                        handler=handler, handlerdata=data).wait()
 
         return data
 
     @staticmethod
-    def get_version_info(versions, channel='', product='Firefox', credentials=None):
+    def get_version_info(versions, channel='', product='Firefox'):
         """Get the throttle for versions
 
         Args:
             versions (List[str]): versions
             channel (Optional[str]): the channel
             product (Optional[str]): product to use, by default 'Firefox'
-            credentials (Optional[dict]): credentials to use with Socorro
 
         Returns:
             dict: version info
@@ -428,17 +413,17 @@ class ProductVersions(Socorro):
             v_without_throttle = []
             for v in versions:
                 if isinstance(v, six.integer_types) or (isinstance(v, six.string_types) and '.' not in v):
-                    vs = ProductVersions.get_active(vnumber=int(v), product=product, active=None, remove_dates=False, remove_throttle=False, credentials=credentials)[channel]
+                    vs = ProductVersions.get_active(vnumber=int(v), product=product, active=None, remove_dates=False, remove_throttle=False)[channel]
                     for v in vs:
                         info[v[0]] = v[1:]
                 elif isinstance(v, six.string_types):
                     v_without_throttle.append(v)
 
             if v_without_throttle:
-                t = ProductVersions.get_throttle(v_without_throttle, product=product, remove_dates=False, credentials=credentials)
+                t = ProductVersions.get_throttle(v_without_throttle, product=product, remove_dates=False)
                 info.update(t)
         else:
-            vs = ProductVersions.get_active(product=product, active=None, remove_dates=False, remove_throttle=False, credentials=credentials)[channel]
+            vs = ProductVersions.get_active(product=product, active=None, remove_dates=False, remove_throttle=False)[channel]
             for v in vs:
                 info[v[0]] = v[1:]
 
@@ -451,20 +436,19 @@ class TCBS(Socorro):
 
     URL = Socorro.API_URL + '/TCBS'
 
-    def __init__(self, params=None, handler=None, handlerdata=None, credentials=None, queries=None):
+    def __init__(self, params=None, handler=None, handlerdata=None, queries=None):
         """Constructor
 
         Args:
             params (Optional[dict]): the params for the query
             handler (Optional[function]): handler to use with the result of the query
             handlerdata (Optional): data used in second argument of the handler
-            credentials (Optional[dict]): credentials to use with Socorro
             queries (Optional[List[Query]]): queries to execute
         """
         if queries:
-            super(TCBS, self).__init__(queries, credentials)
+            super(TCBS, self).__init__(queries)
         else:
-            super(TCBS, self).__init__(Query(TCBS.URL, params, handler, handlerdata), credentials)
+            super(TCBS, self).__init__(Query(TCBS.URL, params, handler, handlerdata))
 
     @staticmethod
     def default_handler(json, data):
@@ -477,7 +461,7 @@ class TCBS(Socorro):
         data.append(json)
 
     @staticmethod
-    def get_firefox_topcrashes(version=None, channel=None, days=7, crash_type='all', limit=50, platforms=None, credentials=None):
+    def get_firefox_topcrashes(version=None, channel=None, days=7, crash_type='all', limit=50, platforms=None):
         """Get top crashes for Firefox
 
         Args:
@@ -487,13 +471,12 @@ class TCBS(Socorro):
             crash_type (Optional[str]): 'all' (default) or 'browser' or 'content' or 'plugin'
             limit (Optional[int]): the number of crashes to retrieve
             platforms (Optional[str]): 'all' or 'windows' or 'linux' or 'mac os x'
-            credentials (Optional[dict]): credentials to use with Socorro
 
         Returns:
             dict: a json
         """
         if not version:
-            version = ProductVersions.get_last_version(channel, credentials)
+            version = ProductVersions.get_last_version(channel)
             if not version:
                 return None
 
@@ -504,7 +487,7 @@ class TCBS(Socorro):
                      'limit': limit,
                      'os': platforms,
                      'duration': days * 24},  # duration is expressed in hours !!
-             credentials=credentials, handler=TCBS.default_handler, handlerdata=data).wait()
+             handler=TCBS.default_handler, handlerdata=data).wait()
 
         return data[0]
 
@@ -515,20 +498,19 @@ class SignatureTrend(Socorro):
 
     URL = Socorro.API_URL + '/SignatureTrend'
 
-    def __init__(self, params=None, handler=None, handlerdata=None, credentials=None, queries=None):
+    def __init__(self, params=None, handler=None, handlerdata=None, queries=None):
         """Constructor
 
         Args:
             params (Optional[dict]): the params for the query
             handler (Optional[function]): handler to use with the result of the query
             handlerdata (Optional): data used in second argument of the handler
-            credentials (Optional[dict]): credentials to use with Socorro
             queries (Optional[List[Query]]): queries to execute
         """
         if queries:
-            super(SignatureTrend, self).__init__(queries, credentials)
+            super(SignatureTrend, self).__init__(queries)
         else:
-            super(SignatureTrend, self).__init__(Query(SignatureTrend.URL, params, handler, handlerdata), credentials)
+            super(SignatureTrend, self).__init__(Query(SignatureTrend.URL, params, handler, handlerdata))
 
     @staticmethod
     def default_handler(json, data):
@@ -542,7 +524,7 @@ class SignatureTrend(Socorro):
             data += json['hits']
 
     @staticmethod
-    def get_trend(signatures, version=None, channel=None, duration=7, end_date='today', product='Firefox', credentials=None):
+    def get_trend(signatures, version=None, channel=None, duration=7, end_date='today', product='Firefox'):
         """Get signatures trend
 
         Args:
@@ -551,13 +533,12 @@ class SignatureTrend(Socorro):
             duration (Optional[int]): the duration
             end_date (Optional[str]): the last date
             product: (Optional[str]): the product, by default 'Firefox'
-            credentials (Optional[dict]): credentials to use with Socorro
 
         Returns:
             dict: the trend for each signature
         """
         if not version:
-            version = ProductVersions.get_last_version(channel, credentials)
+            version = ProductVersions.get_last_version(channel)
             if not version:
                 return None
 
@@ -574,7 +555,7 @@ class SignatureTrend(Socorro):
             __base['signature'] = signatures
             _list = []
             data[signatures] = _list
-            SignatureTrend(params=__base, credentials=credentials, handler=SignatureTrend.default_handler, handlerdata=_list).wait()
+            SignatureTrend(params=__base, handler=SignatureTrend.default_handler, handlerdata=_list).wait()
         else:
             queries = []
             for signature in signatures:
@@ -583,7 +564,7 @@ class SignatureTrend(Socorro):
                 _list = []
                 data[signature] = _list
                 queries.append(Query(SignatureTrend.URL, cparams, SignatureTrend.default_handler, _list))
-            SignatureTrend(queries=queries, credentials=credentials).wait()
+            SignatureTrend(queries=queries).wait()
 
         return data
 
@@ -594,20 +575,19 @@ class ADI(Socorro):
 
     URL = Socorro.API_URL + '/ADI'
 
-    def __init__(self, params=None, handler=None, handlerdata=None, credentials=None, queries=None):
+    def __init__(self, params=None, handler=None, handlerdata=None, queries=None):
         """Constructor
 
         Args:
             params (Optional[dict]): the params for the query
             handler (Optional[function]): handler to use with the result of the query
             handlerdata (Optional): data used in second argument of the handler
-            credentials (Optional[dict]): credentials to use with Socorro
             queries (Optional[List[Query]]): queries to execute
         """
         if queries:
-            super(ADI, self).__init__(queries, credentials)
+            super(ADI, self).__init__(queries)
         else:
-            super(ADI, self).__init__(Query(ADI.URL, params, handler, handlerdata), credentials)
+            super(ADI, self).__init__(Query(ADI.URL, params, handler, handlerdata))
 
     @staticmethod
     def default_handler(json, data):
@@ -624,7 +604,7 @@ class ADI(Socorro):
                 data[date] = data[date] + adi_count if date in data else adi_count
 
     @staticmethod
-    def get(version=None, channel=None, duration=7, end_date='today', product='Firefox', platforms=None, credentials=None):
+    def get(version=None, channel=None, duration=7, end_date='today', product='Firefox', platforms=None):
         """Get ADI
 
         Args:
@@ -634,13 +614,12 @@ class ADI(Socorro):
             end_date (Optional[str]): the last date
             product: (Optional[str]): the product, by default 'Firefox'
             platforms: (Optional[list[str]]): list of platforms
-            credentials (Optional[dict]): credentials to use with Socorro
 
         Returns:
             dict: the trend for each signature
         """
         if not version:
-            version = ProductVersions.get_last_version(channel, credentials)
+            version = ProductVersions.get_last_version(channel)
             if not version:
                 return None
 
@@ -656,10 +635,9 @@ class ADI(Socorro):
                     'versions': version,
                     'start_date': start_date,
                     'end_date': end_date,
-                    'platforms': platforms if platforms else Platforms.get_cached_all(credentials=credentials)},
+                    'platforms': platforms if platforms else Platforms.get_cached_all()},
             handler=ADI.default_handler,
-            handlerdata=data,
-            credentials=credentials).wait()
+            handlerdata=data).wait()
 
         return data
 
@@ -670,20 +648,19 @@ class SignatureURLs(Socorro):
 
     URL = Socorro.API_URL + '/SignatureURLs'
 
-    def __init__(self, params=None, handler=None, handlerdata=None, credentials=None, queries=None):
+    def __init__(self, params=None, handler=None, handlerdata=None, queries=None):
         """Constructor
 
         Args:
             params (Optional[dict]): the params for the query
             handler (Optional[function]): handler to use with the result of the query
             handlerdata (Optional): data used in second argument of the handler
-            credentials (Optional[dict]): credentials to use with Socorro
             queries (Optional[List[Query]]): queries to execute
         """
         if queries:
-            super(SignatureURLs, self).__init__(queries, credentials)
+            super(SignatureURLs, self).__init__(queries)
         else:
-            super(SignatureURLs, self).__init__(Query(SignatureURLs.URL, params, handler, handlerdata), credentials)
+            super(SignatureURLs, self).__init__(Query(SignatureURLs.URL, params, handler, handlerdata))
 
     @staticmethod
     def get_default_handler(trunc):
@@ -706,7 +683,7 @@ class SignatureURLs(Socorro):
         return handler
 
     @staticmethod
-    def get_urls(signatures, version=None, channel=None, duration=7, end_date='today', product='Firefox', credentials=None, trunc=True):
+    def get_urls(signatures, version=None, channel=None, duration=7, end_date='today', product='Firefox', trunc=True):
         """Get signatures urls
 
         Args:
@@ -715,7 +692,6 @@ class SignatureURLs(Socorro):
             channel (Optional[str]): 'nightly', 'aurora', 'beta' or 'release'
             duration (Optional[int]): the duration
             end_date (Optional[str]): the last date
-            credentials (Optional[dict]): credentials to use with Socorro
             trunc (Optional[bool]): if True, then the url are truncated to their first part (netloc)
                                     e.g. http://foo.com/bar/blah/blah.html will be truncated in foo.com
 
@@ -723,7 +699,7 @@ class SignatureURLs(Socorro):
             dict: the URLs for each signature
         """
         if not version:
-            version = ProductVersions.get_last_version(channel, credentials)
+            version = ProductVersions.get_last_version(channel)
             if not version:
                 return None
 
@@ -741,7 +717,7 @@ class SignatureURLs(Socorro):
             __base['signature'] = signatures
             _list = []
             data[signatures] = _list
-            SignatureURLs(params=__base, credentials=credentials, handler=handler, handlerdata=_list).wait()
+            SignatureURLs(params=__base, handler=handler, handlerdata=_list).wait()
         else:
             queries = []
             for signature in signatures:
@@ -750,7 +726,7 @@ class SignatureURLs(Socorro):
                 _list = []
                 data[signature] = _list
                 queries.append(Query(SignatureURLs.URL, cparams, handler, _list))
-            SignatureURLs(queries=queries, credentials=credentials).wait()
+            SignatureURLs(queries=queries).wait()
 
         return data
 
@@ -761,20 +737,19 @@ class Bugs(Socorro):
 
     URL = Socorro.API_URL + '/Bugs'
 
-    def __init__(self, params=None, handler=None, handlerdata=None, credentials=None, queries=None):
+    def __init__(self, params=None, handler=None, handlerdata=None, queries=None):
         """Constructor
 
         Args:
             params (Optional[dict]): the params for the query
             handler (Optional[function]): handler to use with the result of the query
             handlerdata (Optional): data used in second argument of the handler
-            credentials (Optional[dict]): credentials to use with Socorro
             queries (Optional[List[Query]]): queries to execute
         """
         if queries:
-            super(Bugs, self).__init__(queries, credentials)
+            super(Bugs, self).__init__(queries)
         else:
-            super(Bugs, self).__init__(Query(Bugs.URL, params, handler, handlerdata), credentials)
+            super(Bugs, self).__init__(Query(Bugs.URL, params, handler, handlerdata))
 
     @staticmethod
     def default_handler(json, data):
@@ -789,12 +764,11 @@ class Bugs(Socorro):
                 data.add(hit['id'])
 
     @staticmethod
-    def get_bugs(signatures, credentials=None):
+    def get_bugs(signatures):
         """Get signatures bugs
 
         Args:
             signatures (List[str]): the signatures
-            credentials (Optional[dict]): credentials to use with Socorro
 
         Returns:
             dict: the bugs for each signature
@@ -804,14 +778,14 @@ class Bugs(Socorro):
         if isinstance(signatures, six.string_types):
             _set = set()
             data[signatures] = _set
-            Bugs(params={'signatures': signatures}, credentials=credentials, handler=Bugs.default_handler, handlerdata=_set).wait()
+            Bugs(params={'signatures': signatures}, handler=Bugs.default_handler, handlerdata=_set).wait()
         else:
             queries = []
             for signature in signatures:
                 _set = set()
                 data[signature] = _set
                 queries.append(Query(Bugs.URL, {'signatures': signature}, Bugs.default_handler, _set))
-            Bugs(queries=queries, credentials=credentials).wait()
+            Bugs(queries=queries).wait()
 
         _data = {}
         for s, b in data.items():
