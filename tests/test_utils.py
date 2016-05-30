@@ -4,7 +4,6 @@
 
 import unittest
 import datetime
-import json
 import math
 from clouseau import utils
 
