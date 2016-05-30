@@ -5,11 +5,15 @@
 import unittest
 import os
 from clouseau.stability import crashes
+from clouseau.redash import Redash
 
 
 class CrashesTest(unittest.TestCase):
 
     def test_crashes(self):
+        tok = os.environ.get('API_KEY_346')
+        if tok:
+            Redash.TOKEN = tok
         stats = crashes.get('release', 'yesterday', versions=46, duration=11, tcbs_limit=50)
 
         self.assertIn('start_date', stats)
