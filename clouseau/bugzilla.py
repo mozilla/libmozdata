@@ -57,7 +57,9 @@ class Bugzilla(Connection):
             self.got_data = False
 
     def get_header(self):
-        return {'X-Bugzilla-API-Key': self.get_apikey(), 'User-Agent': 'clouseau'}
+        header = super(Bugzilla, self).get_header()
+        header['X-Bugzilla-API-Key'] = self.get_apikey()
+        return header
 
     def put(self, data):
         """Put some data in bugs
@@ -292,6 +294,7 @@ class Bugzilla(Connection):
         url = Bugzilla.API_URL + '/%s/history'
         for bugid in self.bugids:
             self.history_results.append(self.session.get(url % bugid,
+                                                         verify=True,
                                                          timeout=self.TIMEOUT,
                                                          background_callback=self.__history_cb))
 
@@ -319,6 +322,7 @@ class Bugzilla(Connection):
         url = Bugzilla.API_URL + '/%s/comment'
         for bugid in self.bugids:
             self.comment_results.append(self.session.get(url % bugid,
+                                                         verify=True,
                                                          timeout=self.TIMEOUT,
                                                          background_callback=self.__comment_cb))
 
@@ -347,6 +351,7 @@ class Bugzilla(Connection):
         req_params = {'api_key': self.get_apikey()}
         for bugid in self.bugids:
             self.attachment_results.append(self.session.get(url % bugid,
+                                                            verify=True,
                                                             params=req_params,
                                                             timeout=self.TIMEOUT,
                                                             background_callback=self.__attachment_cb))

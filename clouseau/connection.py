@@ -99,7 +99,7 @@ class Connection(object):
         Returns:
             dict: the header
         """
-        return dict()
+        return {'User-Agent': 'clouseau', 'Connection': 'close'}
 
     def get_auth(self):
         """Get the auth to use each query
@@ -123,8 +123,6 @@ class Connection(object):
                 self.queries = [self.queries]
 
             header = self.get_header()
-            if 'Connection' not in header:
-                header['Connection'] = 'close'
             auth = self.get_auth()
 
             for query in self.queries:
@@ -135,6 +133,7 @@ class Connection(object):
                                                              params=query.params,
                                                              headers=header,
                                                              auth=auth,
+                                                             verify=True,
                                                              timeout=self.TIMEOUT,
                                                              background_callback=cb))
                     else:
@@ -143,12 +142,14 @@ class Connection(object):
                                                                  params=p,
                                                                  headers=header,
                                                                  auth=auth,
+                                                                 verify=True,
                                                                  timeout=self.TIMEOUT,
                                                                  background_callback=cb))
                 else:
                     self.results.append(self.session.get(query.url,
                                                          headers=header,
                                                          auth=auth,
+                                                         verify=True,
                                                          timeout=self.TIMEOUT,
                                                          background_callback=cb))
 

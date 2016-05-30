@@ -18,9 +18,10 @@ class BZInfo(Bugzilla):
             bugids (List[str]): list of bug ids or search query
         """
         super(BZInfo, self).__init__(bugids,
+                                     include_fields=['id', 'severity', 'component', 'product', 'creator', 'assigned_to'],
                                      bughandler=self.__bug_handler,
-                                     historyhandler=self.__history_handler,
-                                     commenthandler=self.__comment_handler)
+                                     historyhandler=self.__history_handler)
+        #                             commenthandler=self.__comment_handler)
         self.info = {}
         for bugid in self.bugids:
             self.info[bugid] = {'ownership': [],
@@ -110,10 +111,8 @@ class BZInfo(Bugzilla):
         """
         self.info[str(bug['id'])].update({'authorized': True,
                                           'severity': bug['severity'],
-                                          'votes': bug['votes'],
                                           'component': bug['component'],
                                           'product': bug['product'],
-                                          'nbcc': len(bug['cc']),
                                           'reporter': bug['creator'],
                                           'owner': bug['assigned_to_detail']['email']})
 
