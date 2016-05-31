@@ -34,17 +34,12 @@ class FileStats(object):
         self.hi = HGFileInfo(path, channel=channel, node=node)
         self.module = modules.module_from_path(path)
 
-    def get_info(self):
-        """Get info
-
-        Returns:
-            dict: info
-        """
+    def get_static_info(self):
         info = {
             'path': self.path,
             'guilty': None,
             'needinfo': None,
-            'components': set(),
+            'components': set()
         }
 
         if self.module is not None:
@@ -53,8 +48,25 @@ class FileStats(object):
             info['owners'] = self.module['owners']
             info['peers'] = self.module['peers']
 
+        return info
+        
+    def get_info(self, guilty_only=False):
+        """Get info
+
+        Args:
+            guilty_only(Optional[bool]): if True then return only info if we have a guilty set of patches
+
+        Returns:
+            dict: info
+        """
+
         last = self.hi.get(self.path, self.utc_ts_from, self.utc_ts)['patches']
-        if len(last) > 0:  # we have a 'guilty' set of patches
+        if guilty_only and not last:
+            return None
+
+        info = self.get_static_info()
+
+        if last:  # we have a 'guilty' set of patches
             stats = {}
             last_author = None
             for patch in last:
@@ -67,15 +79,15 @@ class FileStats(object):
                               'last_author': last_author,
                               'patches': last}
 
-            bugs = self.hi.get(self.path)['bugs']
-            bi = BZInfo(bugs) if bugs else None
-            if bi:
-                # find out the good person to query for a needinfo
-                info['needinfo'] = bi.get_best_collaborator()
-                comp_prod = bi.get_best_component_product()
-                if comp_prod:
-                    info['components'].add(comp_prod[1] + '::' + comp_prod[0])
-                info['bugs'] = len(bugs)
+        bugs = self.hi.get(self.path)['bugs']
+        bi = BZInfo(bugs) if bugs else None
+        if bi:
+            # find out the good person to query for a needinfo
+            info['needinfo'] = bi.get_best_collaborator()
+            comp_prod = bi.get_best_component_product()
+            if comp_prod:
+                info['infered_component'] = comp_prod[1] + '::' + comp_prod[0]
+            info['bugs'] = len(bugs)
 
         return info
 
