@@ -38,7 +38,7 @@ class FileStatsTest(unittest.TestCase):
         self.assertIsNotNone(info['needinfo'])
         self.assertEqual(info['path'], path)
         self.assertIsNone(info['guilty'])
-        
+
         info = FileStats(path, utc_ts=utils.get_timestamp('2010-04-06')).get_info()
         self.assertEqual(info['infered_component'], 'Core::General')
         self.assertEqual(info['needinfo'], 'philringnalda@gmail.com')

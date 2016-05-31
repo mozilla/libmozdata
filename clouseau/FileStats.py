@@ -49,7 +49,7 @@ class FileStats(object):
             info['peers'] = self.module['peers']
 
         return info
-        
+
     def get_info(self, guilty_only=False):
         """Get info
 
