@@ -15,7 +15,7 @@ class BZInfoTest(unittest.TestCase):
         info = info['12345']
         self.assertTrue(info['authorized'])
         self.assertEqual(info['owner'], u'jefft@formerly-netscape.com.tld')
-        #self.assertIn(u'jefft@formerly-netscape.com.tld', info['commenters'])
+        # self.assertIn(u'jefft@formerly-netscape.com.tld', info['commenters'])
         self.assertEqual(info['component'], 'Backend')
         self.assertEqual(info['product'], 'MailNews Core')
 
@@ -28,7 +28,7 @@ class BZInfoTest(unittest.TestCase):
         info = info['1269839']
         self.assertFalse(info['authorized'])
         self.assertEqual(info['ownership'], [])
-        #self.assertEqual(info['commenters'], {})
+        # self.assertEqual(info['commenters'], {})
         self.assertEqual(info['reviewers'], set())
 
         self.assertIsNone(bzi.get_best_collaborator())

@@ -178,7 +178,7 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tcbs_limit
 
     for sgn, stats in signatures.items():
         # stats is 2-uple: ([count, win_count, mac_count, linux_count, startup_count], trend)
-        nan = None # Use None because NaN isn't serializable in JSON.
+        nan = None  # Use None because NaN isn't serializable in JSON.
         crash_stats_per_mega_adi = [100 / throttle * float(stats[1][s]) * 1e6 / float(adi[s]) if adi[s] else nan for s in range(duration)]
         crash_stats_per_mega_hours = [100 / throttle * float(stats[1][s]) * 1e3 / khours[s] if khours[s] else nan for s in range(duration)]
         startup_percent = float(stats[0][4]) / float(stats[0][0])
@@ -215,4 +215,4 @@ if __name__ == "__main__":
     pprint(stats)
 
     with open('crashes.json', 'w') as f:
-      json.dump(stats, f, allow_nan=False)
+        json.dump(stats, f, allow_nan=False)
