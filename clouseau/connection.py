@@ -75,7 +75,7 @@ class Connection(object):
             else:
                 print('Connection error:')
                 print('   url: ', res.url)
-                print('   json: ', res.json())
+                print('   text: ', res.text)
 
         return cb
 
