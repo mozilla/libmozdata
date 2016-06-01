@@ -12,7 +12,6 @@ import re
 from FileStats import FileStats
 import backtrace
 import socorro
-import hgmozilla
 import memory
 
 
@@ -36,7 +35,7 @@ class Track(object):
         self.signature = signature
         self.info = {}
         self.date = utils.get_date_ymd(start_date)
-        self.hg_pattern = re.compile('hg:hg.mozilla.org/%s:([^:]*):([a-z0-9]+)' % hgmozilla.Mercurial.get_repo(channel))
+        self.hg_pattern = re.compile('hg:hg.mozilla.org[^:]*:([^:]*):([a-z0-9]+)')
         self.__get_info()
 
     def get(self):
@@ -320,7 +319,7 @@ class Track(object):
                     filename = m.group(1)
                     node = m.group(2)
                     fs = FileStats(path=filename, channel=self.channel, node=node, utc_ts=ts)
-                    fileinfo = fs.get_info(dig_when_non_pertinent=False)
+                    fileinfo = fs.get_info(guilty_only=True)
                     if fileinfo:
                         # hurrah \o/ we found a pertinent file !
                         break
@@ -359,7 +358,7 @@ class Track(object):
         ts = utils.get_timestamp(self.first_date)
         fs = FileStats(path=filename, channel=self.channel, node=node, utc_ts=ts)
         # don't dig: if non-pertinent we'll try in the next function in the backtrace
-        fileinfo = fs.get_info(dig_when_non_pertinent=False)
+        fileinfo = fs.get_info(guilty_only=True)
         if fileinfo and fileinfo['guilty']:
             self.info['fileinfo'] = fileinfo
         else:
@@ -368,7 +367,7 @@ class Track(object):
                 self.info['fileinfo'] = fileinfo
             else:
                 # didn't find out any guilty patches... :(
-                self.info['fileinfo'] = fs.get_info(dig_when_non_pertinent=True)
+                self.info['fileinfo'] = fs.get_info(guilty_only=False)
 
     def __get_info(self):
         """Retrieve information

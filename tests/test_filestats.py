@@ -35,13 +35,12 @@ class FileStatsTest(unittest.TestCase):
         path = 'LICENSE'
         info = FileStats(path, utc_ts=utils.get_timestamp('today')).get_info()
         self.assertEqual(info['components'], set())
-        self.assertIsNone(info['needinfo'])
+        self.assertIsNotNone(info['needinfo'])
         self.assertEqual(info['path'], path)
         self.assertIsNone(info['guilty'])
-        self.assertNotIn('bugs', info)
 
         info = FileStats(path, utc_ts=utils.get_timestamp('2010-04-06')).get_info()
-        self.assertEqual(info['components'], set(['Core::General']))
+        self.assertEqual(info['infered_component'], 'Core::General')
         self.assertEqual(info['needinfo'], 'philringnalda@gmail.com')
         self.assertEqual(info['path'], path)
         self.assertEqual(len(info['guilty']['patches']), 1)
@@ -52,7 +51,7 @@ class FileStatsTest(unittest.TestCase):
         self.assertEqual(info, FileStats(path, utc_ts=utils.get_timestamp('2010-04-07')).get_info())
         self.assertEqual(info, FileStats(path, utc_ts=utils.get_timestamp('2010-04-08')).get_info())
 
-        info = FileStats(path, utc_ts=utils.get_timestamp('2010-04-09')).get_info()
+        info = FileStats(path, utc_ts=utils.get_timestamp('2010-04-09')).get_static_info()
         self.assertEqual(info['components'], set())
         self.assertIsNone(info['needinfo'])
         self.assertEqual(info['path'], path)
@@ -60,7 +59,7 @@ class FileStatsTest(unittest.TestCase):
         self.assertNotIn('bugs', info)
 
         info = FileStats(path, utc_ts=utils.get_timestamp('2008-03-21')).get_info()
-        self.assertEqual(info['components'], set(['Core::General']))
+        self.assertEqual(info['infered_component'], 'Core::General')
         self.assertEqual(info['needinfo'], 'philringnalda@gmail.com')
         self.assertEqual(info['path'], path)
         self.assertEqual(len(info['guilty']['patches']), 1)
