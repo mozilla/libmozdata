@@ -8,9 +8,10 @@ except ImportError:
     import urllib as ur
 
 import json
-
+from . import utils
 
 __versions = None
+__version_dates = None
 
 
 def __get_major(v):
@@ -35,6 +36,14 @@ def __getVersions():
             'nightly': nightly}
 
 
+def __getVersionDates():
+    url = 'https://product-details.mozilla.org/firefox_history_major_releases.json'
+    resp = ur.urlopen(url)
+    data = json.loads(resp.read().decode('utf-8'))
+    resp.close()
+    return data
+
+
 def get(base=False):
     """Get current version number by channel
 
@@ -52,3 +61,13 @@ def get(base=False):
         return res
 
     return __versions
+
+
+def getMajorDate(version):
+    global __version_dates
+    if not __version_dates:
+        __version_dates = __getVersionDates()
+
+    date = __version_dates.get(str(__get_major(version)) + '.0')
+
+    return utils.get_date_ymd(date) if date is not None else None
