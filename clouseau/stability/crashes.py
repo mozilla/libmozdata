@@ -41,7 +41,7 @@ def __trend_handler(default_trend, json, data):
 
 def __bug_handler(json, data):
     for bug in json['bugs']:
-        data.append({'id': bug['id'], 'resolution': bug['resolution']})
+        data.append({'id': bug['id'], 'resolution': bug['resolution'], 'last_change_time': bug['last_change_time']})
 
 
 def get(channel, date, versions=None, product='Firefox', duration=11, tcbs_limit=50, crash_type='all'):
@@ -123,7 +123,7 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tcbs_limit
     base = {'f1': 'cf_crash_signature',
             'v1': None,
             'o1': 'substring',
-            'include_fields': ['resolution', 'id']}
+            'include_fields': ['resolution', 'id', 'last_change_time']}
     queries = []
     for sgn in signatures.keys():
         cparams = base.copy()
