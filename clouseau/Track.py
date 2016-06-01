@@ -12,7 +12,6 @@ import re
 from FileStats import FileStats
 import backtrace
 import socorro
-import hgmozilla
 import memory
 
 
@@ -36,7 +35,7 @@ class Track(object):
         self.signature = signature
         self.info = {}
         self.date = utils.get_date_ymd(start_date)
-        self.hg_pattern = re.compile('hg:hg.mozilla.org/%s:([^:]*):([a-z0-9]+)' % hgmozilla.Mercurial.get_repo(channel))
+        self.hg_pattern = re.compile('hg:hg.mozilla.org[^:]*:([^:]*):([a-z0-9]+)')
         self.__get_info()
 
     def get(self):
