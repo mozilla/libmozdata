@@ -6,6 +6,8 @@ try:
 except ImportError:
     from urllib import urlopen
 import weakref
+import os
+import pickle
 import whatthepatch
 from .HGFileInfo import HGFileInfo
 from .bugzilla import Bugzilla
@@ -25,7 +27,7 @@ def patch_analysis(patch, author):
         'developer_familiarity_overall': 0,
         'developer_familiarity_last_3_releases': 0,
         # 'reviewer_familiarity_overall': 0,
-        # 'developer_familiarity_last_3_releases': 0,
+        # 'reviewer_familiarity_last_3_releases': 0,
         'crashes': 0,
     }
 
@@ -61,7 +63,7 @@ def patch_analysis(patch, author):
         info['developer_familiarity_overall'] += len(hi.get(path, author=author)['patches'])
         info['developer_familiarity_last_3_releases'] += len(hi.get(path, author=author, utc_ts_from=utils.get_timestamp(date.today() + timedelta(-3 * 6 * 7)))['patches'])
 
-        # TODO: Add number of times the file was modified by the developer or the reviewer.
+        # TODO: Add number of times the file was modified by the reviewer.
 
     info['modules_num'] = sum(used_modules.values())
 
@@ -123,10 +125,22 @@ def bug_analysis(bug_id):
             except:
                 review_num = re.search(MOZREVIEW_URL_PATTERN2, mozreview_url).group(1)
 
-            mozreview_raw_diff_url = 'https://reviewboard.mozilla.org/r/' + review_num + '/diff/raw/'
+            try:
+                with open('mozreviews_cache/' + review_num, 'rb') as f:
+                    data = pickle.load(f)
+            except:
+                mozreview_raw_diff_url = 'https://reviewboard.mozilla.org/r/' + review_num + '/diff/raw/'
 
-            response = urlopen(mozreview_raw_diff_url)
-            data = response.read().decode('ascii', 'ignore')
+                response = urlopen(mozreview_raw_diff_url)
+                data = response.read().decode('ascii', 'ignore')
+
+                try:
+                  os.mkdir('mozreviews_cache')
+                except:
+                  pass
+
+                with open('mozreviews_cache/' + review_num, 'wb') as f:
+                    pickle.dump(data, f)
 
         if data is not None:
             info.update(patch_analysis(data, attachment['creator']))

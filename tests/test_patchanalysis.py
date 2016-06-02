@@ -51,5 +51,9 @@ class PatchAnalysisTest(unittest.TestCase):
         self.assertGreaterEqual(info['developer_familiarity_last_3_releases'], 0)
         self.assertGreaterEqual(info['crashes'], 0)
 
+        # Test mozreview patch caching.
+        info2 = patchanalysis.bug_analysis(1271794)
+        self.assertEqual(info2, info)
+
 if __name__ == '__main__':
     unittest.main()
