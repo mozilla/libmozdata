@@ -8,6 +8,7 @@ except ImportError:
 import weakref
 import os
 import pickle
+import numbers
 import whatthepatch
 from .HGFileInfo import HGFileInfo
 from .bugzilla import Bugzilla
@@ -77,27 +78,29 @@ MOZREVIEW_URL_PATTERN2 = 'https://reviewboard.mozilla.org/r/([0-9]+)/'
 
 
 # TODO: Consider feedback+ and feedback- as review+ and review-
-def bug_analysis(bug_id):
-    bug = {}
+def bug_analysis(bug):
+    if isinstance(bug, numbers.Number):
+        bug_id = bug
+        bug = {}
 
-    def bughandler(found_bug, data):
-        bug.update(found_bug)
+        def bughandler(found_bug, data):
+            bug.update(found_bug)
 
-    def commenthandler(found_bug, bugid, data):
-        bug['comments'] = found_bug['comments']
+        def commenthandler(found_bug, bugid, data):
+            bug['comments'] = found_bug['comments']
 
-    def attachmenthandler(attachments, bugid, data):
-        bug['attachments'] = attachments
+        def attachmenthandler(attachments, bugid, data):
+            bug['attachments'] = attachments
 
-    INCLUDE_FIELDS = [
-        'id', 'flags', 'depends_on', 'keywords', 'blocks', 'whiteboard', 'resolution', 'status',
-        'url', 'version', 'summary', 'priority', 'product', 'component', 'severity',
-        'platform', 'op_sys'
-    ]
+        INCLUDE_FIELDS = [
+            'id', 'flags', 'depends_on', 'keywords', 'blocks', 'whiteboard', 'resolution', 'status',
+            'url', 'version', 'summary', 'priority', 'product', 'component', 'severity',
+            'platform', 'op_sys'
+        ]
 
-    INCLUDE_FIELDS_QUERY = 'include_fields=' + ','.join(INCLUDE_FIELDS)
+        INCLUDE_FIELDS_QUERY = 'include_fields=' + ','.join(INCLUDE_FIELDS)
 
-    Bugzilla('id=' + str(bug_id) + '&' + INCLUDE_FIELDS_QUERY, bughandler=bughandler, commenthandler=commenthandler, attachmenthandler=attachmenthandler).get_data().wait()
+        Bugzilla('id=' + str(bug_id) + '&' + INCLUDE_FIELDS_QUERY, bughandler=bughandler, commenthandler=commenthandler, attachmenthandler=attachmenthandler).get_data().wait()
 
     info = {
         'backout_num': 0,
@@ -135,9 +138,9 @@ def bug_analysis(bug_id):
                 data = response.read().decode('ascii', 'ignore')
 
                 try:
-                  os.mkdir('mozreviews_cache')
-                except:
-                  pass
+                    os.mkdir('mozreviews_cache')
+                except OSError:
+                    pass
 
                 with open('mozreviews_cache/' + review_num, 'wb') as f:
                     pickle.dump(data, f)

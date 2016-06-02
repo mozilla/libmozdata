@@ -3,6 +3,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import unittest
+from clouseau.bugzilla import Bugzilla
 from clouseau import patchanalysis
 
 
@@ -54,6 +55,22 @@ class PatchAnalysisTest(unittest.TestCase):
         # Test mozreview patch caching.
         info2 = patchanalysis.bug_analysis(1271794)
         self.assertEqual(info2, info)
+
+        bug = {}
+
+        def bughandler(found_bug, data):
+            bug.update(found_bug)
+
+        def commenthandler(found_bug, bugid, data):
+            bug['comments'] = found_bug['comments']
+
+        def attachmenthandler(attachments, bugid, data):
+            bug['attachments'] = attachments
+
+        Bugzilla('id=1271794', bughandler=bughandler, commenthandler=commenthandler, attachmenthandler=attachmenthandler).get_data().wait()
+
+        info3 = patchanalysis.bug_analysis(1271794)
+        self.assertEqual(info3, info)
 
 if __name__ == '__main__':
     unittest.main()
