@@ -76,6 +76,7 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tc_limit=5
     khours = Redash.get_khours(utils.get_date_ymd(start_date), utils.get_date_ymd(end_date), channel, versions, product)
     khours = [khours[key] for key in sorted(khours.keys(), reverse=True)]
 
+    overall_crashes_by_day = []
     signatures = {}
 
     def signature_handler(json, data):
@@ -94,6 +95,9 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tc_limit=5
                 if int(uptime['term']) < 60:
                     signatures[signature['term']][4] += uptime['count']
 
+        for facets in json['facets']['histogram_date']:
+            overall_crashes_by_day.insert(0, facets['count'])
+
     socorro.SuperSearch(params={
         'product': product,
         'version': versions,
@@ -102,6 +106,8 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tc_limit=5
         '_aggs.signature': ['platform', 'uptime'],
         '_results_number': 0,
         '_facets_size': tc_limit,
+        '_histogram.date': ['product'],
+        '_histogram_interval': 1
     }, handler=signature_handler).wait()
 
     # TODO: too many requests... should be improved with chunks
@@ -126,22 +132,6 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tc_limit=5
     default_trend = {}
     for i in range(duration):
         default_trend[_date - timedelta(i)] = 0
-
-    overall_crashes_by_day = []
-
-    def crash_count_handler(json, data):
-        for facets in json['facets']['histogram_date']:
-            overall_crashes_by_day.insert(0, facets['count'])
-
-    socorro.SuperSearch(params={
-        'product': product,
-        'version': versions,
-        'date': socorro.SuperSearch.get_search_date(start_date, end_date),
-        'release_channel': channel,
-        '_results_number': 0,
-        '_histogram.date': ['product'],
-        '_histogram_interval': 1
-    }, handler=crash_count_handler).wait()
 
     base = {'product': product,
             'version': versions,
