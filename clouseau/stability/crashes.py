@@ -35,7 +35,7 @@ def __bug_handler(json, data):
         data.append({'id': bug['id'], 'resolution': bug['resolution'], 'last_change_time': bug['last_change_time']})
 
 
-def get(channel, date, versions=None, product='Firefox', duration=11, tc_limit=50, crash_type='all'):
+def get(channel, date, versions=None, product='Firefox', duration=11, tc_limit=50, crash_type='all', startup=False):
     """Get crashes info
 
     Args:
@@ -98,7 +98,7 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tc_limit=5
         for facets in json['facets']['histogram_date']:
             overall_crashes_by_day.insert(0, facets['count'])
 
-    socorro.SuperSearch(params={
+    params = {
         'product': product,
         'version': versions,
         'date': socorro.SuperSearch.get_search_date(start_date, end_date),
@@ -108,7 +108,12 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tc_limit=5
         '_facets_size': tc_limit,
         '_histogram.date': ['product'],
         '_histogram_interval': 1
-    }, handler=signature_handler).wait()
+    }
+
+    if startup:
+        params['uptime'] = '<=60';
+
+    socorro.SuperSearch(params=params, handler=signature_handler).wait()
 
     # TODO: too many requests... should be improved with chunks
     bugs = {}
@@ -191,10 +196,11 @@ if __name__ == "__main__":
     parser.add_argument('-D', '--duration', action='store', default=11, help='the duration')
     parser.add_argument('-v', '--versions', action='store', nargs='+', help='the Firefox versions')
     parser.add_argument('-t', '--tclimit', action='store', default=50, help='number of top crashes to retrieve')
+    parser.add_argument('-s', '--startup', action='store', default=False, help='whether to gather only startup crashes or not')
 
     args = parser.parse_args()
 
-    stats = get(args.channel, args.date, versions=args.versions, duration=int(args.duration), tc_limit=int(args.tclimit))
+    stats = get(args.channel, args.date, versions=args.versions, duration=int(args.duration), tc_limit=int(args.tclimit), startup=args.startup)
     pprint(stats)
 
     with open('crashes.json', 'w') as f:
