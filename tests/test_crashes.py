@@ -14,23 +14,21 @@ class CrashesTest(unittest.TestCase):
         tok = os.environ.get('API_KEY_346')
         if tok:
             Redash.TOKEN = tok
-        stats = crashes.get('release', 'yesterday', versions=46, duration=11, tcbs_limit=50)
+        stats = crashes.get('release', 'yesterday', versions=46, duration=11, tc_limit=50)
 
         self.assertIn('start_date', stats)
         self.assertIn('end_date', stats)
         self.assertIn('versions', stats)
         self.assertIn('adi', stats)
         self.assertIn('khours', stats)
+        self.assertIn('crash_by_day', stats)
         self.assertIn('throttle', stats)
         for sign in stats['signatures'].values():
             self.assertIn('bugs', sign)
             self.assertIn('startup_percent', sign)
-            self.assertIn('startup_crash', sign)
             self.assertIn('tc_rank', sign)
             self.assertIn('crash_count', sign)
             self.assertIn('crash_by_day', sign)
-            self.assertIn('crash_stats_per_mega_adi', sign)
-            self.assertIn('crash_stats_per_mega_hours', sign)
 
 
 if __name__ == '__main__':
