@@ -66,10 +66,7 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tc_limit=5
 
     _date = utils.get_date_ymd(date)
     start_date = utils.get_date_str(_date - timedelta(duration - 1))
-    end_date = utils.get_date(date)
-
-    _start_date = utils.get_date_str(_date - timedelta(duration - 1))
-    _end_date = utils.get_date_str(_date)
+    end_date = utils.get_date_str(_date)
 
     # First, we get the ADI
     adi = socorro.ADI.get(version=versions, product=product, end_date=end_date, duration=duration, platforms=platforms)
@@ -100,7 +97,7 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tc_limit=5
     socorro.SuperSearch(params={
         'product': product,
         'version': versions,
-        'date': socorro.SuperSearch.get_search_date(_start_date, _end_date),
+        'date': socorro.SuperSearch.get_search_date(start_date, end_date),
         'release_channel': channel,
         '_aggs.signature': ['platform', 'uptime'],
         '_results_number': 0,
@@ -139,7 +136,7 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tc_limit=5
     socorro.SuperSearch(params={
         'product': product,
         'version': versions,
-        'date': socorro.SuperSearch.get_search_date(_start_date, _end_date),
+        'date': socorro.SuperSearch.get_search_date(start_date, end_date),
         'release_channel': channel,
         '_results_number': 0,
         '_histogram.date': ['product'],
@@ -149,7 +146,7 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tc_limit=5
     base = {'product': product,
             'version': versions,
             'signature': None,
-            'date': socorro.SuperSearch.get_search_date(_start_date, _end_date),
+            'date': socorro.SuperSearch.get_search_date(start_date, end_date),
             'release_channel': channel,
             '_results_number': 0,
             '_histogram.date': ['signature'],
