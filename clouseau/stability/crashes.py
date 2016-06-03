@@ -15,15 +15,6 @@ from clouseau.connection import (Connection, Query)
 from clouseau.bugzilla import Bugzilla
 
 
-def __tcbs_handler(json, data):
-    for crash in json['crashes']:
-        count = crash['count']
-        startup_percent = crash['startup_percent']
-        startup_count = int(round(float(count) * startup_percent))
-        signature = crash['signature']
-        data[signature] = [count, crash['win_count'], crash['mac_count'], crash['linux_count'], startup_count]
-
-
 def __trend_handler(default_trend, json, data):
     for facets in json['facets']['histogram_date']:
         d = datetime.strptime(facets['term'], '%Y-%m-%dT00:00:00+00:00')
@@ -44,7 +35,7 @@ def __bug_handler(json, data):
         data.append({'id': bug['id'], 'resolution': bug['resolution'], 'last_change_time': bug['last_change_time']})
 
 
-def get(channel, date, versions=None, product='Firefox', duration=11, tcbs_limit=50, crash_type='all'):
+def get(channel, date, versions=None, product='Firefox', duration=11, tc_limit=50, crash_type='all'):
     """Get crashes info
 
     Args:
@@ -53,7 +44,7 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tcbs_limit
         versions (Optional[List[str]]): the versions to treat
         product (Optional[str]): the product
         duration (Optional[int]): the duration to retrieve the data
-        tcbs_limit (Optional[int]): the number of crashes to get from tcbs
+        tc_limit (Optional[int]): the number of topcrashes to load
         crash_type (Optional[str]): 'all' (default) or 'browser' or 'content' or 'plugin'
 
     Returns:
@@ -77,46 +68,44 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tcbs_limit
     start_date = utils.get_date_str(_date - timedelta(duration - 1))
     end_date = utils.get_date(date)
 
-    signatures = {}
+    _start_date = utils.get_date_str(_date - timedelta(duration - 1))
+    _end_date = utils.get_date_str(_date)
 
     # First, we get the ADI
     adi = socorro.ADI.get(version=versions, product=product, end_date=end_date, duration=duration, platforms=platforms)
     adi = [adi[key] for key in sorted(adi.keys(), reverse=True)]
 
-    # Second we get info from TCBS (Top Crash By Signature)
-    # we can have several active versions (45.0, 45.0.1) so we need to aggregates the results
-    # TODO: ask to Socorro team to add a feature to get that directly
-    tcbs = {}
-    base = {'product': product,
-            'crash_type': 'all',
-            'version': None,
-            'limit': tcbs_limit,
-            'duration': 24 * duration,
-            'end_date': end_date}
-
-    queries = []
-    for v in versions:
-        _dict = {}
-        tcbs[v] = _dict
-        cparams = base.copy()
-        cparams['version'] = v
-        queries.append(Query(socorro.TCBS.URL, cparams, __tcbs_handler, _dict))
-
-    socorro.TCBS(queries=queries).wait()
-
-    # aggregate the results from the different versions
-    for tc in tcbs.values():
-        for sgn, count in tc.items():
-            if sgn in signatures:
-                c = signatures[sgn]
-                for i in range(5):  # 5 is the len of the list (see __tcbs_handler)
-                    c[i] += count[i]
-            else:
-                signatures[sgn] = count
-
     # get the khours
     khours = Redash.get_khours(utils.get_date_ymd(start_date), utils.get_date_ymd(end_date), channel, versions, product)
     khours = [khours[key] for key in sorted(khours.keys(), reverse=True)]
+
+    signatures = {}
+
+    def signature_handler(json, data):
+        for signature in json['facets']['signature']:
+            signatures[signature['term']] = [signature['count'], 0, 0, 0, 0]
+
+            for platform in signature['facets']['platform']:
+                if platform['term'] == 'Linux':
+                    signatures[signature['term']][3] = platform['count']
+                elif platform['term'] == 'Windows NT':
+                    signatures[signature['term']][1] = platform['count']
+                elif platform['term'] == 'Mac OS X':
+                    signatures[signature['term']][2] = platform['count']
+
+            for uptime in signature['facets']['uptime']:
+                if int(uptime['term']) < 60:
+                    signatures[signature['term']][4] += uptime['count']
+
+    socorro.SuperSearch(params={
+        'product': product,
+        'version': versions,
+        'date': socorro.SuperSearch.get_search_date(_start_date, _end_date),
+        'release_channel': channel,
+        '_aggs.signature': ['platform', 'uptime'],
+        '_results_number': 0,
+        '_facets_size': tc_limit,
+    }, handler=signature_handler).wait()
 
     # TODO: too many requests... should be improved with chunks
     bugs = {}
@@ -140,9 +129,6 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tcbs_limit
     default_trend = {}
     for i in range(duration):
         default_trend[_date - timedelta(i)] = 0
-
-    _start_date = utils.get_date_str(_date - timedelta(duration - 1))
-    _end_date = utils.get_date_str(_date)
 
     overall_crashes_by_day = []
 
@@ -217,11 +203,11 @@ if __name__ == "__main__":
     parser.add_argument('-d', '--date', action='store', default='yesterday', help='the end date')
     parser.add_argument('-D', '--duration', action='store', default=11, help='the duration')
     parser.add_argument('-v', '--versions', action='store', nargs='+', help='the Firefox versions')
-    parser.add_argument('-t', '--tcbslimit', action='store', default=50, help='number of crashes to retrieve in Top Crash')
+    parser.add_argument('-t', '--tclimit', action='store', default=50, help='number of top crashes to retrieve')
 
     args = parser.parse_args()
 
-    stats = get(args.channel, args.date, versions=args.versions, duration=int(args.duration), tcbs_limit=int(args.tcbslimit))
+    stats = get(args.channel, args.date, versions=args.versions, duration=int(args.duration), tc_limit=int(args.tclimit))
     pprint(stats)
 
     with open('crashes.json', 'w') as f:
