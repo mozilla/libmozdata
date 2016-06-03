@@ -145,6 +145,7 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tcbs_limit
     _end_date = utils.get_date_str(_date)
 
     overall_crashes_by_day = []
+
     def crash_count_handler(json, data):
         for facets in json['facets']['histogram_date']:
             overall_crashes_by_day.insert(0, facets['count'])
