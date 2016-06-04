@@ -117,5 +117,13 @@ class BugAttachmentTest(unittest.TestCase):
         self.assertEqual(data['attachment'][0]['is_obsolete'], 1)
 
 
+class BugDuplicateTest(unittest.TestCase):
+
+    def test_duplicate(self):
+        self.assertEqual(bugzilla.Bugzilla.follow_dup([1244129, 890156]), {'1244129': '1240533', '890156': None})
+
+    def test_not_duplicate(self):
+        self.assertEqual(bugzilla.Bugzilla.follow_dup([890156, 1240533]), {'1240533': None, '890156': None})
+
 if __name__ == '__main__':
     unittest.main()
