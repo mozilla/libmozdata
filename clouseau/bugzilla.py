@@ -148,7 +148,7 @@ class Bugzilla(Connection):
         def bughandler2(bug, data):
             if bug['resolution'] == 'DUPLICATE':
                 bugid = str(bug['id'])
-                for _id in dup.iterkeys():
+                for _id in dup.keys():
                     dupid = dup[_id]
                     if dupid and dupid[-1] == bugid:
                         dupeofid = str(bug['dupe_of'])

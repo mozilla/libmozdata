@@ -122,6 +122,9 @@ class BugDuplicateTest(unittest.TestCase):
     def test_duplicate(self):
         self.assertEqual(bugzilla.Bugzilla.follow_dup([1244129, 890156]), {'1244129': '1240533', '890156': None})
 
+    def test_double_duplicate(self):
+        self.assertEqual(bugzilla.Bugzilla.follow_dup([784349]), {'784349': '784345'})
+
     def test_not_duplicate(self):
         self.assertEqual(bugzilla.Bugzilla.follow_dup([890156, 1240533]), {'1240533': None, '890156': None})
 
