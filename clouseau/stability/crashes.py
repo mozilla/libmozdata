@@ -111,7 +111,7 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tc_limit=5
     }
 
     if startup:
-        params['uptime'] = '<=60';
+        params['uptime'] = '<=60'
 
     socorro.SuperSearch(params=params, handler=signature_handler).wait()
 
