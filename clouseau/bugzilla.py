@@ -167,7 +167,7 @@ class Bugzilla(Connection):
             bz.got_data = False
             bz.get_data().wait_bugs()
 
-        for k in dup.iterkeys():
+        for k in dup.keys():
             v = dup[k]
             dup[k] = v[-1] if v else None
 
