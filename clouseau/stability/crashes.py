@@ -13,6 +13,7 @@ import clouseau.utils as utils
 from clouseau.redash import Redash
 from clouseau.connection import (Connection, Query)
 from clouseau.bugzilla import Bugzilla
+import clouseau.versions
 
 
 def __trend_handler(default_trend, json, data):
@@ -209,17 +210,17 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tc_limit=5
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Track')
-    parser.add_argument('-c', '--channel', action='store', default='release', help='release channel')
+    parser.add_argument('-c', '--channels', action='store', nargs='+', default=['release', 'beta', 'aurora'], help='the channels')
     parser.add_argument('-d', '--date', action='store', default='yesterday', help='the end date')
     parser.add_argument('-D', '--duration', action='store', default=11, help='the duration')
-    parser.add_argument('-v', '--versions', action='store', nargs='+', help='the Firefox versions')
     parser.add_argument('-t', '--tclimit', action='store', default=50, help='number of top crashes to retrieve')
-    parser.add_argument('-s', '--startup', action='store', default=False, help='whether to gather only startup crashes or not')
 
     args = parser.parse_args()
 
-    stats = get(args.channel, args.date, versions=args.versions, duration=int(args.duration), tc_limit=int(args.tclimit), startup=args.startup)
-    pprint(stats)
+    v = clouseau.versions.get(base=True)
+    for channel in args.channels:
+        for startup in [False, True]:
+            stats = get(channel, args.date, versions=v[channel], duration=int(args.duration), tc_limit=int(args.tclimit), startup=startup)
 
-    with open('crashes.json', 'w') as f:
-        json.dump(stats, f, allow_nan=False)
+            with open(channel + ('-startup' if startup else '') + '.json', 'w') as f:
+                json.dump(stats, f, allow_nan=False)
