@@ -125,9 +125,8 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tc_limit=5
     for sgn in signatures.keys():
         cparams = base.copy()
         cparams['v1'] = sgn
-        _list = []
-        bugs[sgn] = _list
-        queries.append(Query(Bugzilla.API_URL, cparams, __bug_handler, _list))
+        bugs[sgn] = []
+        queries.append(Query(Bugzilla.API_URL, cparams, __bug_handler, bugs[sgn]))
     res_bugs = Bugzilla(queries=queries)
 
     # we have stats by signature in self.signatures
@@ -167,6 +166,25 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tc_limit=5
         i += 1
 
     res_bugs.wait()
+
+    # TODO: Remove bugs that appear twice in the lists.
+
+    # TODO: In the first query to get the bugs, also get dupe_of and avoid the first query
+    #       in follow_dup (so modify follow_dup to accept both a bug ID or a bug object).
+    queries = []
+    for sgn in signatures.keys():
+        ids = [str(bug['id']) for bug in bugs[sgn] if bug['resolution'] == 'DUPLICATE']
+        duplicates = {k: v for k, v in Bugzilla.follow_dup(ids).items() if v is not None}
+        if len(duplicates) == 0:
+            continue
+
+        bugs[sgn] = [bug for bug in bugs[sgn] if str(bug['id']) not in duplicates.keys()]
+        params = {
+            'id': ','.join([bug_id for bug_id in duplicates.values() if bug_id not in ids]),
+            'include_fields': ['resolution', 'id', 'last_change_time'],
+        }
+        queries.append(Query(Bugzilla.API_URL, params, __bug_handler, bugs[sgn]))
+    Bugzilla(queries=queries).wait()
 
     throttle = float(throttle)
 
