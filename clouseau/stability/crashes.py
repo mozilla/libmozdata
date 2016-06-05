@@ -168,26 +168,29 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tc_limit=5
 
     res_bugs.wait()
 
-    # TODO: Remove bugs that appear twice in the lists.
-
     # TODO: In the first query to get the bugs, also get dupe_of and avoid the first query
     #       in follow_dup (so modify follow_dup to accept both a bug ID or a bug object).
     queries = []
     for sgn in signatures.keys():
-        ids = [str(bug['id']) for bug in bugs[sgn] if bug['resolution'] == 'DUPLICATE']
-        duplicates = {k: v for k, v in Bugzilla.follow_dup(ids).items() if v is not None}
-        if len(duplicates) == 0:
+        duplicate_ids = [bug['id'] for bug in bugs[sgn] if bug['resolution'] == 'DUPLICATE']
+
+        # Remove bugs resolved as DUPLICATE from the list of bugs associated to the signature.
+        bugs[sgn] = [bug for bug in bugs[sgn] if bug['id'] not in duplicate_ids]
+
+        # Find duplicates for bugs resolved as DUPLICATE.
+        duplicates = {k: v for k, v in Bugzilla.follow_dup(duplicate_ids).items() if v is not None}
+        duplicate_sources = duplicates.keys()
+        duplicate_targets = [bug_id for bug_id in duplicates.values() if int(bug_id) not in [bug['id'] for bug in bugs[sgn]]]
+        if len(duplicate_targets) == 0:
             continue
 
-        bugs[sgn] = [bug for bug in bugs[sgn] if str(bug['id']) not in duplicates.keys()]
+        # Get info about bugs that the DUPLICATE bugs have been duped to.
         params = {
-            'id': ','.join([bug_id for bug_id in duplicates.values() if bug_id not in ids]),
+            'id': ','.join(duplicate_targets),
             'include_fields': ['resolution', 'id', 'last_change_time'],
         }
         queries.append(Query(Bugzilla.API_URL, params, __bug_handler, bugs[sgn]))
     Bugzilla(queries=queries).wait()
-
-    throttle = float(throttle)
 
     for sgn, stats in signatures.items():
         # stats is 2-uple: ([count, win_count, mac_count, linux_count, startup_count], trend)
@@ -198,14 +201,16 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tc_limit=5
                             'crash_by_day': stats[1],
                             'bugs': bugs[sgn]}
 
-    return {'start_date': start_date,
-            'end_date': end_date,
-            'versions': list(versions),
-            'adi': adi,
-            'khours': khours,
-            'crash_by_day': overall_crashes_by_day,
-            'signatures': _signatures,
-            'throttle': throttle}
+    return {
+        'start_date': start_date,
+        'end_date': end_date,
+        'versions': list(versions),
+        'adi': adi,
+        'khours': khours,
+        'crash_by_day': overall_crashes_by_day,
+        'signatures': _signatures,
+        'throttle': float(throttle)
+      }
 
 
 if __name__ == "__main__":
