@@ -7,7 +7,6 @@ import json
 import six
 import functools
 from datetime import (datetime, timedelta)
-from pprint import pprint
 import clouseau.socorro as socorro
 import clouseau.utils as utils
 from clouseau.redash import Redash
@@ -179,7 +178,6 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tc_limit=5
 
         # Find duplicates for bugs resolved as DUPLICATE.
         duplicates = {k: v for k, v in Bugzilla.follow_dup(duplicate_ids).items() if v is not None}
-        duplicate_sources = duplicates.keys()
         duplicate_targets = [bug_id for bug_id in duplicates.values() if int(bug_id) not in [bug['id'] for bug in bugs[sgn]]]
         if len(duplicate_targets) == 0:
             continue
@@ -210,7 +208,7 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tc_limit=5
         'crash_by_day': overall_crashes_by_day,
         'signatures': _signatures,
         'throttle': float(throttle)
-      }
+    }
 
 
 if __name__ == "__main__":
