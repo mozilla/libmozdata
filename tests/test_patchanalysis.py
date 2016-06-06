@@ -69,7 +69,7 @@ class PatchAnalysisTest(unittest.TestCase):
 
         Bugzilla('id=1271794', bughandler=bughandler, commenthandler=commenthandler, attachmenthandler=attachmenthandler).get_data().wait()
 
-        info3 = patchanalysis.bug_analysis(1271794)
+        info3 = patchanalysis.bug_analysis(bug)
         self.assertEqual(info3, info)
 
 if __name__ == '__main__':
