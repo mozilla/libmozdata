@@ -157,6 +157,7 @@ class BugAttachmentTest(unittest.TestCase):
         self.assertEqual(data['attachment'][0]['is_patch'], 1)
         self.assertEqual(data['attachment'][0]['is_obsolete'], 1)
 
+
 class BugDuplicateTest(unittest.TestCase):
 
     def test_duplicate(self):
