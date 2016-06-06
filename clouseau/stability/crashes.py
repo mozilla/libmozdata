@@ -37,13 +37,12 @@ def __bug_handler(json, data):
         data.append(bug)
 
 
-def get(channel, date, version=None, product='Firefox', duration=11, tc_limit=50, crash_type='all', startup=False):
+def get(channel, date, product='Firefox', duration=11, tc_limit=50, crash_type='all', startup=False):
     """Get crashes info
 
     Args:
         channel (str): the channel
         date (str): the final date
-        version (Optional[List[str]]): the version
         product (Optional[str]): the product
         duration (Optional[int]): the duration to retrieve the data
         tc_limit (Optional[int]): the number of topcrashes to load
@@ -53,6 +52,7 @@ def get(channel, date, version=None, product='Firefox', duration=11, tc_limit=50
         dict: contains all the info relative to the crashes
     """
     channel = channel.lower()
+    version = v[channel]
     versions_info = socorro.ProductVersions.get_version_info(version, channel=channel, product=product)
     versions = versions_info.keys()
     platforms = socorro.Platforms.get_cached_all()
@@ -230,7 +230,7 @@ if __name__ == "__main__":
 
     for channel in args.channels:
         for startup in [False, True]:
-            stats = get(channel, args.date, version=v[channel], duration=int(args.duration), tc_limit=int(args.tclimit), startup=startup)
+            stats = get(channel, args.date, duration=int(args.duration), tc_limit=int(args.tclimit), startup=startup)
 
             with open(channel + ('-startup' if startup else '') + '.json', 'w') as f:
                 json.dump(stats, f, allow_nan=False)

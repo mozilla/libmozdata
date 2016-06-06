@@ -14,7 +14,7 @@ class CrashesTest(unittest.TestCase):
         tok = os.environ.get('API_KEY_346')
         if tok:
             Redash.TOKEN = tok
-        stats = crashes.get('release', 'yesterday', versions=46, duration=11, tc_limit=50)
+        stats = crashes.get('release', 'yesterday', duration=11, tc_limit=50)
 
         self.assertIn('start_date', stats)
         self.assertIn('end_date', stats)
