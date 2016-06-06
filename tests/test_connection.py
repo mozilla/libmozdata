@@ -13,7 +13,8 @@ class QueryTest(unittest.TestCase):
 
     def test_args(self):
         representation = str(Query('https://www.mozilla.org/', {
-            'var1': 'value1',
+            'var1': True,
             'var2': ['value2', 'value3'],
+            'var3': None
         }))
-        self.assertTrue(representation == 'url: https://www.mozilla.org/?var1=value1&var2=value2&var2=value3' or representation == 'url: https://www.mozilla.org/?var2=value2&var2=value3&var1=value1')
+        self.assertTrue(representation == 'url: https://www.mozilla.org/?var1=True&var2=value2&var2=value3' or representation == 'url: https://www.mozilla.org/?var2=value2&var2=value3&var1=True')
