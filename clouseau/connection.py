@@ -29,7 +29,7 @@ class Query(object):
         self.handlerdata = handlerdata
 
     def params_repr(self):
-      return '?' + '&'.join([name + '=' + value if not isinstance(value, list) else '&'.join([name + '=' + intValue for intValue in value]) for name, value in self.params.items()]) if self.params else ''
+        return '?' + '&'.join([name + '=' + value if not isinstance(value, list) else '&'.join([name + '=' + intValue for intValue in value]) for name, value in self.params.items()]) if self.params else ''
 
     def __repr__(self):
         return 'url: %s' % self.url + self.params_repr()
