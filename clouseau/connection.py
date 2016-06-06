@@ -29,7 +29,8 @@ class Query(object):
         self.handlerdata = handlerdata
 
     def __repr__(self):
-        return 'url: %s' % self.url
+        params = '&'.join([name + '=' + value if not isinstance(value, list) else '&'.join([name + '=' + intValue for intValue in value]) for name, value in self.params.items()])
+        return 'url: %s' % self.url + (('?' + params) if params else '')
 
 
 class Connection(object):

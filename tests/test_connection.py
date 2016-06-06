@@ -10,3 +10,10 @@ class QueryTest(unittest.TestCase):
 
     def test(self):
         self.assertEqual(str(Query('https://www.mozilla.org/')), 'url: https://www.mozilla.org/')
+
+
+    def test(self):
+        self.assertEqual(str(Query('https://www.mozilla.org/', {
+          'var1': 'value1',
+          'var2': ['value2', 'value3'],
+        })), 'url: https://www.mozilla.org/?var1=value1&var2=value2&var2=value3')
