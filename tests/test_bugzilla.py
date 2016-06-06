@@ -69,7 +69,6 @@ class BugIDTest(unittest.TestCase):
 class BugCommentHistoryTest(unittest.TestCase):
 
     def test_bugid(self):
-
         def bughandler(bug, data):
             data['bug'] = bug
 
@@ -87,11 +86,28 @@ class BugCommentHistoryTest(unittest.TestCase):
         self.assertTrue(data['comment'][0]['text'].startswith(u'Steps to reproduce'))
         self.assertEqual(len(data['history']['history']), 24)
 
+    def test_search(self):
+        def bughandler(bug, data):
+            data['bug'] = bug
+
+        def commenthandler(bug, bugid, data):
+            data['comment'] = bug['comments']
+
+        def historyhandler(bug, data):
+            data['history'] = bug
+
+        data = {}
+        bugzilla.Bugzilla('bug_id=12345', bughandler=bughandler, bugdata=data, commenthandler=commenthandler, commentdata=data, historyhandler=historyhandler, historydata=data).get_data().wait()
+
+        self.assertEqual(data['bug']['id'], 12345)
+        self.assertEqual(len(data['comment']), 19)
+        self.assertTrue(data['comment'][0]['text'].startswith(u'Steps to reproduce'))
+        self.assertEqual(len(data['history']['history']), 24)
+
 
 class BugAttachmentTest(unittest.TestCase):
 
     def test_bugid(self):
-
         def bughandler(bug, data):
             data['bug'] = bug
 
@@ -116,6 +132,30 @@ class BugAttachmentTest(unittest.TestCase):
         self.assertEqual(data['attachment'][0]['is_patch'], 1)
         self.assertEqual(data['attachment'][0]['is_obsolete'], 1)
 
+    def test_search(self):
+        def bughandler(bug, data):
+            data['bug'] = bug
+
+        def commenthandler(bug, bugid, data):
+            data['comment'] = bug['comments']
+
+        def historyhandler(bug, data):
+            data['history'] = bug
+
+        def attachmenthandler(bug, bugid, data):
+            data['attachment'] = bug
+
+        data = {}
+        bugzilla.Bugzilla('bug_id=12345', bughandler=bughandler, bugdata=data, commenthandler=commenthandler, commentdata=data, historyhandler=historyhandler, historydata=data, attachmenthandler=attachmenthandler, attachmentdata=data).get_data().wait()
+
+        self.assertEqual(data['bug']['id'], 12345)
+        self.assertEqual(len(data['comment']), 19)
+        self.assertTrue(data['comment'][0]['text'].startswith(u'Steps to reproduce'))
+        self.assertEqual(len(data['history']['history']), 24)
+        self.assertEqual(len(data['attachment']), 1)
+        self.assertEqual(data['attachment'][0]['description'], 'Some patch.')
+        self.assertEqual(data['attachment'][0]['is_patch'], 1)
+        self.assertEqual(data['attachment'][0]['is_obsolete'], 1)
 
 class BugDuplicateTest(unittest.TestCase):
 
