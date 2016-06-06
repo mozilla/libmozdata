@@ -14,6 +14,8 @@ from clouseau.connection import (Connection, Query)
 from clouseau.bugzilla import Bugzilla
 import clouseau.versions
 
+v = clouseau.versions.get(base=True)
+
 
 def __trend_handler(default_trend, json, data):
     for facets in json['facets']['histogram_date']:
@@ -32,16 +34,16 @@ def __trend_handler(default_trend, json, data):
 
 def __bug_handler(json, data):
     for bug in json['bugs']:
-        data.append({'id': bug['id'], 'resolution': bug['resolution'], 'last_change_time': bug['last_change_time']})
+        data.append(bug)
 
 
-def get(channel, date, versions=None, product='Firefox', duration=11, tc_limit=50, crash_type='all', startup=False):
+def get(channel, date, version=None, product='Firefox', duration=11, tc_limit=50, crash_type='all', startup=False):
     """Get crashes info
 
     Args:
         channel (str): the channel
         date (str): the final date
-        versions (Optional[List[str]]): the versions to treat
+        version (Optional[List[str]]): the version
         product (Optional[str]): the product
         duration (Optional[int]): the duration to retrieve the data
         tc_limit (Optional[int]): the number of topcrashes to load
@@ -51,7 +53,7 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tc_limit=5
         dict: contains all the info relative to the crashes
     """
     channel = channel.lower()
-    versions_info = socorro.ProductVersions.get_version_info(versions, channel=channel, product=product)
+    versions_info = socorro.ProductVersions.get_version_info(version, channel=channel, product=product)
     versions = versions_info.keys()
     platforms = socorro.Platforms.get_cached_all()
 
@@ -115,12 +117,18 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tc_limit=5
 
     socorro.SuperSearch(params=params, handler=signature_handler).wait()
 
+    bug_flags = ['resolution', 'id', 'last_change_time']
+    for i in range(int(version), int(v['nightly']) + 1):
+        bug_flags.append('cf_status_firefox' + str(i))
+
     # TODO: too many requests... should be improved with chunks
     bugs = {}
-    base = {'f1': 'cf_crash_signature',
-            'v1': None,
-            'o1': 'substring',
-            'include_fields': ['resolution', 'id', 'last_change_time']}
+    base = {
+        'f1': 'cf_crash_signature',
+        'v1': None,
+        'o1': 'substring',
+        'include_fields': bug_flags
+    }
     queries = []
     for sgn in signatures.keys():
         cparams = base.copy()
@@ -185,7 +193,7 @@ def get(channel, date, versions=None, product='Firefox', duration=11, tc_limit=5
         # Get info about bugs that the DUPLICATE bugs have been duped to.
         params = {
             'id': ','.join(duplicate_targets),
-            'include_fields': ['resolution', 'id', 'last_change_time'],
+            'include_fields': bug_flags,
         }
         queries.append(Query(Bugzilla.API_URL, params, __bug_handler, bugs[sgn]))
     Bugzilla(queries=queries).wait()
@@ -220,10 +228,9 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    v = clouseau.versions.get(base=True)
     for channel in args.channels:
         for startup in [False, True]:
-            stats = get(channel, args.date, versions=v[channel], duration=int(args.duration), tc_limit=int(args.tclimit), startup=startup)
+            stats = get(channel, args.date, version=v[channel], duration=int(args.duration), tc_limit=int(args.tclimit), startup=startup)
 
             with open(channel + ('-startup' if startup else '') + '.json', 'w') as f:
                 json.dump(stats, f, allow_nan=False)
