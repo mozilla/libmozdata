@@ -117,7 +117,7 @@ def get(channel, date, product='Firefox', duration=11, tc_limit=50, crash_type='
 
     socorro.SuperSearch(params=params, handler=signature_handler).wait()
 
-    bug_flags = ['resolution', 'id', 'last_change_time']
+    bug_flags = ['resolution', 'id', 'last_change_time', 'cf_tracking_firefox' + str(version)]
     for i in range(int(version), int(v['nightly']) + 1):
         bug_flags.append('cf_status_firefox' + str(i))
 
