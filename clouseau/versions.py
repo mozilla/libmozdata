@@ -3,9 +3,9 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 try:
-    import urllib.request as ur
+    from urllib.request import urlopen
 except ImportError:
-    import urllib as ur
+    from urllib import urlopen
 
 import json
 from . import utils
@@ -24,10 +24,15 @@ def __getVersions():
     Returns:
         dict: versions for each channel
     """
-    url = 'https://product-details.mozilla.org/firefox_versions.json'
-    resp = ur.urlopen(url)
-    data = json.loads(resp.read().decode('utf-8'))
-    resp.close()
+    try:
+        resp = urlopen('https://product-details.mozilla.org/firefox_versions.json')
+        data = json.loads(resp.read().decode('utf-8'))
+        resp.close()
+    except:
+        resp = urlopen('http://svn.mozilla.org/libs/product-details/json/firefox_versions.json')
+        data = json.loads(resp.read().decode('utf-8'))
+        resp.close()
+
     aurora = data['FIREFOX_AURORA']
     nightly = '%d.0a1' % (__get_major(aurora) + 1)
     return {'release': data['LATEST_FIREFOX_VERSION'],
@@ -37,10 +42,15 @@ def __getVersions():
 
 
 def __getVersionDates():
-    url = 'https://product-details.mozilla.org/firefox_history_major_releases.json'
-    resp = ur.urlopen(url)
-    data = json.loads(resp.read().decode('utf-8'))
-    resp.close()
+    try:
+        resp = urlopen('https://product-details.mozilla.org/firefox_history_major_releases.json')
+        data = json.loads(resp.read().decode('utf-8'))
+        resp.close()
+    except:
+        resp = urlopen('http://svn.mozilla.org/libs/product-details/json/firefox_history_major_releases.json')
+        data = json.loads(resp.read().decode('utf-8'))
+        resp.close()
+
     return data
 
 
