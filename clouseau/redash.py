@@ -93,13 +93,12 @@ class Redash(Connection):
         else:
             versions = set(versions)
 
+        rows = [row for row in rows if row['channel'] == channel and row['build_version'] in versions]
+
         for row in rows:
-            if row['channel'] == channel:
-                v = row['build_version']
-                if v in versions:
-                    d = utils.get_date_ymd(row['activity_date'])
-                    if d >= start_date and d <= end_date:
-                        res[d] += row['usage_khours']
+            d = utils.get_date_ymd(row['activity_date'])
+            if start_date <= d <= end_date:
+                res[d] += row['usage_khours']
 
         return res
 
@@ -138,17 +137,16 @@ class Redash(Connection):
         else:
             versions = set(versions)
 
+        rows = [row for row in rows if row['channel'] == channel and row['build_version'] in versions]
+
         for row in rows:
-            if row['channel'] == channel:
-                v = row['build_version']
-                if v in versions:
-                    d = utils.get_date_ymd(row['date'])
-                    if d >= start_date and d <= end_date:
-                        stats = res[d]
-                        stats['m+c'] = row['main'] + row['content']
-                        stats['main'] = row['main']
-                        stats['content'] = row['content']
-                        stats['plugin'] = row['plugin'] + row['gmplugin']
-                        stats['all'] = row['total']
+            d = utils.get_date_ymd(row['date'])
+            if d >= start_date and d <= end_date:
+                stats = res[d]
+                stats['m+c'] = row['main'] + row['content']
+                stats['main'] = row['main']
+                stats['content'] = row['content']
+                stats['plugin'] = row['plugin'] + row['gmplugin']
+                stats['all'] = row['total']
 
         return res
