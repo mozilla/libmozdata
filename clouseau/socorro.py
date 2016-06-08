@@ -51,7 +51,7 @@ class SuperSearch(Socorro):
             handlerdata (Optional): data used in second argument of the handler
             queries (Optional[List[Query]]): queries to execute
         """
-        if queries:
+        if queries is not None:
             super(SuperSearch, self).__init__(queries)
         else:
             url = SuperSearch.URL

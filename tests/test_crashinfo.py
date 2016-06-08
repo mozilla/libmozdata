@@ -40,3 +40,6 @@ class CrashInfoTest(unittest.TestCase):
         ci2 = CrashInfo(os.path.basename(path)).get()
 
         self.assertEqual(ci[path], ci2[os.path.basename(path)])
+
+    def test_empty_array(self):
+        self.assertEqual(CrashInfo([]).get(), {})
