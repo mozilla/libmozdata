@@ -33,8 +33,9 @@ class UtilsTest(unittest.TestCase):
         self.assertEqual(utils.get_date_ymd('04/16/1991'), date)
         self.assertEqual(utils.get_date_ymd('16/04/1991'), date)
         self.assertEqual(utils.get_date_ymd('1991-04-16 12:00:00'), datetime.datetime(1991, 4, 16, 12, 0))
-        self.assertEqual(utils.get_date_ymd(''), utils.get_date_ymd('today'))
 
+        with self.assertRaises(Exception):
+            utils.get_date_ymd('')
         with self.assertRaises(Exception):
             utils.get_date_ymd('marco')
 
