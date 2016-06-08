@@ -19,7 +19,7 @@ from . import utils
 hginfos = weakref.WeakValueDictionary()
 
 
-def patch_analysis(patch, author):
+def patch_analysis(patch, author, creation_date=utils.get_date_ymd('today')):
     info = {
         'changes_size': 0,
         'modules_num': 0,
@@ -59,10 +59,10 @@ def patch_analysis(patch, author):
         else:
             hi = hginfos[path] = HGFileInfo(path)
 
-        info['code_churn_overall'] += len(hi.get(path)['patches'])
-        info['code_churn_last_3_releases'] += len(hi.get(path, utc_ts_from=utils.get_timestamp(date.today() + timedelta(-3 * 6 * 7)))['patches'])
-        info['developer_familiarity_overall'] += len(hi.get(path, author=author)['patches'])
-        info['developer_familiarity_last_3_releases'] += len(hi.get(path, author=author, utc_ts_from=utils.get_timestamp(date.today() + timedelta(-3 * 6 * 7)))['patches'])
+        info['code_churn_overall'] += len(hi.get(path, utc_ts_to=utils.get_timestamp(creation_date))['patches'])
+        info['code_churn_last_3_releases'] += len(hi.get(path, utc_ts_from=utils.get_timestamp(creation_date + timedelta(-3 * 6 * 7)), utc_ts_to=utils.get_timestamp(creation_date))['patches'])
+        info['developer_familiarity_overall'] += len(hi.get(path, author=author, utc_ts_to=utils.get_timestamp(creation_date))['patches'])
+        info['developer_familiarity_last_3_releases'] += len(hi.get(path, author=author, utc_ts_from=utils.get_timestamp(creation_date + timedelta(-3 * 6 * 7)), utc_ts_to=utils.get_timestamp(creation_date))['patches'])
 
         # TODO: Add number of times the file was modified by the reviewer.
 
@@ -146,7 +146,7 @@ def bug_analysis(bug):
                     pickle.dump(data, f)
 
         if data is not None:
-            info.update(patch_analysis(data, attachment['creator']))
+            info.update(patch_analysis(data, attachment['creator'], utils.get_date_ymd(attachment['creation_time'])))
             # XXX: The creator of the attachment isn't always the developer of the patch (and sometimes it is, but with a different email). For example, in bug 1271794.
             # Using the landing comment with the hg revision instead of reading the attachments would be better.
 
