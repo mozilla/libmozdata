@@ -104,6 +104,31 @@ class BugCommentHistoryTest(unittest.TestCase):
         self.assertTrue(data['comment'][0]['text'].startswith(u'Steps to reproduce'))
         self.assertEqual(len(data['history']['history']), 24)
 
+    def test_search_history(self):
+        def bughandler(bug, data):
+            data['bug'] = bug
+
+        def commenthandler(bug, bugid, data):
+            data['comment'] = bug['comments']
+
+        def historyhandler(bug, data):
+            data['history'] = bug['history']
+
+        data = {}
+        bugzilla.Bugzilla(12345, bughandler=bughandler, bugdata=data, commenthandler=commenthandler, commentdata=data, historyhandler=historyhandler, historydata=data).get_data().wait()
+
+        all = bugzilla.Bugzilla.get_history_matches(data['history'], {})
+        self.assertEqual(len(all), len(data['history']))
+
+        change_to_assigned = bugzilla.Bugzilla.get_history_matches(data['history'], {'added': 'ASSIGNED'})
+        self.assertEqual(change_to_assigned, [{'when': '1999-08-29T17:43:15Z', 'changes': [{'added': 'ASSIGNED', 'field_name': 'status', 'removed': 'NEW'}], 'who': 'jefft@formerly-netscape.com.tld'}])
+
+        blocks_changes = bugzilla.Bugzilla.get_history_matches(data['history'], {'field_name': 'blocks'})
+        self.assertEqual(blocks_changes, [{'changes': [{'removed': '', 'added': '11091', 'field_name': 'blocks'}], 'who': 'lchiang@formerly-netscape.com.tld', 'when': '1999-09-20T22:58:39Z'}, {'changes': [{'removed': '', 'added': '17976', 'field_name': 'blocks'}], 'who': 'chofmann@gmail.com', 'when': '1999-11-04T14:05:18Z'}])
+
+        single_block_change = bugzilla.Bugzilla.get_history_matches(data['history'], {'added': '11091', 'field_name': 'blocks'})
+        self.assertEqual(single_block_change, [{'changes': [{'removed': '', 'added': '11091', 'field_name': 'blocks'}], 'who': 'lchiang@formerly-netscape.com.tld', 'when': '1999-09-20T22:58:39Z'}])
+
 
 class BugAttachmentTest(unittest.TestCase):
 

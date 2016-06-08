@@ -173,6 +173,23 @@ class Bugzilla(Connection):
 
         return dup
 
+    @staticmethod
+    def get_history_matches(history, change_to_match):
+        history_entries = []
+
+        for history_entry in history:
+            found = False
+
+            for change in history_entry['changes']:
+                if set(change.items()).intersection(set(change_to_match.items())) == set(change_to_match.items()):
+                    history_entries.append(history_entry)
+                    found = True
+
+                if found:
+                    break
+
+        return history_entries
+
     def __is_bugid(self):
         """Check if the first bugid is a bug id or a search query
 
