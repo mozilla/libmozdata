@@ -8,6 +8,7 @@ import calendar
 from datetime import (datetime, date, timedelta)
 import math
 import random
+import dateutil.parser
 
 
 def get_best(stats):
@@ -58,18 +59,7 @@ def get_date_ymd(dt):
         tomorrow = date.today() + timedelta(1)
         return datetime(tomorrow.year, tomorrow.month, tomorrow.day)
 
-    l = None
-    if '-' in dt:
-        l = dt.split('-')
-    elif '/' in dt:
-        l = dt.split('/')
-    elif ' ' in dt:
-        l = dt.split(' ')
-    if l and len(l) == 3 and len(l[0]) == 4:
-        (y, m, d) = map(int, l)
-        return datetime(y, m, d)
-    else:
-        raise Exception('Malformed string (should be YYYY-MM-DD)')
+    return dateutil.parser.parse(dt)
 
 
 def get_today():
