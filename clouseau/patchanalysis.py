@@ -1,6 +1,6 @@
 import base64
 import re
-from datetime import (date, timedelta)
+from datetime import timedelta
 try:
     from urllib.request import urlopen
 except ImportError:
