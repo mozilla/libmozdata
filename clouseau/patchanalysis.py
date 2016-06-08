@@ -19,6 +19,10 @@ from . import utils
 hginfos = weakref.WeakValueDictionary()
 
 
+def _is_test(path):
+    return 'test' in path and not path.endswith(('ini', 'list', 'in', 'py', 'json', 'manifest'))
+
+
 def patch_analysis(patch, author, creation_date=utils.get_date_ymd('today')):
     info = {
         'changes_size': 0,
@@ -34,10 +38,11 @@ def patch_analysis(patch, author, creation_date=utils.get_date_ymd('today')):
 
     paths = []
     for diff in whatthepatch.parse_patch(patch):
-        info['changes_size'] += len(diff.changes)
-
         old_path = diff.header.old_path[2:] if diff.header.old_path.startswith('a/') else diff.header.old_path
         new_path = diff.header.new_path[2:] if diff.header.new_path.startswith('b/') else diff.header.new_path
+
+        if not _is_test(new_path):
+            info['changes_size'] += len(diff.changes)
 
         if old_path != '/dev/null' and old_path != new_path:
             paths.append(old_path)
