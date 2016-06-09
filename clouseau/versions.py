@@ -78,6 +78,6 @@ def getMajorDate(version):
     if not __version_dates:
         __version_dates = __getVersionDates()
 
-    date = __version_dates.get(str(__get_major(version)) + '.0')
+    date = __version_dates.get(str(__get_major(str(version))) + '.0')
 
     return utils.get_date_ymd(date) if date is not None else None

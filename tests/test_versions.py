@@ -14,6 +14,7 @@ class VersionsTest(unittest.TestCase):
         self.assertTrue(v['release'] <= v['beta'] < v['aurora'] < v['nightly'])
 
     def test_version_dates(self):
+        self.assertEqual(versions.getMajorDate(46), datetime.datetime(2016, 4, 26, 0, 0))
         self.assertEqual(versions.getMajorDate('46'), datetime.datetime(2016, 4, 26, 0, 0))
         self.assertEqual(versions.getMajorDate('46.0'), datetime.datetime(2016, 4, 26, 0, 0))
         self.assertEqual(versions.getMajorDate('46.0.1'), datetime.datetime(2016, 4, 26, 0, 0))
