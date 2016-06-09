@@ -80,4 +80,4 @@ def getMajorDate(version):
 
     date = __version_dates.get(str(__get_major(str(version))) + '.0')
 
-    return utils.get_date_ymd(date) if date is not None else None
+    return utils.get_date_ymd(date + 'T00:00:00Z') if date is not None else None
