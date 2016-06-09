@@ -10,7 +10,7 @@ except ImportError:
 from os.path import commonprefix
 import json
 import re
-from datetime import (datetime, timedelta, time)
+from datetime import timedelta
 from icalendar import Calendar
 from . import utils
 
@@ -73,6 +73,7 @@ def __getVersionDates():
                     data[version] = __as_utc(utils.get_date_str(component.decoded('dtstart')))
 
     return data
+
 
 def get(base=False):
     """Get current version number by channel
