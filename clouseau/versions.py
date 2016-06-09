@@ -7,6 +7,8 @@ try:
 except ImportError:
     from urllib import urlopen
 
+import six
+from os.path import commonprefix
 import json
 from . import utils
 
@@ -78,6 +80,14 @@ def getMajorDate(version):
     if not __version_dates:
         __version_dates = __getVersionDates()
 
-    date = __version_dates.get(str(__get_major(str(version))) + '.0')
+    date = None
+    longest_match = []
+    longest_match_v = None
+    for v, d in __version_dates.items():
+        match = commonprefix([v.split('.'), str(version).split('.')])
+        if len(match) > 0 and (len(match) > len(longest_match) or (len(match) == len(longest_match) and int(v[-1]) <= int(longest_match_v[-1]))):
+            longest_match = match
+            longest_match_v = v
+            date = d
 
     return utils.get_date_ymd(date + 'T00:00:00Z') if date is not None else None
