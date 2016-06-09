@@ -105,17 +105,11 @@ class BugCommentHistoryTest(unittest.TestCase):
         self.assertEqual(len(data['history']['history']), 24)
 
     def test_search_history(self):
-        def bughandler(bug, data):
-            data['bug'] = bug
-
-        def commenthandler(bug, bugid, data):
-            data['comments'] = bug['comments']
-
         def historyhandler(bug, data):
             data['history'] = bug['history']
 
         data = {}
-        bugzilla.Bugzilla(12345, bughandler=bughandler, bugdata=data, commenthandler=commenthandler, commentdata=data, historyhandler=historyhandler, historydata=data).get_data().wait()
+        bugzilla.Bugzilla(12345, historyhandler=historyhandler, historydata=data).get_data().wait()
 
         all = bugzilla.Bugzilla.get_history_matches(data['history'], {})
         self.assertEqual(len(all), len(data['history']))
@@ -130,17 +124,11 @@ class BugCommentHistoryTest(unittest.TestCase):
         self.assertEqual(single_block_change, [{'changes': [{'removed': '', 'added': '11091', 'field_name': 'blocks'}], 'who': 'lchiang@formerly-netscape.com.tld', 'when': '1999-09-20T22:58:39Z'}])
 
     def test_search_landing(self):
-        def bughandler(bug, data):
-            data['bug'] = bug
-
         def commenthandler(bug, bugid, data):
             data['comments'] = bug['comments']
 
-        def historyhandler(bug, data):
-            data['history'] = bug['history']
-
         data = {}
-        bugzilla.Bugzilla(538189, bughandler=bughandler, bugdata=data, commenthandler=commenthandler, commentdata=data, historyhandler=historyhandler, historydata=data).get_data().wait()
+        bugzilla.Bugzilla(538189, commenthandler=commenthandler, commentdata=data).get_data().wait()
 
         inbound = bugzilla.Bugzilla.get_landing_comments(data['comments'], 'inbound')
         self.assertEqual(inbound[0]['revision'], '42c54c7cb4a3')
