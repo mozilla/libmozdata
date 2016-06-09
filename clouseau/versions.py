@@ -94,6 +94,10 @@ def getMajorDate(version):
 
 
 def getCloserMajorRelease(date, negative=False):
+    global __version_dates
+    if not __version_dates:
+        __version_dates = __getVersionDates()
+
     def diff(d):
         return utils.get_date_ymd(d + 'T00:00:00Z') - date
 
