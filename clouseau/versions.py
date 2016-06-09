@@ -9,7 +9,9 @@ except ImportError:
 
 from os.path import commonprefix
 import json
-from datetime import timedelta
+import re
+from datetime import (datetime, timedelta, time)
+from icalendar import Calendar
 from . import utils
 
 __versions = None
@@ -53,8 +55,24 @@ def __getVersionDates():
         data = json.loads(resp.read().decode('utf-8'))
         resp.close()
 
-    return data
+    def __as_utc(date_str):
+        return utils.get_date_ymd(date_str + 'T00:00:00Z')
 
+    data = dict([(v, __as_utc(d)) for v, d in data.items()])
+
+    resp = urlopen('https://www.google.com/calendar/ical/mozilla.com_2d37383433353432352d3939%40resource.calendar.google.com/public/basic.ics')
+    calendar = Calendar.from_ical(resp.read().decode('utf-8'))
+    resp.close()
+
+    for component in calendar.walk():
+        if component.name == 'VEVENT':
+            match = re.search('Firefox ([0-9]+) Release', component.get('summary'))
+            if match:
+                version = match.group(1) + '.0'
+                if version not in data:
+                    data[version] = __as_utc(utils.get_date_str(component.decoded('dtstart')))
+
+    return data
 
 def get(base=False):
     """Get current version number by channel
@@ -75,10 +93,6 @@ def get(base=False):
     return __versions
 
 
-def __as_utc(date_str):
-    return utils.get_date_ymd(date_str + 'T00:00:00Z')
-
-
 def getMajorDate(version):
     global __version_dates
     if not __version_dates:
@@ -94,7 +108,7 @@ def getMajorDate(version):
             longest_match_v = v
             date = d
 
-    return __as_utc(date) if date is not None else None
+    return date
 
 
 def getCloserMajorRelease(date, negative=False):
@@ -105,4 +119,4 @@ def getCloserMajorRelease(date, negative=False):
     def diff(d):
         return d - date
 
-    return min([(v, __as_utc(d)) for v, d in __version_dates.items() if negative or diff(__as_utc(d)) > timedelta(0)], key=lambda i: abs(diff(i[1])))
+    return min([(v, d) for v, d in __version_dates.items() if negative or diff(d) > timedelta(0)], key=lambda i: abs(diff(i[1])))
