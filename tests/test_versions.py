@@ -33,9 +33,9 @@ class VersionsTest(unittest.TestCase):
         date = utils.get_date_ymd('2011-08-24T14:52:52Z')
         self.assertEqual(date - versions.getMajorDate('7'), datetime.timedelta(-34, 53572))
 
-        self.assertEqual(versions.getCloserMajorRelease(date), ('7.0', '2011-09-27'))
-        self.assertEqual(versions.getCloserMajorRelease(date, negative=True), ('6.0', '2011-08-16'))
-        self.assertEqual(versions.getCloserMajorRelease(date, negative=False), ('7.0', '2011-09-27'))
+        self.assertEqual(versions.getCloserMajorRelease(date), ('7.0', datetime.datetime(2011, 9, 27, 0, 0, tzinfo=tzutc())))
+        self.assertEqual(versions.getCloserMajorRelease(date, negative=True), ('6.0', datetime.datetime(2011, 8, 16, 0, 0, tzinfo=tzutc())))
+        self.assertEqual(versions.getCloserMajorRelease(date, negative=False), ('7.0', datetime.datetime(2011, 9, 27, 0, 0, tzinfo=tzutc())))
 
 if __name__ == '__main__':
     unittest.main()

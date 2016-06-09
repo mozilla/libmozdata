@@ -75,6 +75,10 @@ def get(base=False):
     return __versions
 
 
+def __as_utc(date_str):
+    return utils.get_date_ymd(date_str + 'T00:00:00Z')
+
+
 def getMajorDate(version):
     global __version_dates
     if not __version_dates:
@@ -90,7 +94,7 @@ def getMajorDate(version):
             longest_match_v = v
             date = d
 
-    return utils.get_date_ymd(date + 'T00:00:00Z') if date is not None else None
+    return __as_utc(date) if date is not None else None
 
 
 def getCloserMajorRelease(date, negative=False):
@@ -99,6 +103,6 @@ def getCloserMajorRelease(date, negative=False):
         __version_dates = __getVersionDates()
 
     def diff(d):
-        return utils.get_date_ymd(d + 'T00:00:00Z') - date
+        return d - date
 
-    return min([(v, d) for v, d in __version_dates.items() if negative or diff(d) > timedelta(0)], key=lambda i: abs(diff(i[1])))
+    return min([(v, __as_utc(d)) for v, d in __version_dates.items() if negative or diff(__as_utc(d)) > timedelta(0)], key=lambda i: abs(diff(i[1])))
