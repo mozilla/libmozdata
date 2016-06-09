@@ -7,7 +7,6 @@ try:
 except ImportError:
     from urllib import urlopen
 
-import six
 from os.path import commonprefix
 import json
 from . import utils
