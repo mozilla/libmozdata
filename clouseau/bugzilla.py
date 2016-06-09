@@ -3,6 +3,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import six
+import re
 from .connection import (Connection)
 from . import config
 
@@ -189,6 +190,27 @@ class Bugzilla(Connection):
                     break
 
         return history_entries
+
+    @staticmethod
+    def get_landing_comments(comments, channel):
+        if channel == 'central':
+            land = 'http://hg.mozilla.org/mozilla-central/rev/([0-9a-z]+)'
+        elif channel == 'inbound':
+            land = 'http://hg.mozilla.org/integration/mozilla-inbound/rev/([0-9a-z]+)'
+        elif channel in ['release', 'beta', 'aurora']:
+            land = 'http://hg.mozilla.org/releases/mozilla-' + channel + '/rev/([0-9a-z]+)'
+
+        results = []
+
+        for comment in comments:
+            match = re.search(land, comment['text'])
+            if match:
+                results.append({
+                    'comment': comment,
+                    'revision': match.group(1),
+                })
+
+        return results
 
     def __is_bugid(self):
         """Check if the first bugid is a bug id or a search query

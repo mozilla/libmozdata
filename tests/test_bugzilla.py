@@ -109,7 +109,7 @@ class BugCommentHistoryTest(unittest.TestCase):
             data['bug'] = bug
 
         def commenthandler(bug, bugid, data):
-            data['comment'] = bug['comments']
+            data['comments'] = bug['comments']
 
         def historyhandler(bug, data):
             data['history'] = bug['history']
@@ -128,6 +128,29 @@ class BugCommentHistoryTest(unittest.TestCase):
 
         single_block_change = bugzilla.Bugzilla.get_history_matches(data['history'], {'added': '11091', 'field_name': 'blocks'})
         self.assertEqual(single_block_change, [{'changes': [{'removed': '', 'added': '11091', 'field_name': 'blocks'}], 'who': 'lchiang@formerly-netscape.com.tld', 'when': '1999-09-20T22:58:39Z'}])
+
+    def test_search_landing(self):
+        def bughandler(bug, data):
+            data['bug'] = bug
+
+        def commenthandler(bug, bugid, data):
+            data['comments'] = bug['comments']
+
+        def historyhandler(bug, data):
+            data['history'] = bug['history']
+
+        data = {}
+        bugzilla.Bugzilla(538189, bughandler=bughandler, bugdata=data, commenthandler=commenthandler, commentdata=data, historyhandler=historyhandler, historydata=data).get_data().wait()
+
+        inbound = bugzilla.Bugzilla.get_landing_comments(data['comments'], 'inbound')
+        self.assertEqual(inbound[0]['revision'], '42c54c7cb4a3')
+        self.assertEqual(inbound[0]['comment'], {'attachment_id': None, 'raw_text': 'http://hg.mozilla.org/integration/mozilla-inbound/rev/42c54c7cb4a3', 'tags': [], 'is_private': False, 'creator': 'cam@mcc.id.au', 'bug_id': 538189, 'author': 'cam@mcc.id.au', 'text': 'http://hg.mozilla.org/integration/mozilla-inbound/rev/42c54c7cb4a3', 'id': 5655196, 'creation_time': '2011-08-15T21:21:13Z', 'time': '2011-08-15T21:21:13Z'})
+        central = bugzilla.Bugzilla.get_landing_comments(data['comments'], 'central')
+        self.assertEqual(central[0]['revision'], '42c54c7cb4a3')
+        self.assertEqual(central[0]['comment'], {'attachment_id': None, 'raw_text': 'http://hg.mozilla.org/mozilla-central/rev/42c54c7cb4a3\n\nAsa, did you mean to set approval-beta+ instead of approval-beta?', 'tags': [], 'is_private': False, 'creator': 'khuey@kylehuey.com', 'bug_id': 538189, 'author': 'khuey@kylehuey.com', 'text': 'http://hg.mozilla.org/mozilla-central/rev/42c54c7cb4a3\n\nAsa, did you mean to set approval-beta+ instead of approval-beta?', 'id': 5656549, 'creation_time': '2011-08-16T11:02:36Z', 'time': '2011-08-16T11:02:36Z'})
+        beta = bugzilla.Bugzilla.get_landing_comments(data['comments'], 'beta')
+        self.assertEqual(beta[0]['revision'], '1d02edaa92bc')
+        self.assertEqual(beta[0]['comment'], {'attachment_id': None, 'raw_text': 'http://hg.mozilla.org/releases/mozilla-beta/rev/1d02edaa92bc', 'tags': [], 'is_private': False, 'creator': 'cam@mcc.id.au', 'bug_id': 538189, 'author': 'cam@mcc.id.au', 'text': 'http://hg.mozilla.org/releases/mozilla-beta/rev/1d02edaa92bc', 'id': 5686198, 'creation_time': '2011-08-29T21:55:57Z', 'time': '2011-08-29T21:55:57Z'})
 
 
 class BugAttachmentTest(unittest.TestCase):
