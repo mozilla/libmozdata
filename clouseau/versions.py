@@ -9,6 +9,7 @@ except ImportError:
 
 from os.path import commonprefix
 import json
+from datetime import timedelta
 from . import utils
 
 __versions = None
@@ -90,3 +91,10 @@ def getMajorDate(version):
             date = d
 
     return utils.get_date_ymd(date + 'T00:00:00Z') if date is not None else None
+
+
+def getCloserMajorRelease(date, negative=False):
+  def diff(d):
+    return utils.get_date_ymd(d + 'T00:00:00Z') - date
+
+  return min([(v,d) for v, d in __version_dates.items() if negative or diff(d) > timedelta(0)], key=lambda i: abs(diff(i[1])))
