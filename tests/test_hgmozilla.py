@@ -56,8 +56,8 @@ class RevisionTest(unittest.TestCase):
 
 class RawRevisionTest(unittest.TestCase):
     def test_revision(self):
-        rev = hgmozilla.RawRevision.get_revision('1584ba8c1b86')
-        self.assertIn('# Node ID 16663eb3dcfa759f25b5e27b101bc79270c156f2', rev)
+        rev = hgmozilla.RawRevision.get_revision('central', '1584ba8c1b86')
+        self.assertIn('# Node ID 1584ba8c1b86f9c4de5ccda5241cef36e80f042c', rev)
 
     def test_revisions(self):
         data1 = {
