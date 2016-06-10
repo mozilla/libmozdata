@@ -81,7 +81,7 @@ def get(channel, date, product='Firefox', duration=11, tc_limit=50, crash_type='
     overall_crashes_by_day = []
     signatures = {}
 
-    def signature_handler(json, data):
+    def signature_handler(json):
         for signature in json['facets']['signature']:
             signatures[signature['term']] = [signature['count'], 0, 0, 0, 0]
 
