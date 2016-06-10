@@ -44,7 +44,7 @@ class Connection(object):
     """Represents a connection to a server
     """
 
-    TIMEOUT = 60
+    TIMEOUT = 30
     MAX_RETRIES = 256
     MAX_WORKERS = multiprocessing.cpu_count()
     CHUNK_SIZE = 32

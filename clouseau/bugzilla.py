@@ -272,10 +272,12 @@ class Bugzilla(Connection):
     def __get_bugs(self):
         """Get the bugs
         """
+        header = self.get_header()
         for bugids in Connection.chunks(self.bugids):
             self.bugs_results.append(self.session.get(Bugzilla.API_URL,
                                                       params={'id': ','.join(bugids),
                                                               'include_fields': self.include_fields},
+                                                      headers=header,
                                                       verify=True,
                                                       timeout=self.TIMEOUT,
                                                       background_callback=self.__bugs_cb))
@@ -284,8 +286,10 @@ class Bugzilla(Connection):
         """Get the bugs in making a search query
         """
         url = Bugzilla.API_URL + '?'
+        header = self.get_header()
         for query in self.bugids:
             self.bugs_results.append(self.session.get(url + query,
+                                                      headers=header,
                                                       verify=True,
                                                       timeout=self.TIMEOUT,
                                                       background_callback=self.__bugs_cb))
@@ -302,8 +306,10 @@ class Bugzilla(Connection):
 
         results = []
         url = Bugzilla.API_URL + '?'
+        header = self.get_header()
         for query in self.bugids:
             results.append(self.session.get(url + query,
+                                            headers=header,
                                             verify=True,
                                             timeout=self.TIMEOUT,
                                             background_callback=cb))
@@ -330,8 +336,10 @@ class Bugzilla(Connection):
         """Get the bug history
         """
         url = Bugzilla.API_URL + '/%s/history'
+        header = self.get_header()
         for bugid in self.bugids:
             self.history_results.append(self.session.get(url % bugid,
+                                                         headers=header,
                                                          verify=True,
                                                          timeout=self.TIMEOUT,
                                                          background_callback=self.__history_cb))
@@ -358,8 +366,10 @@ class Bugzilla(Connection):
         """Get the bug comment
         """
         url = Bugzilla.API_URL + '/%s/comment'
+        header = self.get_header()
         for bugid in self.bugids:
             self.comment_results.append(self.session.get(url % bugid,
+                                                         headers=header,
                                                          verify=True,
                                                          timeout=self.TIMEOUT,
                                                          background_callback=self.__comment_cb))
@@ -386,10 +396,10 @@ class Bugzilla(Connection):
         """Get the bug attachment
         """
         url = Bugzilla.API_URL + '/%s/attachment'
-        req_params = {'api_key': self.get_apikey()}
+        header = self.get_header()
         for bugid in self.bugids:
             self.attachment_results.append(self.session.get(url % bugid,
+                                                            headers=header,
                                                             verify=True,
-                                                            params=req_params,
                                                             timeout=self.TIMEOUT,
                                                             background_callback=self.__attachment_cb))
