@@ -16,7 +16,7 @@ class Bugzilla(Connection):
     API_URL = URL + '/rest/bug'
     TOKEN = config.get('Bugzilla', 'token', '')
 
-    def __init__(self, bugids=None, include_fields='_default', bughandler=None, bugdata=None, historyhandler=None, historydata=None, commenthandler=None, commentdata=None, attachmenthandler=None, attachmentdata=None, queries=None):
+    def __init__(self, bugids=None, include_fields='_default', bughandler=None, bugdata=None, historyhandler=None, historydata=None, commenthandler=None, commentdata=None, attachmenthandler=None, attachmentdata=None, attachment_include_fields=None, queries=None):
         """Constructor
 
         Args:
@@ -51,6 +51,7 @@ class Bugzilla(Connection):
             self.commentdata = commentdata
             self.attachmenthandler = attachmenthandler
             self.attachmentdata = attachmentdata
+            self.attachment_include_fields = attachment_include_fields
             self.bugs_results = []
             self.history_results = []
             self.comment_results = []
@@ -397,9 +398,11 @@ class Bugzilla(Connection):
         """
         url = Bugzilla.API_URL + '/%s/attachment'
         header = self.get_header()
+        req_params = {'include_fields': self.attachment_include_fields}
         for bugid in self.bugids:
             self.attachment_results.append(self.session.get(url % bugid,
                                                             headers=header,
+                                                            params=req_params,
                                                             verify=True,
                                                             timeout=self.TIMEOUT,
                                                             background_callback=self.__attachment_cb))
