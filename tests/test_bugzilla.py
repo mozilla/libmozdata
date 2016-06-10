@@ -210,6 +210,7 @@ class BugAttachmentTest(unittest.TestCase):
         self.assertNotIn('is_patch', data['attachment'][0])
         self.assertNotIn('is_obsolete', data['attachment'][0])
 
+
 class BugDuplicateTest(unittest.TestCase):
 
     def test_duplicate(self):
