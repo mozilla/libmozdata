@@ -19,5 +19,5 @@ class QueryTest(unittest.TestCase):
         }))
         self.assertTrue(representation == 'url: https://www.mozilla.org/?var1=True&var2=value2&var2=value3' or representation == 'url: https://www.mozilla.org/?var2=value2&var2=value3&var1=True')
 
-        representation = str(Query('https://www.mozilla.org/', [{'var1': True }, {'var2': 'marco'}]))
+        representation = str(Query('https://www.mozilla.org/', [{'var1': True}, {'var2': 'marco'}]))
         self.assertEqual(representation, 'url: https://www.mozilla.org/?var1=True\nurl: https://www.mozilla.org/?var2=marco')

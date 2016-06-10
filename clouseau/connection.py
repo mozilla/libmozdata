@@ -35,7 +35,7 @@ class Query(object):
         params_list = self.params
 
         if not isinstance(params_list, list):
-          params_list = [self.params]
+            params_list = [self.params]
 
         return '\n'.join('url: %s' % self.url + self.params_repr(params) for params in params_list)
 
@@ -79,7 +79,15 @@ class Connection(object):
         """
         def cb(sess, res):
             if res.status_code == 200:
-                query.handler(res.json(), query.handlerdata)
+                try:
+                    response = res.json()
+                except:
+                    response = res.text
+
+                if query.handlerdata is not None:
+                    query.handler(response, query.handlerdata)
+                else:
+                    query.handler(response)
             else:
                 print('Connection error:')
                 print('   url: ', res.url)
