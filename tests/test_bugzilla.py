@@ -140,6 +140,12 @@ class BugCommentHistoryTest(unittest.TestCase):
         self.assertEqual(beta[0]['revision'], '1d02edaa92bc')
         self.assertEqual(beta[0]['comment'], {'attachment_id': None, 'raw_text': 'http://hg.mozilla.org/releases/mozilla-beta/rev/1d02edaa92bc', 'tags': [], 'is_private': False, 'creator': 'cam@mcc.id.au', 'bug_id': 538189, 'author': 'cam@mcc.id.au', 'text': 'http://hg.mozilla.org/releases/mozilla-beta/rev/1d02edaa92bc', 'id': 5686198, 'creation_time': '2011-08-29T21:55:57Z', 'time': '2011-08-29T21:55:57Z'})
 
+        data = {}
+        bugzilla.Bugzilla(679352, commenthandler=commenthandler, commentdata=data).get_data().wait()
+
+        central = bugzilla.Bugzilla.get_landing_comments(data['comments'], 'central')
+        self.assertEqual(len(central), 8)
+
 
 class BugAttachmentTest(unittest.TestCase):
 
