@@ -49,7 +49,6 @@ class RevisionTest(unittest.TestCase):
             self.assertIn('desc', rev)
             self.assertIn('node', rev)
 
-
         self.assertEqual(data1['second']['node'], '1584ba8c1b86f9c4de5ccda5241cef36e80f042c')
         self.assertNotEqual(data1['first']['node'], data1['second']['node'])
         self.assertEqual(data1['first']['node'], data2['node'])
@@ -70,9 +69,9 @@ class RawRevisionTest(unittest.TestCase):
         }
 
         def handler1(response):
-            if not data1['first']:
+            if '1584ba8c1b86' in response:
                 data1['first'] = response
-            else:
+            elif 'f5578fdc50ef' in response:
                 data1['second'] = response
 
         def handler2(response):
