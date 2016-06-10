@@ -28,11 +28,16 @@ class Query(object):
         self.handler = handler
         self.handlerdata = handlerdata
 
-    def params_repr(self):
-        return '?' + '&'.join([name + '=' + str(value) if not isinstance(value, list) else '&'.join([name + '=' + str(intValue) for intValue in value]) for name, value in self.params.items() if value is not None]) if self.params else ''
+    def params_repr(self, params):
+        return '?' + '&'.join([name + '=' + str(value) if not isinstance(value, list) else '&'.join([name + '=' + str(intValue) for intValue in value]) for name, value in params.items() if value is not None]) if params else ''
 
     def __repr__(self):
-        return 'url: %s' % self.url + self.params_repr()
+        params_list = self.params
+
+        if not isinstance(params_list, list):
+          params_list = [self.params]
+
+        return '\n'.join('url: %s' % self.url + self.params_repr(params) for params in params_list)
 
 
 class Connection(object):
