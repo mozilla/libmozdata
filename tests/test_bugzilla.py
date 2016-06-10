@@ -199,6 +199,16 @@ class BugAttachmentTest(unittest.TestCase):
         self.assertEqual(data['attachment'][0]['is_patch'], 1)
         self.assertEqual(data['attachment'][0]['is_obsolete'], 1)
 
+    def test_include_fields(self):
+        def attachmenthandler(bug, bugid, data):
+            data['attachment'] = bug
+
+        data = {}
+        bugzilla.Bugzilla(12345, attachmenthandler=attachmenthandler, attachmentdata=data, attachment_include_fields=['description']).get_data().wait()
+
+        self.assertEqual(data['attachment'][0]['description'], 'Some patch.')
+        self.assertNotIn('is_patch', data['attachment'][0])
+        self.assertNotIn('is_obsolete', data['attachment'][0])
 
 class BugDuplicateTest(unittest.TestCase):
 
