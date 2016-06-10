@@ -159,7 +159,7 @@ class RawRevision(Mercurial):
         data = {}
 
         def handler(response):
-          data['res'] = response
+            data['res'] = response
 
         RawRevision(channel, {'node': node}, handler).wait()
 

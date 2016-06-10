@@ -10,7 +10,13 @@ from clouseau.connection import Query
 class RevisionTest(unittest.TestCase):
     def test_revision(self):
         rev = hgmozilla.Revision.get_revision()
-        self.assertIsNotNone(rev)
+        self.assertIn('pushid', rev)
+        self.assertIn('pushuser', rev)
+        self.assertIn('pushdate', rev)
+        self.assertIn('user', rev)
+        self.assertIn('branch', rev)
+        self.assertIn('date', rev)
+        self.assertIn('desc', rev)
 
     def test_revisions(self):
         data1 = {
@@ -33,9 +39,20 @@ class RevisionTest(unittest.TestCase):
             Query(hgmozilla.Revision.get_url('nightly'), {'node': 'tip'}, handler2, data2),
         ]).wait()
 
-        self.assertTrue(data1['first'])
-        self.assertTrue(data1['second']['node'].startswith('1584ba8c1b86'))
-        self.assertTrue(data2)
+        for rev in [data1['first'], data1['second'], data2]:
+            self.assertIn('pushid', rev)
+            self.assertIn('pushuser', rev)
+            self.assertIn('pushdate', rev)
+            self.assertIn('user', rev)
+            self.assertIn('branch', rev)
+            self.assertIn('date', rev)
+            self.assertIn('desc', rev)
+            self.assertIn('node', rev)
+
+
+        self.assertEqual(data1['second']['node'], '1584ba8c1b86f9c4de5ccda5241cef36e80f042c')
+        self.assertNotEqual(data1['first']['node'], data1['second']['node'])
+        self.assertEqual(data1['first']['node'], data2['node'])
 
 
 class RawRevisionTest(unittest.TestCase):
