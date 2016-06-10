@@ -49,6 +49,8 @@ def get_date_ymd(dt):
     Returns:
         datetime: a datetime object
     """
+    assert dt
+
     if dt == 'today':
         today = date.today()
         return datetime(today.year, today.month, today.day)
