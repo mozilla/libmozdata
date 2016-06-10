@@ -34,8 +34,10 @@ class Mercurial(Connection):
         Returns:
             str: the repo name
         """
-        if channel == 'nightly':
+        if channel == 'nightly' or channel == 'central':
             return 'mozilla-central'
+        elif channel == 'inbound':
+            return 'integration/mozilla-inbound'
         else:
             return 'releases/mozilla-' + channel
 
