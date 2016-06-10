@@ -114,6 +114,58 @@ class Revision(Mercurial):
         return data
 
 
+class RawRevision(Mercurial):
+    """Connection to get a raw revision
+    """
+
+    def __init__(self, channel='nightly', params=None, handler=None, queries=None):
+        """Constructor
+
+        Args:
+            channel (Optional[str]): the channel, by default 'nightly'
+            params (Optional[dict]): the params for the query
+            handler (Optional[function]): handler to use with the result of the query
+            handlerdata (Optional): data used in second argument of the handler
+            queries (List[Query]): queries to pass to mercurial server
+        """
+        if queries:
+            super(RawRevision, self).__init__(queries)
+        else:
+            super(RawRevision, self).__init__(Query(RawRevision.get_url(channel), params, handler))
+
+    @staticmethod
+    def get_url(channel):
+        """Get the api url
+
+        Args:
+            channel (str): channel version of firefox
+
+        Returns:
+            str: the api url
+        """
+        return Mercurial.get_repo_url(channel) + '/raw-rev'
+
+    @staticmethod
+    def get_revision(channel='nightly', node='tip'):
+        """Get the revision for a node
+
+        Args:
+            channel (str): channel version of firefox
+            node (Optional[str]): the node, by default 'tip'
+
+        Returns:
+            dict: the revision corresponding to the node
+        """
+        data = {}
+
+        def handler(response):
+          data['res'] = response
+
+        RawRevision(channel, {'node': node}, handler).wait()
+
+        return data['res']
+
+
 class FileInfo(Mercurial):
     """Connection to get file info
     """

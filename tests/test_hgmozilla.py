@@ -8,7 +8,6 @@ from clouseau.connection import Query
 
 
 class RevisionTest(unittest.TestCase):
-
     def test_revision(self):
         rev = hgmozilla.Revision.get_revision()
         self.assertIsNotNone(rev)
@@ -37,6 +36,39 @@ class RevisionTest(unittest.TestCase):
         self.assertTrue(data1['first'])
         self.assertTrue(data1['second']['node'].startswith('1584ba8c1b86'))
         self.assertTrue(data2)
+
+
+class RawRevisionTest(unittest.TestCase):
+    def test_revision(self):
+        rev = hgmozilla.RawRevision.get_revision('1584ba8c1b86')
+        self.assertIn('# Node ID 16663eb3dcfa759f25b5e27b101bc79270c156f2', rev)
+
+    def test_revisions(self):
+        data1 = {
+            'first': None,
+            'second': None,
+        }
+        data2 = {
+            'first': None
+        }
+
+        def handler1(response):
+            if not data1['first']:
+                data1['first'] = response
+            else:
+                data1['second'] = response
+
+        def handler2(response):
+            data2['first'] = response
+
+        hgmozilla.Revision(queries=[
+            Query(hgmozilla.RawRevision.get_url('nightly'), [{'node': 'f5578fdc50ef'}, {'node': '1584ba8c1b86'}], handler1),
+            Query(hgmozilla.RawRevision.get_url('nightly'), {'node': '1584ba8c1b86'}, handler2),
+        ]).wait()
+
+        self.assertIn('# Node ID 1584ba8c1b86f9c4de5ccda5241cef36e80f042c', data1['first'])
+        self.assertIn('# Node ID f5578fdc50ef11b7f12451c88297f327abb0e9da', data1['second'])
+        self.assertIn('# Node ID 1584ba8c1b86f9c4de5ccda5241cef36e80f042c', data2['first'])
 
 
 class FileInfoTest(unittest.TestCase):
