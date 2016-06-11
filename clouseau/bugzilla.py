@@ -195,20 +195,24 @@ class Bugzilla(Connection):
     @staticmethod
     def get_landing_comments(comments, channel):
         if channel == 'central':
-            landing_pattern = re.compile('://hg.mozilla.org/mozilla-central/rev/([0-9a-z]+)')
+            landing_patterns = [
+                re.compile('://hg.mozilla.org/mozilla-central/rev/([0-9a-z]+)'),
+                re.compile('://hg.mozilla.org/mozilla-central/pushloghtml\?changeset=([0-9a-z]+)'),
+            ]
         elif channel == 'inbound':
-            landing_pattern = re.compile('://hg.mozilla.org/integration/mozilla-inbound/rev/([0-9a-z]+)')
+            landing_patterns = [re.compile('://hg.mozilla.org/integration/mozilla-inbound/rev/([0-9a-z]+)')]
         elif channel in ['release', 'beta', 'aurora']:
-            landing_pattern = re.compile('://hg.mozilla.org/releases/mozilla-' + channel + '/rev/([0-9a-z]+)')
+            landing_pattern = [re.compile('://hg.mozilla.org/releases/mozilla-' + channel + '/rev/([0-9a-z]+)')]
 
         results = []
 
         for comment in comments:
-            for match in landing_pattern.finditer(comment['text']):
-                results.append({
-                    'comment': comment,
-                    'revision': match.group(1),
-                })
+            for landing_pattern in landing_patterns:
+                for match in landing_pattern.finditer(comment['text']):
+                    results.append({
+                        'comment': comment,
+                        'revision': match.group(1),
+                    })
 
         return results
 
