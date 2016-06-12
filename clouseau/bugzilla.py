@@ -30,6 +30,7 @@ class Bugzilla(Connection):
             commentdata (Optional): the data to use with the comment handler
             attachmenthandler (Optional[function]): the handler to use with each retrieved bug attachment
             attachmentdata (Optional): the data to use with the attachment handler
+            attachment_include_fields (Optional[List[str]]): list of attachment include fields
             queries (List[Query]): queries rather than single query
         """
         if queries:
