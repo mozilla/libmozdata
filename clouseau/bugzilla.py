@@ -4,7 +4,7 @@
 
 import six
 import re
-from .connection import (Connection)
+from .connection import (Connection, Query)
 from . import config
 
 
@@ -417,3 +417,61 @@ class Bugzilla(Connection):
                                                             verify=True,
                                                             timeout=self.TIMEOUT,
                                                             background_callback=self.__attachment_cb))
+
+
+class BugzillaUser(Connection):
+    """Connection to bugzilla.mozilla.org
+    """
+
+    URL = config.get('Bugzilla', 'URL', 'https://bugzilla.mozilla.org')
+    API_URL = URL + '/rest/user'
+    TOKEN = config.get('Bugzilla', 'token', '')
+
+    def __init__(self, user_names=None, search_strings=None, include_fields='_default', user_handler=None, user_data=None):
+        """Constructor
+
+        Args:
+            user_names (List[str]): list of user names or IDs
+            search_strings (List[str]): list of search strings
+            include_fields (List[str]): list of include fields
+            user_handler (Optional[function]): the handler to use with each retrieved user
+            user_data (Optional): the data to use with the user handler
+        """
+        self.user_handler = user_handler
+        self.user_data = user_data
+
+        if user_names is not None:
+            if isinstance(user_names, six.string_types) or isinstance(user_names, int):
+                user_names = [user_names]
+
+            params = {
+                'include_fields': include_fields,
+                'names': [user_name for user_name in user_names if isinstance(user_name, six.string_types) and not user_name.isdigit()],
+                'ids': [str(user_id) for user_id in user_names if isinstance(user_id, int) or user_id.isdigit()],
+            }
+
+            super(BugzillaUser, self).__init__(BugzillaUser.URL, Query(BugzillaUser.API_URL, params, self.__users_cb))
+        elif search_strings is not None:
+            if isinstance(search_strings, six.string_types):
+                search_strings = [search_strings]
+
+            queries = []
+            for search_string in search_strings:
+                queries.append(Query(BugzillaUser.API_URL + '?' + search_string, handler=self.__users_cb))
+
+            super(BugzillaUser, self).__init__(BugzillaUser.URL, queries)
+
+    def get_header(self):
+        header = super(BugzillaUser, self).get_header()
+        header['X-Bugzilla-API-Key'] = self.get_apikey()
+        return header
+
+    def __users_cb(self, res):
+        if not self.user_handler:
+            return
+
+        for user in res['users']:
+            if self.user_data is not None:
+                self.user_handler(user, self.user_data)
+            else:
+                self.user_handler(user)

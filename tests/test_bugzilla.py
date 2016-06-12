@@ -244,5 +244,179 @@ class BugDuplicateTest(unittest.TestCase):
     def test_not_duplicate(self):
         self.assertEqual(bugzilla.Bugzilla.follow_dup([890156, 1240533]), {'1240533': None, '890156': None})
 
+
+class User(unittest.TestCase):
+    def test_get_user(self):
+        user = {}
+        user_data = {}
+
+        def user_handler(u, data):
+            user.update(u)
+            data.update(u)
+
+        bugzilla.BugzillaUser(user_names='nobody@mozilla.org', user_handler=user_handler, user_data=user_data).wait()
+
+        self.assertEqual(user['email'], 'nobody@mozilla.org')
+        self.assertEqual(user['name'], 'nobody@mozilla.org')
+        self.assertEqual(user['real_name'], 'Nobody; OK to take it and work on it')
+        self.assertEqual(user, user_data)
+
+    def test_get_user_no_data(self):
+        user = {}
+
+        def user_handler(u):
+            user.update(u)
+
+        bugzilla.BugzillaUser(user_names='nobody@mozilla.org', user_handler=user_handler).wait()
+
+        self.assertEqual(user['email'], 'nobody@mozilla.org')
+        self.assertEqual(user['name'], 'nobody@mozilla.org')
+        self.assertEqual(user['real_name'], 'Nobody; OK to take it and work on it')
+
+    def test_get_user_id(self):
+        user = {}
+
+        def user_handler(u):
+            user.update(u)
+
+        bugzilla.BugzillaUser(user_names=1, user_handler=user_handler).wait()
+
+        self.assertEqual(user['email'], 'nobody@mozilla.org')
+        self.assertEqual(user['name'], 'nobody@mozilla.org')
+        self.assertEqual(user['real_name'], 'Nobody; OK to take it and work on it')
+
+    def test_get_user_id_string(self):
+        user = {}
+
+        def user_handler(u):
+            user.update(u)
+
+        bugzilla.BugzillaUser(user_names='1', user_handler=user_handler).wait()
+
+        self.assertEqual(user['email'], 'nobody@mozilla.org')
+        self.assertEqual(user['name'], 'nobody@mozilla.org')
+        self.assertEqual(user['real_name'], 'Nobody; OK to take it and work on it')
+
+    def test_get_user_array(self):
+        user = {}
+
+        def user_handler(u):
+            user.update(u)
+
+        bugzilla.BugzillaUser(user_names=['nobody@mozilla.org'], user_handler=user_handler).wait()
+
+        self.assertEqual(user['email'], 'nobody@mozilla.org')
+        self.assertEqual(user['name'], 'nobody@mozilla.org')
+        self.assertEqual(user['real_name'], 'Nobody; OK to take it and work on it')
+
+    def test_get_users(self):
+        user = {
+            'first': {},
+            'second': {},
+        }
+
+        def user_handler(u):
+            if u['id'] == 1:
+                user['first'].update(u)
+            elif u['id'] == 208267:
+                user['second'].update(u)
+            else:
+                raise Exception('Unexpected ID')
+
+        bugzilla.BugzillaUser(user_names=['nobody@mozilla.org', 'bugbot@bugzilla.org'], user_handler=user_handler).wait()
+
+        self.assertEqual(user['first']['email'], 'nobody@mozilla.org')
+        self.assertEqual(user['first']['name'], 'nobody@mozilla.org')
+        self.assertEqual(user['first']['real_name'], 'Nobody; OK to take it and work on it')
+        self.assertEqual(user['second']['email'], 'bugbot@bugzilla.org')
+        self.assertEqual(user['second']['name'], 'bugbot@bugzilla.org')
+        self.assertEqual(user['second']['real_name'], 'bugbot on irc.mozilla.org')
+
+    def test_get_users_ids(self):
+        user = {
+            'first': {},
+            'second': {},
+        }
+
+        def user_handler(u):
+            if u['id'] == 1:
+                user['first'].update(u)
+            elif u['id'] == 208267:
+                user['second'].update(u)
+            else:
+                raise Exception('Unexpected ID')
+
+        bugzilla.BugzillaUser(user_names=['1', 208267], user_handler=user_handler).wait()
+
+        self.assertEqual(user['first']['email'], 'nobody@mozilla.org')
+        self.assertEqual(user['first']['name'], 'nobody@mozilla.org')
+        self.assertEqual(user['first']['real_name'], 'Nobody; OK to take it and work on it')
+        self.assertEqual(user['second']['email'], 'bugbot@bugzilla.org')
+        self.assertEqual(user['second']['name'], 'bugbot@bugzilla.org')
+        self.assertEqual(user['second']['real_name'], 'bugbot on irc.mozilla.org')
+
+    def test_search_single_result(self):
+        user = {}
+
+        def user_handler(u):
+            user.update(u)
+
+        bugzilla.BugzillaUser(search_strings='match=nobody@mozilla.org', user_handler=user_handler).wait()
+
+        self.assertEqual(user['email'], 'nobody@mozilla.org')
+        self.assertEqual(user['name'], 'nobody@mozilla.org')
+        self.assertEqual(user['real_name'], 'Nobody; OK to take it and work on it')
+
+    def test_search_multiple_results(self):
+        users = []
+
+        def user_handler(u):
+            users.append(u)
+
+        bugzilla.BugzillaUser(search_strings='match=nobody', user_handler=user_handler).wait()
+
+        foundNobody1 = False
+        foundNobody2 = False
+        for user in users:
+            if user['email'] == 'nobody@mozilla.org':
+                self.assertFalse(foundNobody1)
+                foundNobody1 = True
+                self.assertEqual(user['name'], 'nobody@mozilla.org')
+                self.assertEqual(user['real_name'], 'Nobody; OK to take it and work on it')
+            elif user['email'] == 'attach-and-request@bugzilla.bugs':
+                self.assertFalse(foundNobody2)
+                foundNobody2 = True
+                self.assertEqual(user['name'], 'attach-and-request@bugzilla.bugs')
+                self.assertEqual(user['real_name'], 'Nobody; OK to take it and work on it')
+
+        self.assertTrue(foundNobody1)
+        self.assertTrue(foundNobody2)
+
+    def test_search_multiple_queries(self):
+        users = []
+
+        def user_handler(u):
+            users.append(u)
+
+        bugzilla.BugzillaUser(search_strings=['match=nobody@mozilla.org','match=attach-and-request@bugzilla.bugs'], user_handler=user_handler).wait()
+
+        foundNobody1 = False
+        foundNobody2 = False
+        for user in users:
+            if user['email'] == 'nobody@mozilla.org':
+                self.assertFalse(foundNobody1)
+                foundNobody1 = True
+                self.assertEqual(user['name'], 'nobody@mozilla.org')
+                self.assertEqual(user['real_name'], 'Nobody; OK to take it and work on it')
+            elif user['email'] == 'attach-and-request@bugzilla.bugs':
+                self.assertFalse(foundNobody2)
+                foundNobody2 = True
+                self.assertEqual(user['name'], 'attach-and-request@bugzilla.bugs')
+                self.assertEqual(user['real_name'], 'Nobody; OK to take it and work on it')
+
+        self.assertTrue(foundNobody1)
+        self.assertTrue(foundNobody2)
+
+
 if __name__ == '__main__':
     unittest.main()
