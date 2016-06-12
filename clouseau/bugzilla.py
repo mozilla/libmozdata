@@ -193,25 +193,31 @@ class Bugzilla(Connection):
         return history_entries
 
     @staticmethod
-    def get_landing_comments(comments, channel):
-        if channel == 'central':
-            landing_patterns = [
-                re.compile('://hg.mozilla.org/mozilla-central/rev/([0-9a-z]+)'),
-                re.compile('://hg.mozilla.org/mozilla-central/pushloghtml\?changeset=([0-9a-z]+)'),
-            ]
-        elif channel == 'inbound':
-            landing_patterns = [re.compile('://hg.mozilla.org/integration/mozilla-inbound/rev/([0-9a-z]+)')]
-        elif channel in ['release', 'beta', 'aurora']:
-            landing_pattern = [re.compile('://hg.mozilla.org/releases/mozilla-' + channel + '/rev/([0-9a-z]+)')]
+    def get_landing_comments(comments, channels):
+        if not isinstance(channels, list):
+            channels = [channels]
+
+        landing_patterns = []
+        for channel in channels:
+            if channel == 'central':
+                landing_patterns += [
+                    (re.compile('://hg.mozilla.org/mozilla-central/rev/([0-9a-z]+)'), 'central'),
+                    (re.compile('://hg.mozilla.org/mozilla-central/pushloghtml\?changeset=([0-9a-z]+)'), 'central'),
+                ]
+            elif channel == 'inbound':
+                landing_patterns += [(re.compile('://hg.mozilla.org/integration/mozilla-inbound/rev/([0-9a-z]+)'), 'inbound')]
+            elif channel in ['release', 'beta', 'aurora']:
+                landing_patterns += [(re.compile('://hg.mozilla.org/releases/mozilla-' + channel + '/rev/([0-9a-z]+)'), channel)]
 
         results = []
 
         for comment in comments:
             for landing_pattern in landing_patterns:
-                for match in landing_pattern.finditer(comment['text']):
+                for match in landing_pattern[0].finditer(comment['text']):
                     results.append({
                         'comment': comment,
                         'revision': match.group(1),
+                        'channel': landing_pattern[1],
                     })
 
         return results
