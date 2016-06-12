@@ -27,7 +27,9 @@ class Redash(Connection):
         super(Redash, self).__init__(self.RE_DASH_URL, queries=queries)
 
     def get_header(self):
-        return {'Authorization': 'Key %s' % self.get_apikey()}
+        header = super(Redash, self).get_header()
+        header['Authorization'] = 'Key %s' % self.get_apikey()
+        return header
 
     @staticmethod
     def default_handler(query_id, json, data):

@@ -32,7 +32,9 @@ class Socorro(Connection):
         super(Socorro, self).__init__(self.CRASH_STATS_URL, queries=queries)
 
     def get_header(self):
-        return {'Auth-Token': self.get_apikey()}
+        header = super(Socorro, self).get_header()
+        header['Auth-Token'] = self.get_apikey()
+        return header
 
 
 class SuperSearch(Socorro):
