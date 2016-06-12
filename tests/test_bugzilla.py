@@ -3,6 +3,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import unittest
+import os
 from clouseau import bugzilla
 
 
@@ -246,6 +247,12 @@ class BugDuplicateTest(unittest.TestCase):
 
 
 class User(unittest.TestCase):
+    def __init__(self, a):
+        tok = os.environ.get('API_KEY_BUGZILLA')
+        if tok:
+            bugzilla.BugzillaUser.TOKEN = tok
+        super(User, self).__init__(a)
+
     def test_get_user(self):
         user = {}
         user_data = {}
