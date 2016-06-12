@@ -6,7 +6,7 @@ import unittest
 from clouseau import bugzilla
 
 
-'''class BugIDTest(unittest.TestCase):
+class BugIDTest(unittest.TestCase):
 
     def test_bugid(self):
 
@@ -63,12 +63,12 @@ from clouseau import bugzilla
         self.assertEqual(bugs[12347]['id'], 12347)
         self.assertEqual(bugs[12348]['id'], 12348)
         self.assertEqual(bugs[12349]['id'], 12349)
-        self.assertEqual(bugs[12350]['id'], 12350)'''
+        self.assertEqual(bugs[12350]['id'], 12350)
 
 
 class BugCommentHistoryTest(unittest.TestCase):
 
-    '''def test_bugid(self):
+    def test_bugid(self):
         def bughandler(bug, data):
             data['bug'] = bug
 
@@ -121,7 +121,7 @@ class BugCommentHistoryTest(unittest.TestCase):
         self.assertEqual(blocks_changes, [{'changes': [{'removed': '', 'added': '11091', 'field_name': 'blocks'}], 'who': 'lchiang@formerly-netscape.com.tld', 'when': '1999-09-20T22:58:39Z'}, {'changes': [{'removed': '', 'added': '17976', 'field_name': 'blocks'}], 'who': 'chofmann@gmail.com', 'when': '1999-11-04T14:05:18Z'}])
 
         single_block_change = bugzilla.Bugzilla.get_history_matches(data['history'], {'added': '11091', 'field_name': 'blocks'})
-        self.assertEqual(single_block_change, [{'changes': [{'removed': '', 'added': '11091', 'field_name': 'blocks'}], 'who': 'lchiang@formerly-netscape.com.tld', 'when': '1999-09-20T22:58:39Z'}])'''
+        self.assertEqual(single_block_change, [{'changes': [{'removed': '', 'added': '11091', 'field_name': 'blocks'}], 'who': 'lchiang@formerly-netscape.com.tld', 'when': '1999-09-20T22:58:39Z'}])
 
     def test_search_landing(self):
         def commenthandler(bug, bugid, data):
@@ -153,7 +153,7 @@ class BugCommentHistoryTest(unittest.TestCase):
         self.assertEqual(len(central), 8)
 
 
-'''class BugAttachmentTest(unittest.TestCase):
+class BugAttachmentTest(unittest.TestCase):
 
     def test_bugid(self):
         def bughandler(bug, data):
@@ -205,6 +205,22 @@ class BugCommentHistoryTest(unittest.TestCase):
         self.assertEqual(data['attachment'][0]['is_patch'], 1)
         self.assertEqual(data['attachment'][0]['is_obsolete'], 1)
 
+    def test_search_only_attachment(self):
+        def bughandler(bug, data):
+            data['bug'] = bug
+
+        def attachmenthandler(bug, bugid, data):
+            data['attachment'] = bug
+
+        data = {}
+        bugzilla.Bugzilla('bug_id=12345', bughandler=bughandler, bugdata=data, attachmenthandler=attachmenthandler, attachmentdata=data).get_data().wait()
+
+        self.assertEqual(data['bug']['id'], 12345)
+        self.assertEqual(len(data['attachment']), 1)
+        self.assertEqual(data['attachment'][0]['description'], 'Some patch.')
+        self.assertEqual(data['attachment'][0]['is_patch'], 1)
+        self.assertEqual(data['attachment'][0]['is_obsolete'], 1)
+
     def test_include_fields(self):
         def attachmenthandler(bug, bugid, data):
             data['attachment'] = bug
@@ -226,7 +242,7 @@ class BugDuplicateTest(unittest.TestCase):
         self.assertEqual(bugzilla.Bugzilla.follow_dup([784349]), {'784349': '784345'})
 
     def test_not_duplicate(self):
-        self.assertEqual(bugzilla.Bugzilla.follow_dup([890156, 1240533]), {'1240533': None, '890156': None})'''
+        self.assertEqual(bugzilla.Bugzilla.follow_dup([890156, 1240533]), {'1240533': None, '890156': None})
 
 if __name__ == '__main__':
     unittest.main()

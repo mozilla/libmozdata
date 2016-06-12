@@ -238,7 +238,7 @@ class Bugzilla(Connection):
     def __get_bugs_for_history_comment(self):
         """Get history and comment (if there are some handlers) after a search query
         """
-        if self.historyhandler or self.commenthandler:
+        if self.historyhandler or self.commenthandler or self.attachmenthandler:
             bugids = []
             bughandler = self.bughandler
             bugdata = self.bugdata
