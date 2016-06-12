@@ -398,7 +398,7 @@ class User(unittest.TestCase):
         def user_handler(u):
             users.append(u)
 
-        bugzilla.BugzillaUser(search_strings=['match=nobody@mozilla.org','match=attach-and-request@bugzilla.bugs'], user_handler=user_handler).wait()
+        bugzilla.BugzillaUser(search_strings=['match=nobody@mozilla.org', 'match=attach-and-request@bugzilla.bugs'], user_handler=user_handler).wait()
 
         foundNobody1 = False
         foundNobody2 = False
