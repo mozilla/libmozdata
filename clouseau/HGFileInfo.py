@@ -37,7 +37,7 @@ class HGFileInfo(object):
         self.results = []
         self.__get_info(self.paths, self.node)
 
-    def get(self, path, utc_ts_from=None, utc_ts_to=None, author=None):
+    def get(self, path, utc_ts_from=None, utc_ts_to=None, authors=[]):
         if utc_ts_to is None:
             revision = hgmozilla.Revision.get_revision(self.channel, self.node)
             assert self.date_type in revision
@@ -51,7 +51,7 @@ class HGFileInfo(object):
 
         entries = self.data[path]
 
-        authors = {}
+        authors_result = {}
         bugs = set()
         patches = []
 
@@ -67,13 +67,13 @@ class HGFileInfo(object):
             if m:
                 entry['author'] = m.group(1)
             patch_author = entry['author']
-            if author is not None and author != patch_author:
+            if authors and patch_author not in authors:
                 continue
 
-            if patch_author not in authors:
-                authors[patch_author] = {'count': 1, 'reviewers': {}}
+            if patch_author not in authors_result:
+                authors_result[patch_author] = {'count': 1, 'reviewers': {}}
             else:
-                authors[patch_author]['count'] += 1
+                authors_result[patch_author]['count'] += 1
 
             info_desc = self.__get_info_from_desc(entry['desc'])
             starter = info_desc['starter']
@@ -82,7 +82,7 @@ class HGFileInfo(object):
 
             reviewers = info_desc['reviewers']
             if reviewers:
-                _reviewers = authors[patch_author]['reviewers']
+                _reviewers = authors_result[patch_author]['reviewers']
                 for reviewer in reviewers:
                     if reviewer not in _reviewers:
                         _reviewers[reviewer] = 1
@@ -92,7 +92,7 @@ class HGFileInfo(object):
             patches.append(entry)
 
         return {
-            'authors': authors,
+            'authors': authors_result,
             'bugs': bugs,
             'patches': patches,
         }
