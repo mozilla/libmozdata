@@ -212,7 +212,7 @@ class Bugzilla(Connection):
             elif channel == 'fx-team':
                 landing_patterns += [(re.compile('://hg.mozilla.org/integration/fx-team/rev/([0-9a-z]+)'), 'inbound')]
             else:
-              raise Exception('Unexpected channel: ' + channel)
+                raise Exception('Unexpected channel: ' + channel)
 
         results = []
 

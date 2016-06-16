@@ -76,6 +76,52 @@ class HGFileInfoTest(unittest.TestCase):
         self.assertEqual(fi['patches'][0]['author'], 'philringnalda@gmail.com')
         self.assertEqual(fi['patches'][1]['author'], 'hg@mozilla.com')
 
+    def test_hgfileinfo_creation_vs_push_date(self):
+        path = 'LICENSE'
+        hi = HGFileInfo(path, date_type='creation')
+
+        fi = hi.get(path, utc_ts_to=utils.get_timestamp('2010-02-22'))
+        self.assertEqual(len(fi['authors']), 1)
+        self.assertEqual(fi['authors']['hg@mozilla.com']['count'], 1)
+        self.assertEqual(fi['authors']['hg@mozilla.com']['reviewers'], {})
+        self.assertEqual(fi['bugs'], set())
+        self.assertEqual(len(fi['patches']), 1)
+        self.assertEqual(fi['patches'][0]['author'], 'hg@mozilla.com')
+
+        fi = hi.get(path, utc_ts_to=utils.get_timestamp('2010-02-24'))
+        self.assertEqual(len(fi['authors']), 2)
+        self.assertEqual(fi['authors']['philringnalda@gmail.com']['count'], 1)
+        self.assertEqual(len(fi['authors']['philringnalda@gmail.com']['reviewers']), 1)
+        self.assertEqual(fi['authors']['philringnalda@gmail.com']['reviewers']['gerv'], 1)
+        self.assertEqual(fi['authors']['hg@mozilla.com']['count'], 1)
+        self.assertEqual(fi['authors']['hg@mozilla.com']['reviewers'], {})
+        self.assertEqual(fi['bugs'], set(['547914']))
+        self.assertEqual(len(fi['patches']), 2)
+        self.assertEqual(fi['patches'][0]['author'], 'philringnalda@gmail.com')
+        self.assertEqual(fi['patches'][1]['author'], 'hg@mozilla.com')
+
+        hi = HGFileInfo(path, date_type='push')
+
+        fi = hi.get(path, utc_ts_to=utils.get_timestamp('2010-02-24'))
+        self.assertEqual(len(fi['authors']), 1)
+        self.assertEqual(fi['authors']['hg@mozilla.com']['count'], 1)
+        self.assertEqual(fi['authors']['hg@mozilla.com']['reviewers'], {})
+        self.assertEqual(fi['bugs'], set())
+        self.assertEqual(len(fi['patches']), 1)
+        self.assertEqual(fi['patches'][0]['author'], 'hg@mozilla.com')
+
+        fi = hi.get(path, utc_ts_to=utils.get_timestamp('2010-04-07'))
+        self.assertEqual(len(fi['authors']), 2)
+        self.assertEqual(fi['authors']['philringnalda@gmail.com']['count'], 1)
+        self.assertEqual(len(fi['authors']['philringnalda@gmail.com']['reviewers']), 1)
+        self.assertEqual(fi['authors']['philringnalda@gmail.com']['reviewers']['gerv'], 1)
+        self.assertEqual(fi['authors']['hg@mozilla.com']['count'], 1)
+        self.assertEqual(fi['authors']['hg@mozilla.com']['reviewers'], {})
+        self.assertEqual(fi['bugs'], set(['547914']))
+        self.assertEqual(len(fi['patches']), 2)
+        self.assertEqual(fi['patches'][0]['author'], 'philringnalda@gmail.com')
+        self.assertEqual(fi['patches'][1]['author'], 'hg@mozilla.com')
+
     def test_hgfileinfo_author(self):
         path = 'LICENSE'
         hi = HGFileInfo(path)

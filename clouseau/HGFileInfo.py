@@ -17,7 +17,7 @@ class HGFileInfo(object):
 
     MAX_REV_COUNT = 255
 
-    def __init__(self, paths, channel='nightly', node='tip'):
+    def __init__(self, paths, channel='nightly', node='tip', date_type='push'):
         """Constructor
 
         Args:
@@ -27,6 +27,7 @@ class HGFileInfo(object):
         """
         self.channel = channel
         self.node = node
+        self.date_type = 'date' if date_type == 'creation' else 'pushdate'
         self.data = {}
         self.paths = [paths] if isinstance(paths, six.string_types) else paths
         for p in self.paths:
@@ -39,9 +40,9 @@ class HGFileInfo(object):
     def get(self, path, utc_ts_from=None, utc_ts_to=None, author=None):
         if utc_ts_to is None:
             revision = hgmozilla.Revision.get_revision(self.channel, self.node)
-            assert 'pushdate' in revision
-            assert isinstance(revision['pushdate'], list)
-            utc_ts_to = revision['pushdate'][0]
+            assert self.date_type in revision
+            assert isinstance(revision[self.date_type], list)
+            utc_ts_to = revision[self.date_type][0]
 
         for result in self.results:
             result.wait()
@@ -55,9 +56,9 @@ class HGFileInfo(object):
         patches = []
 
         for entry in entries:
-            assert 'pushdate' in entry
-            assert isinstance(entry['pushdate'], list)
-            utc_date = entry['pushdate'][0]
+            assert self.date_type in entry
+            assert isinstance(entry[self.date_type], list)
+            utc_date = entry[self.date_type][0]
 
             if (utc_ts_from is not None and utc_ts_from > utc_date) or utc_ts_to < utc_date:
                 continue
