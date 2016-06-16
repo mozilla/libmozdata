@@ -209,6 +209,10 @@ class Bugzilla(Connection):
                 landing_patterns += [(re.compile('://hg.mozilla.org/integration/mozilla-inbound/rev/([0-9a-z]+)'), 'inbound')]
             elif channel in ['release', 'beta', 'aurora']:
                 landing_patterns += [(re.compile('://hg.mozilla.org/releases/mozilla-' + channel + '/rev/([0-9a-z]+)'), channel)]
+            elif channel == 'fx-team':
+                landing_patterns += [(re.compile('://hg.mozilla.org/integration/fx-team/rev/([0-9a-z]+)'), 'inbound')]
+            else:
+              raise Exception('Unexpected channel: ' + channel)
 
         results = []
 
