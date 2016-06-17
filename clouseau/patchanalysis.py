@@ -1,6 +1,6 @@
 import base64
 import re
-from datetime import timedelta
+from datetime import (datetime, timedelta)
 try:
     from urllib.request import urlopen
 except ImportError:
@@ -9,22 +9,91 @@ import weakref
 import os
 import pickle
 import numbers
+from collections import Counter
+import warnings
 import whatthepatch
 from .HGFileInfo import HGFileInfo
-from .bugzilla import Bugzilla
+from .bugzilla import Bugzilla, BugzillaUser
 from .CrashInfo import CrashInfo
+from . import hgmozilla
 from . import modules
 from . import utils
 
-hginfos = weakref.WeakValueDictionary()
 
+reviewer_cache = {}
+
+
+def reviewer_match(short_name, bugzilla_names, cc_list):
+    if short_name in reviewer_cache:
+        assert reviewer_cache[short_name] in bugzilla_names
+        return reviewer_cache[short_name]
+
+    # Check if we can find the reviewer in the list of reviewers from the bug.
+    for bugzilla_name in bugzilla_names:
+        if bugzilla_name.startswith(short_name):
+            assert short_name not in reviewer_cache
+            reviewer_cache[short_name] = bugzilla_name
+            return bugzilla_name
+
+    # Otherwise, check if we can find him/her in the CC list.
+    for entry in cc_list:
+        if entry['email'] in bugzilla_names and (('[:' + short_name + ']') in entry['real_name'] or ('(:' + short_name + ')') in entry['real_name']):
+            assert short_name not in reviewer_cache
+            reviewer_cache[short_name] = entry['email']
+            return entry['email']
+
+    # Otherwise, find matching users on Bugzilla.
+    bugzilla_users = []
+    def user_handler(u):
+        bugzilla_users.append(u)
+
+    BugzillaUser(search_strings='match=' + short_name, user_handler=user_handler).wait()
+    for user in bugzilla_users:
+        if user['email'] in bugzilla_names and (('[:' + short_name + ']') in user['real_name'] or ('(:' + short_name + ')') in user['real_name']):
+            assert short_name not in reviewer_cache
+            reviewer_cache[short_name] = user['email']
+            return user['email']
+
+    # We should always find a matching reviewer name.
+    # If we're unable to find it, add a static entry in the
+    # reviewer_cache dict or find a new clever way to retrieve it.
+    raise Exception(short_name + ' not found in ' + str(bugzilla_names))
+
+
+def author_match(author_mercurial, author_real_name, bugzilla_names, cc_list):
+  if author_mercurial in bugzilla_names:
+      return [author_mercurial]
+
+  # Check in the cc_list, so we don't have to hit Bugzilla.
+  found = []
+  for entry in cc_list:
+      if author_real_name in entry['real_name']:
+          found.append(entry['email'])
+
+  if len(found) == 0:
+      # Otherwise, search on Bugzilla.
+      bugzilla_users = []
+      def user_handler(u):
+          bugzilla_users.append(u)
+
+      BugzillaUser(search_strings='match=' + author_name, user_handler=user_handler).wait()
+      for user in bugzilla_users:
+          if author_real_name in user['real_name']:
+              found.append(user['email'])
+
+  assert len(found) == 1
+
+  return [author_mercurial, found[0]]
 
 def _is_test(path):
     return 'test' in path and not path.endswith(('ini', 'list', 'in', 'py', 'json', 'manifest'))
 
 
-def patch_analysis(patch, author, creation_date=utils.get_date_ymd('today')):
-    info = {
+hginfos = weakref.WeakValueDictionary()
+
+
+def patch_analysis(patch, authors, creation_date=utils.get_date_ymd('today')):
+    info = Counter({
         'changes_size': 0,
         'modules_num': 0,
         'code_churn_overall': 0,
@@ -34,7 +103,7 @@ def patch_analysis(patch, author, creation_date=utils.get_date_ymd('today')):
         # 'reviewer_familiarity_overall': 0,
         # 'reviewer_familiarity_last_3_releases': 0,
         'crashes': 0,
-    }
+    })
 
     paths = []
     for diff in whatthepatch.parse_patch(patch):
@@ -51,7 +120,7 @@ def patch_analysis(patch, author, creation_date=utils.get_date_ymd('today')):
             paths.append(new_path)
 
     used_modules = {}
-    ci = CrashInfo(paths).get()
+    ci = CrashInfo(paths).get() # TODO: Only check files that can actually be here (.c or .cpp).
     for path in paths:
         info['crashes'] += ci[path]
 
@@ -62,12 +131,14 @@ def patch_analysis(patch, author, creation_date=utils.get_date_ymd('today')):
         if path in hginfos:
             hi = hginfos[path]
         else:
-            hi = hginfos[path] = HGFileInfo(path)
+            hi = hginfos[path] = HGFileInfo(path, date_type='creation')
 
-        info['code_churn_overall'] += len(hi.get(path, utc_ts_to=utils.get_timestamp(creation_date))['patches'])
-        info['code_churn_last_3_releases'] += len(hi.get(path, utc_ts_from=utils.get_timestamp(creation_date + timedelta(-3 * 6 * 7)), utc_ts_to=utils.get_timestamp(creation_date))['patches'])
-        info['developer_familiarity_overall'] += len(hi.get(path, author=author, utc_ts_to=utils.get_timestamp(creation_date))['patches'])
-        info['developer_familiarity_last_3_releases'] += len(hi.get(path, author=author, utc_ts_from=utils.get_timestamp(creation_date + timedelta(-3 * 6 * 7)), utc_ts_to=utils.get_timestamp(creation_date))['patches'])
+        utc_ts_to = utils.get_timestamp(creation_date) - 1 # -1 so it doesn't include the current patch
+
+        info['code_churn_overall'] += len(hi.get(path, utc_ts_to=utc_ts_to)['patches'])
+        info['code_churn_last_3_releases'] += len(hi.get(path, utc_ts_from=utils.get_timestamp(creation_date + timedelta(-3 * 6 * 7)), utc_ts_to=utc_ts_to)['patches'])
+        info['developer_familiarity_overall'] += len(hi.get(path, authors=authors, utc_ts_to=utc_ts_to)['patches'])
+        info['developer_familiarity_last_3_releases'] += len(hi.get(path, authors=authors, utc_ts_from=utils.get_timestamp(creation_date + timedelta(-3 * 6 * 7)), utc_ts_to=utc_ts_to)['patches'])
 
         # TODO: Add number of times the file was modified by the reviewer.
 
@@ -78,8 +149,7 @@ def patch_analysis(patch, author, creation_date=utils.get_date_ymd('today')):
     return info
 
 
-MOZREVIEW_URL_PATTERN = 'https://reviewboard.mozilla.org/r/([0-9]+)/diff/#index_header'
-MOZREVIEW_URL_PATTERN2 = 'https://reviewboard.mozilla.org/r/([0-9]+)/'
+MOZREVIEW_URL_PATTERN = 'https://reviewboard.mozilla.org/r/([0-9]+)/'
 
 
 # TODO: Consider feedback+ and feedback- as review+ and review-
@@ -100,68 +170,153 @@ def bug_analysis(bug):
         INCLUDE_FIELDS = [
             'id', 'flags', 'depends_on', 'keywords', 'blocks', 'whiteboard', 'resolution', 'status',
             'url', 'version', 'summary', 'priority', 'product', 'component', 'severity',
-            'platform', 'op_sys'
+            'platform', 'op_sys', 'cc',
         ]
 
-        INCLUDE_FIELDS_QUERY = 'include_fields=' + ','.join(INCLUDE_FIELDS)
+        ATTACHMENT_INCLUDE_FIELDS = [
+            'flags', 'is_patch', 'creator', 'content_type',
+        ]
 
-        Bugzilla('id=' + str(bug_id) + '&' + INCLUDE_FIELDS_QUERY, bughandler=bughandler, commenthandler=commenthandler, attachmenthandler=attachmenthandler).get_data().wait()
+        Bugzilla(bug_id, INCLUDE_FIELDS, bughandler=bughandler, commenthandler=commenthandler, attachmenthandler=attachmenthandler, attachment_include_fields=ATTACHMENT_INCLUDE_FIELDS).get_data().wait()
 
-    info = {
+    info = Counter({
         'backout_num': 0,
         'blocks': len(bug['blocks']),
         'depends_on': len(bug['depends_on']),
         'comments': len(bug['comments']),
         'r-ed_patches': sum((a['is_patch'] == 1 or a['content_type'] == 'text/x-review-board-request') and sum(flag['name'] == 'review' and flag['status'] == '-' for flag in a['flags']) > 0 for a in bug['attachments']),
-    }
+    })
 
-    # Assume all non-obsolete and r+ed patches have landed.
-    # TODO: Evaluate if reading comments to see what landed is better.
+    # Get all reviewers and authors, we will match them with the changeset description (r=XXX).
+    bugzilla_reviewers = []
+    bugzilla_authors = []
     for attachment in bug['attachments']:
-        if sum(flag['name'] == 'review' and flag['status'] == '+' for flag in attachment['flags']) == 0:
+        if sum(flag['name'] == 'review' and (flag['status'] == '+' or flag['status'] == '-') for flag in attachment['flags']) == 0:
             continue
 
-        data = None
+        bugzilla_authors.append(attachment['creator'])
 
-        if attachment['is_patch'] == 1 and attachment['is_obsolete'] == 0:
-            data = base64.b64decode(attachment['data']).decode('ascii', 'ignore')
-        elif attachment['content_type'] == 'text/x-review-board-request' and attachment['is_obsolete'] == 0:
-            mozreview_url = base64.b64decode(attachment['data']).decode('utf-8')
+        for flag in attachment['flags']:
+            # If the creator of the patch is the setter of the review flag, it's probably
+            # because he/she was carrying a r+, so we don't add him/her to the reviewers list.
+            if flag['setter'] == attachment['creator']:
+                continue
 
-            try:
+            bugzilla_reviewers.append(flag['setter'])
+
+    reviewer_pattern = re.compile('r=([a-zA-Z0-9]+)')
+    author_pattern = re.compile('<([^>]+)>')
+    author_name_pattern = re.compile('([^<]+)')
+    backout_pattern = re.compile('(?:Backout|Back out|Backed out|Backedout) changeset ([0-9a-z]+)')
+    landings = Bugzilla.get_landing_comments(bug['comments'], ['inbound', 'central', 'fx-team'])
+    revs = {}
+    backed_out_revs = set()
+    backout_comments = set()
+    for landing in landings:
+        rev = landing['revision'][:12]
+        channel = landing['channel']
+
+        diff = hgmozilla.RawRevision.get_revision(channel, rev)
+        # TODO: No need to get the revision, we have everything in the raw format.
+        meta = hgmozilla.Revision.get_revision(channel, rev)
+
+        # Check if it was a backout
+        backout_revisions = set()
+        for match in backout_pattern.finditer(meta['desc']):
+            backout_revisions.add(match.group(1)[:12])
+        if not backout_revisions:
+            match = re.search('Backout|Back out|Backed out|Backedout', meta['desc'])
+            if match:
+                for parent in meta['parents']:
+                    for match in backout_pattern.finditer(hgmozilla.Revision.get_revision(channel, parent)['desc']):
+                        backout_revisions.add(match.group(1)[:12])
+
+                # It's definitely a backout, but we couldn't find which revision was backed out.
+                if not backout_revisions:
+                    warnings.warn('Looks like a backout, but we couldn\'t find which revision was backed out.', stacklevel=2)
+                # I wish we could assert instead of warn.
+                # assert backout_revisions
+
+        if backout_revisions and not backout_revisions.issubset(backed_out_revs):
+            backout_comments.add(landing['comment']['id'])
+            backed_out_revs.update(backout_revisions)
+
+        if backout_revisions:
+            continue
+
+        reviewers = set()
+        for match in reviewer_pattern.finditer(meta['desc']):
+            reviewers.add(match.group(1))
+
+        author_mercurial = author_pattern.search(meta['user']).group(1)
+        author_real_name = author_name_pattern.search(meta['user']).group(1)
+        # Multiple names because sometimes authors use different emails on Bugzilla and Mercurial and sometimes
+        # they change it.
+        author_names = author_match(author_mercurial, author_real_name, bugzilla_authors, bug['cc_detail'])
+
+        # Overwrite revisions from integration channels (inbound, fx-team).
+        if rev not in revs or channel == 'central':
+            revs[rev] = {
+                'diff': diff,
+                'author_names': author_names,
+                'creation_date': meta['date'][0],
+                'reviewers': reviewers,
+            }
+
+    # Remove backed out changesets
+    for rev in backed_out_revs:
+        if rev not in revs:
+            warnings.warn('Revision ' + rev + ' was not found.', stacklevel=2)
+        else:
+            del revs[rev]
+
+    if len(revs) > 0:
+        for rev in revs.values():
+            reviewers = set()
+
+            short_reviewers = rev['reviewers']
+
+            for short_reviewer in short_reviewers:
+                if short_reviewer == 'me':
+                    reviewers.add(rev['author'])
+                else:
+                    reviewers.add(reviewer_match(short_reviewer, bugzilla_reviewers, bug['cc_detail']))
+
+            rev['reviewers'] = reviewers
+
+            info += patch_analysis(rev['diff'], rev['author_names'], datetime.fromtimestamp(rev['creation_date']))
+    else:
+        def attachmenthandler(attachments, bugid, data):
+            for i in range(0, len(bug['attachments'])):
+                bug['attachments'][i].update(attachments[i])
+
+        Bugzilla(bug['id'], attachmenthandler=attachmenthandler, attachment_include_fields=['data', 'is_obsolete', 'creation_time']).get_data().wait()
+
+        for attachment in bug['attachments']:
+            if sum(flag['name'] == 'review' and flag['status'] == '+' for flag in attachment['flags']) == 0:
+                continue
+
+            data = None
+
+            if attachment['is_patch'] == 1 and attachment['is_obsolete'] == 0:
+                data = base64.b64decode(attachment['data']).decode('ascii', 'ignore')
+            elif attachment['content_type'] == 'text/x-review-board-request' and attachment['is_obsolete'] == 0:
+                mozreview_url = base64.b64decode(attachment['data']).decode('utf-8')
                 review_num = re.search(MOZREVIEW_URL_PATTERN, mozreview_url).group(1)
-            except:
-                review_num = re.search(MOZREVIEW_URL_PATTERN2, mozreview_url).group(1)
-
-            try:
-                with open('mozreviews_cache/' + review_num, 'rb') as f:
-                    data = pickle.load(f)
-            except:
                 mozreview_raw_diff_url = 'https://reviewboard.mozilla.org/r/' + review_num + '/diff/raw/'
 
                 response = urlopen(mozreview_raw_diff_url)
                 data = response.read().decode('ascii', 'ignore')
 
-                try:
-                    os.mkdir('mozreviews_cache')
-                except OSError:
-                    pass
-
-                with open('mozreviews_cache/' + review_num, 'wb') as f:
-                    pickle.dump(data, f)
-
-        if data is not None:
-            info.update(patch_analysis(data, attachment['creator'], utils.get_date_ymd(attachment['creation_time'])))
-            # XXX: The creator of the attachment isn't always the developer of the patch (and sometimes it is, but with a different email). For example, in bug 1271794.
-            # Using the landing comment with the hg revision instead of reading the attachments would be better.
+            if data is not None:
+                info += patch_analysis(data, [attachment['creator']], utils.get_date_ymd(attachment['creation_time']))
 
     # TODO: Add number of crashes with signatures from the bug (also before/after the patch?).
 
+    # TODO: Add perfherder results?
+
     # TODO: Add number of days since the landing (to check if the patch baked a little on nightly or not).
 
-    # TODO: Use a more clever way to check if the patch was backed out.
-    for comment in bug['comments']:
-        if 'backed out' in comment['text'].lower():
-            info['backout_num'] += 1
+    info['backout_num'] = len(backout_comments)
 
     return info
