@@ -15,7 +15,7 @@ class HGFileInfo(object):
        The patches can be filtered according to pushdate.
     """
 
-    MAX_REV_COUNT = 255
+    MAX_REV_COUNT = 4095
 
     def __init__(self, paths, channel='nightly', node='tip', date_type='push'):
         """Constructor
