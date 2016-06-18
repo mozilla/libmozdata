@@ -6,8 +6,6 @@ try:
 except ImportError:
     from urllib import urlopen
 import weakref
-import os
-import pickle
 import numbers
 from collections import Counter
 import warnings
@@ -44,6 +42,7 @@ def reviewer_match(short_name, bugzilla_names, cc_list):
 
     # Otherwise, find matching users on Bugzilla.
     bugzilla_users = []
+
     def user_handler(u):
         bugzilla_users.append(u)
 
@@ -61,29 +60,31 @@ def reviewer_match(short_name, bugzilla_names, cc_list):
 
 
 def author_match(author_mercurial, author_real_name, bugzilla_names, cc_list):
-  if author_mercurial in bugzilla_names:
-      return [author_mercurial]
+    if author_mercurial in bugzilla_names:
+        return [author_mercurial]
 
-  # Check in the cc_list, so we don't have to hit Bugzilla.
-  found = []
-  for entry in cc_list:
-      if author_real_name in entry['real_name']:
-          found.append(entry['email'])
+    # Check in the cc_list, so we don't have to hit Bugzilla.
+    found = []
+    for entry in cc_list:
+        if author_real_name in entry['real_name']:
+            found.append(entry['email'])
 
-  if len(found) == 0:
-      # Otherwise, search on Bugzilla.
-      bugzilla_users = []
-      def user_handler(u):
-          bugzilla_users.append(u)
+    if len(found) == 0:
+        # Otherwise, search on Bugzilla.
+        bugzilla_users = []
 
-      BugzillaUser(search_strings='match=' + author_name, user_handler=user_handler).wait()
-      for user in bugzilla_users:
-          if author_real_name in user['real_name']:
-              found.append(user['email'])
+        def user_handler(u):
+            bugzilla_users.append(u)
 
-  assert len(found) == 1
+        BugzillaUser(search_strings='match=' + author_real_name, user_handler=user_handler).wait()
+        for user in bugzilla_users:
+            if author_real_name in user['real_name']:
+                found.append(user['email'])
 
-  return [author_mercurial, found[0]]
+    assert len(found) == 1
+
+    return [author_mercurial, found[0]]
+
 
 def _is_test(path):
     return 'test' in path and not path.endswith(('ini', 'list', 'in', 'py', 'json', 'manifest'))
@@ -120,7 +121,7 @@ def patch_analysis(patch, authors, creation_date=utils.get_date_ymd('today')):
             paths.append(new_path)
 
     used_modules = {}
-    ci = CrashInfo(paths).get() # TODO: Only check files that can actually be here (.c or .cpp).
+    ci = CrashInfo(paths).get()  # TODO: Only check files that can actually be here (.c or .cpp).
     for path in paths:
         info['crashes'] += ci[path]
 
@@ -133,7 +134,7 @@ def patch_analysis(patch, authors, creation_date=utils.get_date_ymd('today')):
         else:
             hi = hginfos[path] = HGFileInfo(path, date_type='creation')
 
-        utc_ts_to = utils.get_timestamp(creation_date) - 1 # -1 so it doesn't include the current patch
+        utc_ts_to = utils.get_timestamp(creation_date) - 1  # -1 so it doesn't include the current patch
 
         info['code_churn_overall'] += len(hi.get(path, utc_ts_to=utc_ts_to)['patches'])
         info['code_churn_last_3_releases'] += len(hi.get(path, utc_ts_from=utils.get_timestamp(creation_date + timedelta(-3 * 6 * 7)), utc_ts_to=utc_ts_to)['patches'])
