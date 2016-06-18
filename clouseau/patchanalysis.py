@@ -96,6 +96,7 @@ hginfos = weakref.WeakValueDictionary()
 def patch_analysis(patch, authors, creation_date=utils.get_date_ymd('today')):
     info = Counter({
         'changes_size': 0,
+        'test_changes_size': 0,
         'modules_num': 0,
         'code_churn_overall': 0,
         'code_churn_last_3_releases': 0,
@@ -111,7 +112,9 @@ def patch_analysis(patch, authors, creation_date=utils.get_date_ymd('today')):
         old_path = diff.header.old_path[2:] if diff.header.old_path.startswith('a/') else diff.header.old_path
         new_path = diff.header.new_path[2:] if diff.header.new_path.startswith('b/') else diff.header.new_path
 
-        if not _is_test(new_path):
+        if _is_test(new_path):
+            info['test_changes_size'] += len(diff.changes)
+        else:
             info['changes_size'] += len(diff.changes)
 
         if old_path != '/dev/null' and old_path != new_path:
