@@ -291,7 +291,7 @@ def bug_analysis(bug):
 
             rev['reviewers'] = reviewers
 
-            info += patch_analysis(rev['diff'], rev['author_names'], reviewers, datetime.fromtimestamp(rev['creation_date']))
+            info += patch_analysis(rev['diff'], rev['author_names'], reviewers, datetime.utcfromtimestamp(rev['creation_date']))
     else:
         def attachmenthandler(attachments, bugid, data):
             for i in range(0, len(bug['attachments'])):
