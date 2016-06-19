@@ -93,7 +93,7 @@ def _is_test(path):
 hginfos = weakref.WeakValueDictionary()
 
 
-def patch_analysis(patch, authors, creation_date=utils.get_date_ymd('today')):
+def patch_analysis(patch, authors, reviewers, creation_date=utils.get_date_ymd('today')):
     info = Counter({
         'changes_size': 0,
         'test_changes_size': 0,
@@ -102,8 +102,8 @@ def patch_analysis(patch, authors, creation_date=utils.get_date_ymd('today')):
         'code_churn_last_3_releases': 0,
         'developer_familiarity_overall': 0,
         'developer_familiarity_last_3_releases': 0,
-        # 'reviewer_familiarity_overall': 0,
-        # 'reviewer_familiarity_last_3_releases': 0,
+        'reviewer_familiarity_overall': 0,
+        'reviewer_familiarity_last_3_releases': 0,
         'crashes': 0,
     })
 
@@ -143,8 +143,8 @@ def patch_analysis(patch, authors, creation_date=utils.get_date_ymd('today')):
         info['code_churn_last_3_releases'] += len(hi.get(path, utc_ts_from=utils.get_timestamp(creation_date + timedelta(-3 * 6 * 7)), utc_ts_to=utc_ts_to)['patches'])
         info['developer_familiarity_overall'] += len(hi.get(path, authors=authors, utc_ts_to=utc_ts_to)['patches'])
         info['developer_familiarity_last_3_releases'] += len(hi.get(path, authors=authors, utc_ts_from=utils.get_timestamp(creation_date + timedelta(-3 * 6 * 7)), utc_ts_to=utc_ts_to)['patches'])
-
-        # TODO: Add number of times the file was modified by the reviewer.
+        info['reviewer_familiarity_overall'] += len(hi.get(path, authors=reviewers, utc_ts_to=utc_ts_to)['patches'])
+        info['reviewer_familiarity_last_3_releases'] += len(hi.get(path, authors=reviewers, utc_ts_from=utils.get_timestamp(creation_date + timedelta(-3 * 6 * 7)), utc_ts_to=utc_ts_to)['patches'])
 
     info['modules_num'] = sum(used_modules.values())
 
@@ -288,7 +288,7 @@ def bug_analysis(bug):
 
             rev['reviewers'] = reviewers
 
-            info += patch_analysis(rev['diff'], rev['author_names'], datetime.fromtimestamp(rev['creation_date']))
+            info += patch_analysis(rev['diff'], rev['author_names'], reviewers, datetime.fromtimestamp(rev['creation_date']))
     else:
         def attachmenthandler(attachments, bugid, data):
             for i in range(0, len(bug['attachments'])):
@@ -312,8 +312,10 @@ def bug_analysis(bug):
                 response = urlopen(mozreview_raw_diff_url)
                 data = response.read().decode('ascii', 'ignore')
 
+            reviewers = [flag['setter'] for flag in attachment['flags'] if flag['name'] == 'review' and flag['status'] == '+']
+
             if data is not None:
-                info += patch_analysis(data, [attachment['creator']], utils.get_date_ymd(attachment['creation_time']))
+                info += patch_analysis(data, [attachment['creator']], reviewers, utils.get_date_ymd(attachment['creation_time']))
 
     # TODO: Add number of crashes with signatures from the bug (also before/after the patch?).
 

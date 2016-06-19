@@ -24,6 +24,8 @@ class PatchAnalysisTest(unittest.TestCase):
         self.assertEqual(info['code_churn_last_3_releases'], 36)
         self.assertEqual(info['developer_familiarity_overall'], 13)
         self.assertEqual(info['developer_familiarity_last_3_releases'], 1)
+        self.assertEqual(info['reviewer_familiarity_overall'], 0)
+        self.assertEqual(info['reviewer_familiarity_last_3_releases'], 0)
         self.assertGreater(info['crashes'], 0)
 
         bug = {}
@@ -55,6 +57,8 @@ class PatchAnalysisTest(unittest.TestCase):
         self.assertEqual(info['code_churn_last_3_releases'], 37)
         self.assertEqual(info['developer_familiarity_overall'], 10)
         self.assertEqual(info['developer_familiarity_last_3_releases'], 10)
+        self.assertEqual(info['reviewer_familiarity_overall'], 16)
+        self.assertEqual(info['reviewer_familiarity_last_3_releases'], 0)
         self.assertGreater(info['crashes'], 0)
 
         # Backed out once (when it was on inbound) with changesets from anther bug.
@@ -77,6 +81,8 @@ class PatchAnalysisTest(unittest.TestCase):
             self.assertEqual(info['code_churn_last_3_releases'], 248)
             self.assertEqual(info['developer_familiarity_overall'], 8)
             self.assertEqual(info['developer_familiarity_last_3_releases'], 8)
+            self.assertEqual(info['reviewer_familiarity_overall'], 158)
+            self.assertEqual(info['reviewer_familiarity_last_3_releases'], 157)
             self.assertGreaterEqual(info['crashes'], 0)
 
         # Backed out from central and relanded on central.
@@ -95,6 +101,8 @@ class PatchAnalysisTest(unittest.TestCase):
         self.assertEqual(info['code_churn_last_3_releases'], 183)
         self.assertEqual(info['developer_familiarity_overall'], 10)
         self.assertEqual(info['developer_familiarity_last_3_releases'], 10)
+        self.assertEqual(info['reviewer_familiarity_overall'], 57)
+        self.assertEqual(info['reviewer_familiarity_last_3_releases'], 3)
         self.assertGreater(info['crashes'], 0)
 
         # Changeset with multiple unrelated backouts (on fx-team).
@@ -112,6 +120,8 @@ class PatchAnalysisTest(unittest.TestCase):
         self.assertEqual(info['code_churn_last_3_releases'], 815)
         self.assertEqual(info['developer_familiarity_overall'], 190)
         self.assertEqual(info['developer_familiarity_last_3_releases'], 78)
+        self.assertEqual(info['reviewer_familiarity_overall'], 2)
+        self.assertEqual(info['reviewer_familiarity_last_3_releases'], 0)
         self.assertGreater(info['crashes'], 0)
 
         # Custom backout (no reference to revision).
@@ -132,6 +142,8 @@ class PatchAnalysisTest(unittest.TestCase):
             self.assertEqual(info['code_churn_last_3_releases'], 74)
             self.assertEqual(info['developer_familiarity_overall'], 21)
             self.assertEqual(info['developer_familiarity_last_3_releases'], 21)
+            self.assertEqual(info['reviewer_familiarity_overall'], 32)
+            self.assertEqual(info['reviewer_familiarity_last_3_releases'], 26)
             self.assertGreater(info['crashes'], 0)
 
         # No landed patches.
@@ -150,6 +162,8 @@ class PatchAnalysisTest(unittest.TestCase):
         self.assertEqual(info['code_churn_last_3_releases'], 316)
         self.assertEqual(info['developer_familiarity_overall'], 4)
         self.assertEqual(info['developer_familiarity_last_3_releases'], 4)
+        self.assertEqual(info['reviewer_familiarity_overall'], 266)
+        self.assertEqual(info['reviewer_familiarity_last_3_releases'], 15)
         self.assertGreaterEqual(info['crashes'], 0)
 
 if __name__ == '__main__':
