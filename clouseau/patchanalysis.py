@@ -26,48 +26,51 @@ def reviewer_match(short_name, bugzilla_names, cc_list):
         assert reviewer_cache[short_name] in bugzilla_names
         return reviewer_cache[short_name]
 
+    found = set()
+
     # Check if we can find the reviewer in the list of reviewers from the bug.
     for bugzilla_name in bugzilla_names:
         if bugzilla_name.startswith(short_name):
-            assert short_name not in reviewer_cache
-            reviewer_cache[short_name] = bugzilla_name
-            return bugzilla_name
+            found.add(bugzilla_name)
 
-    # Otherwise, check if we can find him/her in the CC list.
-    for entry in cc_list:
-        if entry['email'] in bugzilla_names and (('[:' + short_name + ']') in entry['real_name'] or ('(:' + short_name + ')') in entry['real_name']):
-            assert short_name not in reviewer_cache
-            reviewer_cache[short_name] = entry['email']
-            return entry['email']
+    if len(found) == 0:
+        # Otherwise, check if we can find him/her in the CC list.
+        for entry in cc_list:
+            if entry['email'] in bugzilla_names and (('[:' + short_name + ']') in entry['real_name'] or ('(:' + short_name + ')') in entry['real_name']):
+                found.add(entry['email'])
 
-    # Otherwise, find matching users on Bugzilla.
-    bugzilla_users = []
+    if len(found) == 0:
+        # Otherwise, find matching users on Bugzilla.
+        bugzilla_users = []
 
-    def user_handler(u):
-        bugzilla_users.append(u)
+        def user_handler(u):
+            bugzilla_users.append(u)
 
-    BugzillaUser(search_strings='match=' + short_name, user_handler=user_handler).wait()
-    for user in bugzilla_users:
-        if user['email'] in bugzilla_names and (('[:' + short_name + ']') in user['real_name'] or ('(:' + short_name + ')') in user['real_name']):
-            assert short_name not in reviewer_cache
-            reviewer_cache[short_name] = user['email']
-            return user['email']
+        BugzillaUser(search_strings='match=' + short_name, user_handler=user_handler).wait()
+        for user in bugzilla_users:
+            if user['email'] in bugzilla_names and (('[:' + short_name + ']') in user['real_name'] or ('(:' + short_name + ')') in user['real_name']):
+                found.add(user['email'])
 
     # We should always find a matching reviewer name.
     # If we're unable to find it, add a static entry in the
     # reviewer_cache dict or find a new clever way to retrieve it.
-    raise Exception(short_name + ' not found in ' + str(bugzilla_names))
+    assert len(found) == 1, 'Reviewer ' + short_name + ' not found.'
+
+    assert short_name not in reviewer_cache
+    reviewer_cache[short_name] = found.pop()
+    return reviewer_cache[short_name]
 
 
 def author_match(author_mercurial, author_real_name, bugzilla_names, cc_list):
     if author_mercurial in bugzilla_names:
         return [author_mercurial]
 
+    found = set()
+
     # Check in the cc_list, so we don't have to hit Bugzilla.
-    found = []
     for entry in cc_list:
         if author_real_name in entry['real_name']:
-            found.append(entry['email'])
+            found.add(entry['email'])
 
     if len(found) == 0:
         # Otherwise, search on Bugzilla.
@@ -79,11 +82,11 @@ def author_match(author_mercurial, author_real_name, bugzilla_names, cc_list):
         BugzillaUser(search_strings='match=' + author_real_name, user_handler=user_handler).wait()
         for user in bugzilla_users:
             if author_real_name in user['real_name']:
-                found.append(user['email'])
+                found.add(user['email'])
 
-    assert len(found) == 1
+    assert len(found) == 1, 'Author ' + author_mercurial + ' not found.'
 
-    return [author_mercurial, found[0]]
+    return [author_mercurial, found.pop()]
 
 
 def _is_test(path):
@@ -192,13 +195,13 @@ def bug_analysis(bug):
     })
 
     # Get all reviewers and authors, we will match them with the changeset description (r=XXX).
-    bugzilla_reviewers = []
-    bugzilla_authors = []
+    bugzilla_reviewers = set()
+    bugzilla_authors = set()
     for attachment in bug['attachments']:
         if sum(flag['name'] == 'review' and (flag['status'] == '+' or flag['status'] == '-') for flag in attachment['flags']) == 0:
             continue
 
-        bugzilla_authors.append(attachment['creator'])
+        bugzilla_authors.add(attachment['creator'])
 
         for flag in attachment['flags']:
             # If the creator of the patch is the setter of the review flag, it's probably
@@ -206,7 +209,7 @@ def bug_analysis(bug):
             if flag['setter'] == attachment['creator']:
                 continue
 
-            bugzilla_reviewers.append(flag['setter'])
+            bugzilla_reviewers.add(flag['setter'])
 
     reviewer_pattern = re.compile('r=([a-zA-Z0-9]+)')
     author_pattern = re.compile('<([^>]+)>')
