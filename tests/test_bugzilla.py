@@ -124,6 +124,12 @@ class BugCommentHistoryTest(unittest.TestCase):
         single_block_change = bugzilla.Bugzilla.get_history_matches(data['history'], {'added': '11091', 'field_name': 'blocks'})
         self.assertEqual(single_block_change, [{'changes': [{'removed': '', 'added': '11091', 'field_name': 'blocks'}], 'who': 'lchiang@formerly-netscape.com.tld', 'when': '1999-09-20T22:58:39Z'}])
 
+        data = {}
+        bugzilla.Bugzilla(1005958, historyhandler=historyhandler, historydata=data).get_data().wait()
+
+        multiple_changes = bugzilla.Bugzilla.get_history_matches(data['history'], {'added': 'approval-mozilla-release?'})
+        self.assertEqual(multiple_changes, [{'changes': [{'added': 'approval-mozilla-aurora?, approval-mozilla-beta?, approval-mozilla-release?', 'attachment_id': 8417443, 'field_name': 'flagtypes.name', 'removed': ''}], 'when': '2014-05-05T20:25:06Z', 'who': 'hurley@todesschaf.org'}])
+
     def test_search_landing(self):
         def commenthandler(bug, bugid, data):
             data['comments'] = bug['comments']

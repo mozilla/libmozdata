@@ -181,14 +181,20 @@ class Bugzilla(Connection):
         history_entries = []
 
         for history_entry in history:
-            found = False
-
             for change in history_entry['changes']:
-                if set(change.items()).intersection(set(change_to_match.items())) == set(change_to_match.items()):
-                    history_entries.append(history_entry)
-                    found = True
+                matches = True
 
-                if found:
+                for change_key, change_value in change.items():
+                  for key, value in change_to_match.items():
+                      if key == change_key and value != change_value and value not in change_value.split(', '):
+                          matches = False
+                          break
+
+                  if not matches:
+                      break
+
+                if matches:
+                    history_entries.append(history_entry)
                     break
 
         return history_entries
