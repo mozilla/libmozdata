@@ -185,13 +185,13 @@ class Bugzilla(Connection):
                 matches = True
 
                 for change_key, change_value in change.items():
-                  for key, value in change_to_match.items():
-                      if key == change_key and value != change_value and value not in change_value.split(', '):
-                          matches = False
-                          break
+                    for key, value in change_to_match.items():
+                        if key == change_key and value != change_value and value not in change_value.split(', '):
+                            matches = False
+                            break
 
-                  if not matches:
-                      break
+                    if not matches:
+                        break
 
                 if matches:
                     history_entries.append(history_entry)
