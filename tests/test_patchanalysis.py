@@ -110,7 +110,7 @@ class PatchAnalysisTest(unittest.TestCase):
         info = patchanalysis.bug_analysis(384458)
         self.assertEqual(info['backout_num'], 1)
         self.assertEqual(info['blocks'], 5)
-        self.assertEqual(info['depends_on'], 31)
+        self.assertEqual(info['depends_on'], 32)
         self.assertEqual(info['comments'], 100)
         self.assertEqual(info['changes_size'], 2752)
         self.assertEqual(info['test_changes_size'], 462)
