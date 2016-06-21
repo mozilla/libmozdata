@@ -48,7 +48,7 @@ def reviewer_match(short_name, bugzilla_names, cc_list):
 
         BugzillaUser(search_strings='match=' + short_name, user_handler=user_handler).wait()
         for user in bugzilla_users:
-            if user['email'] in bugzilla_names and (('[:' + short_name + ']') in user['real_name'] or ('(:' + short_name + ')') in user['real_name']):
+            if user['email'] in bugzilla_names and (('[:' + short_name + ']') in user['real_name'] or ('(:' + short_name + ')') in user['real_name'] or (short_name + '@mozilla.com') in user['real_name']):
                 found.add(user['email'])
 
     # We should always find a matching reviewer name.
