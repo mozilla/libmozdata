@@ -229,6 +229,7 @@ def bug_analysis(bug):
 
         diff = hgmozilla.RawRevision.get_revision(channel, rev)
         # TODO: No need to get the revision, we have everything in the raw format.
+        #       We can use pylib/mozautomation/mozautomation/commitparser.py from version-control-tools
         meta = hgmozilla.Revision.get_revision(channel, rev)
 
         # Check if it was a backout
