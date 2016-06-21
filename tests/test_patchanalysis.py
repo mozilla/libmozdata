@@ -283,6 +283,7 @@ class PatchAnalysisTest(unittest.TestCase):
 
         # Reviewer with several IRC names.
         # Disable because it's too slow for tests.
+        # TODO: Reenable for local tests but not on Travis.
         # info = patchanalysis.bug_analysis(914034)
         # self.assertEqual(info['backout_num'], 0)
         # self.assertEqual(info['blocks'], 2)
@@ -333,6 +334,23 @@ class PatchAnalysisTest(unittest.TestCase):
         self.assertEqual(info['developer_familiarity_last_3_releases'], 0)
         self.assertEqual(info['reviewer_familiarity_overall'], 11)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 4)
+        self.assertGreaterEqual(info['crashes'], 0)
+
+        info = patchanalysis.bug_analysis(799266)
+        self.assertEqual(info['backout_num'], 0)
+        self.assertEqual(info['blocks'], 0)
+        self.assertEqual(info['depends_on'], 0)
+        self.assertEqual(info['comments'], 28)
+        self.assertEqual(info['changes_size'], 104)
+        self.assertEqual(info['test_changes_size'], 0)
+        self.assertEqual(info['modules_num'], 1)
+        self.assertEqual(info['r-ed_patches'], 0)
+        self.assertEqual(info['code_churn_overall'], 355)
+        self.assertEqual(info['code_churn_last_3_releases'], 37)
+        self.assertEqual(info['developer_familiarity_overall'], 36)
+        self.assertEqual(info['developer_familiarity_last_3_releases'], 5)
+        self.assertEqual(info['reviewer_familiarity_overall'], 1)
+        self.assertEqual(info['reviewer_familiarity_last_3_releases'], 0)
         self.assertGreaterEqual(info['crashes'], 0)
 
 if __name__ == '__main__':

@@ -22,11 +22,14 @@ reviewer_cache = {}
 
 
 def short_name_match(short_name, real_name, email):
-    names = real_name.split(' ')
-    possible_short_name = (names[0][0] + names[1]).lower() if names and len(names) >= 2 else ''
+    short_name = short_name.lower()
+    real_name = real_name.lower()
 
-    return '[:' + short_name + ']' in real_name or\
-           '(:' + short_name + ')' in real_name or\
+    names = real_name.split(' ')
+    possible_short_name = names[0][0] + names[1] if names and len(names) >= 2 else ''
+
+    return ':' + short_name + ']' in real_name or\
+           ':' + short_name + ')' in real_name or\
            ':' + short_name + ',' in real_name or\
            short_name + '@mozilla.com' in real_name or\
            (possible_short_name and short_name == possible_short_name) or\
