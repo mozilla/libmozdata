@@ -206,6 +206,7 @@ class PatchAnalysisTest(unittest.TestCase):
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 0)
         self.assertGreaterEqual(info['crashes'], 0)
 
+        # Reviewer has different emails on Bugzilla and Mercurial, and his short name is hard to find.
         info = patchanalysis.bug_analysis(859425)
         self.assertEqual(info['backout_num'], 0)
         self.assertEqual(info['blocks'], 0)
@@ -221,6 +222,24 @@ class PatchAnalysisTest(unittest.TestCase):
         self.assertEqual(info['developer_familiarity_last_3_releases'], 1)
         self.assertEqual(info['reviewer_familiarity_overall'], 0)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 0)
+        self.assertGreaterEqual(info['crashes'], 0)
+
+        # r=bustage
+        info = patchanalysis.bug_analysis(701875)
+        self.assertEqual(info['backout_num'], 0)
+        self.assertEqual(info['blocks'], 3)
+        self.assertEqual(info['depends_on'], 1)
+        self.assertEqual(info['comments'], 69)
+        self.assertEqual(info['changes_size'], 194)
+        self.assertEqual(info['test_changes_size'], 0)
+        self.assertEqual(info['modules_num'], 5)
+        self.assertEqual(info['r-ed_patches'], 1)
+        self.assertEqual(info['code_churn_overall'], 3770)
+        self.assertEqual(info['code_churn_last_3_releases'], 526)
+        self.assertEqual(info['developer_familiarity_overall'], 86)
+        self.assertEqual(info['developer_familiarity_last_3_releases'], 12)
+        self.assertEqual(info['reviewer_familiarity_overall'], 25)
+        self.assertEqual(info['reviewer_familiarity_last_3_releases'], 5)
         self.assertGreaterEqual(info['crashes'], 0)
 
 if __name__ == '__main__':

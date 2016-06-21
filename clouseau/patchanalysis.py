@@ -63,7 +63,7 @@ def reviewer_match(short_name, bugzilla_names, cc_list):
 
 def author_match(author_mercurial, author_real_name, bugzilla_names, cc_list):
     if author_mercurial in bugzilla_names:
-        return [author_mercurial]
+        return set([author_mercurial])
 
     found = set()
 
@@ -89,7 +89,7 @@ def author_match(author_mercurial, author_real_name, bugzilla_names, cc_list):
 
     assert len(found) == 1, 'Author ' + author_mercurial + ' not found.'
 
-    return [author_mercurial, found.pop()]
+    return set([author_mercurial, found.pop()])
 
 
 def _is_test(path):
@@ -295,8 +295,8 @@ def bug_analysis(bug):
             short_reviewers = rev['reviewers']
 
             for short_reviewer in short_reviewers:
-                if short_reviewer == 'me':
-                    reviewers.add(rev['author'])
+                if short_reviewer == 'me' or short_reviewer == 'bustage':
+                    reviewers |= rev['author_names']
                 else:
                     reviewers.add(reviewer_match(short_reviewer, bugzilla_reviewers, bug['cc_detail']))
 
