@@ -280,5 +280,22 @@ class PatchAnalysisTest(unittest.TestCase):
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 0)
         self.assertGreaterEqual(info['crashes'], 0)
 
+        info = patchanalysis.bug_analysis(914034)
+        self.assertEqual(info['backout_num'], 0)
+        self.assertEqual(info['blocks'], 2)
+        self.assertEqual(info['depends_on'], 1)
+        self.assertEqual(info['comments'], 26)
+        self.assertEqual(info['changes_size'], 93872)
+        self.assertEqual(info['test_changes_size'], 1488)
+        self.assertEqual(info['modules_num'], 23)
+        self.assertEqual(info['r-ed_patches'], 0)
+        self.assertEqual(info['code_churn_overall'], 18959)
+        self.assertEqual(info['code_churn_last_3_releases'], 2396)
+        self.assertEqual(info['developer_familiarity_overall'], 151)
+        self.assertEqual(info['developer_familiarity_last_3_releases'], 54)
+        self.assertEqual(info['reviewer_familiarity_overall'], 18722)
+        self.assertEqual(info['reviewer_familiarity_last_3_releases'], 2371)
+        self.assertGreaterEqual(info['crashes'], 0)
+
 if __name__ == '__main__':
     unittest.main()
