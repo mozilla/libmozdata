@@ -111,7 +111,7 @@ class PatchAnalysisTest(unittest.TestCase):
         self.assertEqual(info['backout_num'], 1)
         self.assertEqual(info['blocks'], 5)
         self.assertEqual(info['depends_on'], 34)
-        self.assertEqual(info['comments'], 100)
+        self.assertEqual(info['comments'], 101)
         self.assertEqual(info['changes_size'], 2752)
         self.assertEqual(info['test_changes_size'], 462)
         self.assertEqual(info['modules_num'], 11)
@@ -241,6 +241,27 @@ class PatchAnalysisTest(unittest.TestCase):
         self.assertEqual(info['reviewer_familiarity_overall'], 25)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 5)
         self.assertGreaterEqual(info['crashes'], 0)
+
+        # Reviewer doesn't have his short name in his Bugzilla name.
+        with warnings.catch_warnings(record=True) as w:
+            info = patchanalysis.bug_analysis(853033)
+            self.assertEqual(len(w), 1)
+            self.assertEqual(str(w[0].message), 'Revision 8de609c5d378 is related to another bug (743252).')
+            self.assertEqual(info['backout_num'], 0)
+            self.assertEqual(info['blocks'], 2)
+            self.assertEqual(info['depends_on'], 0)
+            self.assertEqual(info['comments'], 13)
+            self.assertEqual(info['changes_size'], 18)
+            self.assertEqual(info['test_changes_size'], 0)
+            self.assertEqual(info['modules_num'], 1)
+            self.assertEqual(info['r-ed_patches'], 0)
+            self.assertEqual(info['code_churn_overall'], 4)
+            self.assertEqual(info['code_churn_last_3_releases'], 1)
+            self.assertEqual(info['developer_familiarity_overall'], 1)
+            self.assertEqual(info['developer_familiarity_last_3_releases'], 1)
+            self.assertEqual(info['reviewer_familiarity_overall'], 0)
+            self.assertEqual(info['reviewer_familiarity_last_3_releases'], 0)
+            self.assertGreaterEqual(info['crashes'], 0)
 
 if __name__ == '__main__':
     unittest.main()

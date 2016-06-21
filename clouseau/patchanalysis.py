@@ -21,6 +21,16 @@ from . import utils
 reviewer_cache = {}
 
 
+def short_name_match(short_name, real_name):
+    names = real_name.split(' ')
+    possible_short_name = (names[0][0] + names[1][:]).lower()
+
+    return '[:' + short_name + ']' in real_name or\
+           '(:' + short_name + ')' in real_name or\
+           short_name + '@mozilla.com' in real_name or\
+           short_name == possible_short_name.lower()
+
+
 def reviewer_match(short_name, bugzilla_names, cc_list):
     if short_name in reviewer_cache:
         assert reviewer_cache[short_name] in bugzilla_names
@@ -35,9 +45,7 @@ def reviewer_match(short_name, bugzilla_names, cc_list):
 
     if len(found) == 0:
         # Otherwise, check if we can find him/her in the CC list.
-        for entry in cc_list:
-            if entry['email'] in bugzilla_names and (('[:' + short_name + ']') in entry['real_name'] or ('(:' + short_name + ')') in entry['real_name']):
-                found.add(entry['email'])
+        found |= set([entry['email'] for entry in cc_list if entry['email'] in bugzilla_names and short_name_match(short_name, entry['real_name'])])
 
     if len(found) == 0:
         # Otherwise, find matching users on Bugzilla.
@@ -47,9 +55,10 @@ def reviewer_match(short_name, bugzilla_names, cc_list):
             bugzilla_users.append(u)
 
         BugzillaUser(search_strings='match=' + short_name, user_handler=user_handler).wait()
-        for user in bugzilla_users:
-            if user['email'] in bugzilla_names and (('[:' + short_name + ']') in user['real_name'] or ('(:' + short_name + ')') in user['real_name'] or (short_name + '@mozilla.com') in user['real_name']):
-                found.add(user['email'])
+        for bugzilla_name in bugzilla_names:
+            BugzillaUser(bugzilla_name, user_handler=user_handler).wait()
+
+        found |= set([user['email'] for user in bugzilla_users if user['email'] in bugzilla_names and short_name_match(short_name, user['real_name'])])
 
     # We should always find a matching reviewer name.
     # If we're unable to find it, add a static entry in the
