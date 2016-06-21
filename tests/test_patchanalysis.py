@@ -263,6 +263,7 @@ class PatchAnalysisTest(unittest.TestCase):
             self.assertEqual(info['reviewer_familiarity_last_3_releases'], 0)
             self.assertGreaterEqual(info['crashes'], 0)
 
+        # There are users in the CC list with empty real names.
         info = patchanalysis.bug_analysis(699633)
         self.assertEqual(info['backout_num'], 0)
         self.assertEqual(info['blocks'], 0)
@@ -280,6 +281,8 @@ class PatchAnalysisTest(unittest.TestCase):
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 0)
         self.assertGreaterEqual(info['crashes'], 0)
 
+        ''' Disable because it's too slow for tests.
+        # Reviewer with several IRC names.
         info = patchanalysis.bug_analysis(914034)
         self.assertEqual(info['backout_num'], 0)
         self.assertEqual(info['blocks'], 2)
@@ -295,6 +298,24 @@ class PatchAnalysisTest(unittest.TestCase):
         self.assertEqual(info['developer_familiarity_last_3_releases'], 54)
         self.assertEqual(info['reviewer_familiarity_overall'], 18722)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 2371)
+        self.assertGreaterEqual(info['crashes'], 0)'''
+
+        # IRC handle in the domain of the email (mozilla@IRCHANDLE.org).
+        info = patchanalysis.bug_analysis(903475)
+        self.assertEqual(info['backout_num'], 0)
+        self.assertEqual(info['blocks'], 1)
+        self.assertEqual(info['depends_on'], 0)
+        self.assertEqual(info['comments'], 71)
+        self.assertEqual(info['changes_size'], 18)
+        self.assertEqual(info['test_changes_size'], 0)
+        self.assertEqual(info['modules_num'], 1)
+        self.assertEqual(info['r-ed_patches'], 0)
+        self.assertEqual(info['code_churn_overall'], 13)
+        self.assertEqual(info['code_churn_last_3_releases'], 3)
+        self.assertEqual(info['developer_familiarity_overall'], 0)
+        self.assertEqual(info['developer_familiarity_last_3_releases'], 0)
+        self.assertEqual(info['reviewer_familiarity_overall'], 0)
+        self.assertEqual(info['reviewer_familiarity_last_3_releases'], 0)
         self.assertGreaterEqual(info['crashes'], 0)
 
 if __name__ == '__main__':

@@ -21,7 +21,7 @@ from . import utils
 reviewer_cache = {}
 
 
-def short_name_match(short_name, real_name):
+def short_name_match(short_name, real_name, email):
     names = real_name.split(' ')
     possible_short_name = (names[0][0] + names[1]).lower() if names and len(names) >= 2 else ''
 
@@ -29,7 +29,8 @@ def short_name_match(short_name, real_name):
            '(:' + short_name + ')' in real_name or\
            ':' + short_name + ',' in real_name or\
            short_name + '@mozilla.com' in real_name or\
-           (possible_short_name and short_name == possible_short_name)
+           (possible_short_name and short_name == possible_short_name) or\
+           short_name == email[email.index('@') + 1:email.rindex('.')]
 
 
 def reviewer_match(short_name, bugzilla_names, cc_list):
@@ -46,7 +47,7 @@ def reviewer_match(short_name, bugzilla_names, cc_list):
 
     if len(found) == 0:
         # Otherwise, check if we can find him/her in the CC list.
-        found |= set([entry['email'] for entry in cc_list if entry['email'] in bugzilla_names and short_name_match(short_name, entry['real_name'])])
+        found |= set([entry['email'] for entry in cc_list if entry['email'] in bugzilla_names and short_name_match(short_name, entry['real_name'], entry['email'])])
 
     if len(found) == 0:
         # Otherwise, find matching users on Bugzilla.
@@ -59,7 +60,7 @@ def reviewer_match(short_name, bugzilla_names, cc_list):
         for bugzilla_name in bugzilla_names:
             BugzillaUser(bugzilla_name, user_handler=user_handler).wait()
 
-        found |= set([user['email'] for user in bugzilla_users if user['email'] in bugzilla_names and short_name_match(short_name, user['real_name'])])
+        found |= set([user['email'] for user in bugzilla_users if user['email'] in bugzilla_names and short_name_match(short_name, user['real_name'], user['email'])])
 
     # We should always find a matching reviewer name.
     # If we're unable to find it, add a static entry in the
