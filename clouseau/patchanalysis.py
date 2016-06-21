@@ -320,7 +320,7 @@ def bug_analysis(bug):
                 if short_reviewer == 'me' or short_reviewer == 'bustage':
                     reviewers |= obj['author_names']
                 else:
-                    reviewers.add(reviewer_match(short_reviewer, bugzilla_reviewers, bug['cc_detail']))
+                    reviewers.add(reviewer_match(short_reviewer, bugzilla_reviewers | bugzilla_authors, bug['cc_detail']))
 
             obj['reviewers'] = reviewers
 

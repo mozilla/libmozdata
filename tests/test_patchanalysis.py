@@ -282,8 +282,6 @@ class PatchAnalysisTest(unittest.TestCase):
         self.assertGreaterEqual(info['crashes'], 0)
 
         # Reviewer with several IRC names.
-        # Disable because it's too slow for tests.
-        # TODO: Reenable for local tests but not on Travis.
         info = patchanalysis.bug_analysis(914034)
         self.assertEqual(info['backout_num'], 0)
         self.assertEqual(info['blocks'], 2)
@@ -319,6 +317,7 @@ class PatchAnalysisTest(unittest.TestCase):
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 0)
         self.assertGreaterEqual(info['crashes'], 0)
 
+        # Backout without the 'changeset' word.
         info = patchanalysis.bug_analysis(829421)
         self.assertEqual(info['backout_num'], 1)
         self.assertEqual(info['blocks'], 0)
@@ -336,6 +335,7 @@ class PatchAnalysisTest(unittest.TestCase):
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 4)
         self.assertGreaterEqual(info['crashes'], 0)
 
+        # IRC handle first character is lower case in Mercurial, upper case in Bugzilla.
         info = patchanalysis.bug_analysis(799266)
         self.assertEqual(info['backout_num'], 0)
         self.assertEqual(info['blocks'], 0)
@@ -351,6 +351,24 @@ class PatchAnalysisTest(unittest.TestCase):
         self.assertEqual(info['developer_familiarity_last_3_releases'], 5)
         self.assertEqual(info['reviewer_familiarity_overall'], 1)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 0)
+        self.assertGreaterEqual(info['crashes'], 0)
+
+        # r=IRC_HANDLE_OF_THE_AUTHOR
+        info = patchanalysis.bug_analysis(721760)
+        self.assertEqual(info['backout_num'], 0)
+        self.assertEqual(info['blocks'], 0)
+        self.assertEqual(info['depends_on'], 1)
+        self.assertEqual(info['comments'], 72)
+        self.assertEqual(info['changes_size'], 216)
+        self.assertEqual(info['test_changes_size'], 0)
+        self.assertEqual(info['modules_num'], 2)
+        self.assertEqual(info['r-ed_patches'], 0)
+        self.assertEqual(info['code_churn_overall'], 38)
+        self.assertEqual(info['code_churn_last_3_releases'], 25)
+        self.assertEqual(info['developer_familiarity_overall'], 28)
+        self.assertEqual(info['developer_familiarity_last_3_releases'], 17)
+        self.assertEqual(info['reviewer_familiarity_overall'], 13)
+        self.assertEqual(info['reviewer_familiarity_last_3_releases'], 6)
         self.assertGreaterEqual(info['crashes'], 0)
 
 if __name__ == '__main__':
