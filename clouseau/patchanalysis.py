@@ -129,6 +129,7 @@ def patch_analysis(patch, authors, reviewers, creation_date=utils.get_date_ymd('
         old_path = diff.header.old_path[2:] if diff.header.old_path.startswith('a/') else diff.header.old_path
         new_path = diff.header.new_path[2:] if diff.header.new_path.startswith('b/') else diff.header.new_path
 
+        # TODO: Split C/C++, Rust, Java, JavaScript, build system changes
         if _is_test(new_path):
             info['test_changes_size'] += len(diff.changes)
         else:
@@ -228,7 +229,7 @@ def bug_analysis(bug):
     reviewer_pattern = re.compile('r=([a-zA-Z0-9]+)')
     author_pattern = re.compile('<([^>]+)>')
     author_name_pattern = re.compile('([^<]+)')
-    backout_pattern = re.compile('(?:Backout|Back out|Backed out|Backedout) changeset ([0-9a-z]+)')
+    backout_pattern = re.compile('(?:Backout|Back out|Backed out|Backedout) (?:changeset )?([a-z0-9]{12,})')
     bug_pattern = re.compile('[\t ]*[Bb][Uu][Gg][\t ]*([0-9]+)')
     landings = Bugzilla.get_landing_comments(bug['comments'], ['inbound', 'central', 'fx-team'])
     revs = {}
