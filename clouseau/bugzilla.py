@@ -4,6 +4,7 @@
 
 import six
 import re
+from urllib.parse import urlencode
 from .connection import (Connection, Query)
 from . import config
 
@@ -41,6 +42,9 @@ class Bugzilla(Connection):
                 self.bugids = [bugids]
             elif isinstance(bugids, int):
                 self.bugids = [str(bugids)]
+            elif isinstance(bugids, dict):
+                # Parameters to query string
+                self.bugids = [urlencode(bugids), ]
             else:
                 self.bugids = list(map(str, bugids))
             self.include_fields = include_fields
