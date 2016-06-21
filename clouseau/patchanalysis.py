@@ -67,6 +67,9 @@ def author_match(author_mercurial, author_real_name, bugzilla_names, cc_list):
 
     found = set()
 
+    if len(bugzilla_names) == 1:
+        found.add(list(bugzilla_names)[0])
+
     # Check in the cc_list, so we don't have to hit Bugzilla.
     for entry in cc_list:
         if author_real_name in entry['real_name']:

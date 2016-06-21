@@ -110,7 +110,7 @@ class PatchAnalysisTest(unittest.TestCase):
         info = patchanalysis.bug_analysis(384458)
         self.assertEqual(info['backout_num'], 1)
         self.assertEqual(info['blocks'], 5)
-        self.assertEqual(info['depends_on'], 32)
+        self.assertEqual(info['depends_on'], 34)
         self.assertEqual(info['comments'], 100)
         self.assertEqual(info['changes_size'], 2752)
         self.assertEqual(info['test_changes_size'], 462)
@@ -164,6 +164,25 @@ class PatchAnalysisTest(unittest.TestCase):
         self.assertEqual(info['developer_familiarity_last_3_releases'], 4)
         self.assertEqual(info['reviewer_familiarity_overall'], 266)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 15)
+        self.assertGreaterEqual(info['crashes'], 0)
+
+        # No link between Bugzilla account and Mercurial author.
+        # Reviewer uses different email on Bugzilla and Mercurial.
+        info = patchanalysis.bug_analysis(901821)
+        self.assertEqual(info['backout_num'], 0)
+        self.assertEqual(info['blocks'], 1)
+        self.assertEqual(info['depends_on'], 0)
+        self.assertEqual(info['comments'], 11)
+        self.assertEqual(info['changes_size'], 18)
+        self.assertEqual(info['test_changes_size'], 0)
+        self.assertEqual(info['modules_num'], 1)
+        self.assertEqual(info['r-ed_patches'], 0)
+        self.assertEqual(info['code_churn_overall'], 1088)
+        self.assertEqual(info['code_churn_last_3_releases'], 152)
+        self.assertEqual(info['developer_familiarity_overall'], 115)
+        self.assertEqual(info['developer_familiarity_last_3_releases'], 23)
+        self.assertEqual(info['reviewer_familiarity_overall'], 0)
+        self.assertEqual(info['reviewer_familiarity_last_3_releases'], 0)
         self.assertGreaterEqual(info['crashes'], 0)
 
 if __name__ == '__main__':
