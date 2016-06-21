@@ -429,5 +429,32 @@ class PatchAnalysisTest(unittest.TestCase):
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 7)
         self.assertGreaterEqual(info['crashes'], 0)
 
+        # r=backout
+        info = patchanalysis.bug_analysis(679509)
+        self.assertEqual(info['backout_num'], 0)
+        self.assertEqual(info['blocks'], 0)
+        self.assertEqual(info['depends_on'], 0)
+        self.assertEqual(info['comments'], 97)
+        self.assertEqual(info['changes_size'], 347)
+        self.assertEqual(info['test_changes_size'], 108)
+        self.assertEqual(info['modules_num'], 5)
+        self.assertEqual(info['r-ed_patches'], 0)
+        self.assertEqual(info['code_churn_overall'], 1874)
+        self.assertEqual(info['code_churn_last_3_releases'], 334)
+        self.assertEqual(info['developer_familiarity_overall'], 116)
+        self.assertEqual(info['developer_familiarity_last_3_releases'], 43)
+        self.assertEqual(info['reviewer_familiarity_overall'], 53)
+        self.assertEqual(info['reviewer_familiarity_last_3_releases'], 44)
+        self.assertGreaterEqual(info['crashes'], 0)
+
+        # Bugzilla user is impossible to find from IRC handle.
+        # info = patchanalysis.bug_analysis(700583)
+
+        # IRC handle is name+surname
+        info = patchanalysis.bug_analysis(701262)
+
+        # r=none
+        info = patchanalysis.bug_analysis(733614)
+
 if __name__ == '__main__':
     unittest.main()

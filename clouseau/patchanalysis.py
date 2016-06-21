@@ -26,7 +26,8 @@ def short_name_match(short_name, real_name, email):
     real_name = real_name.lower()
 
     names = real_name.split(' ')
-    possible_short_name = names[0][0] + names[1] if names and len(names) >= 2 else ''
+    possible_short_name1 = names[0][0] + names[1] if names and len(names) >= 2 else ''
+    possible_short_name2 = names[0] + names[1] if names and len(names) >= 2 else ''
 
     return ':' + short_name + ']' in real_name or\
            ':' + short_name + ')' in real_name or\
@@ -34,7 +35,8 @@ def short_name_match(short_name, real_name, email):
            ':' + short_name + '.' in real_name or\
            ':' + short_name + ' ' in real_name or\
            short_name + '@mozilla.com' in real_name or\
-           (possible_short_name and short_name == possible_short_name) or\
+           (possible_short_name1 and short_name == possible_short_name1) or\
+           (possible_short_name2 and short_name == possible_short_name2) or\
            short_name == email[email.index('@') + 1:email.rindex('.')]
 
 
@@ -319,7 +321,9 @@ def bug_analysis(bug):
             short_reviewers = obj['reviewers']
 
             for short_reviewer in short_reviewers:
-                if short_reviewer == 'me' or short_reviewer == 'bustage' or short_reviewer == 'oops':
+                # TODO: Figure out if this is the best thing to do (probably we should just skip these and not add the author
+                # to the set of reviewers).
+                if short_reviewer in ['me', 'oops', 'none', 'bustage', 'backout']:
                     reviewers |= obj['author_names']
                 else:
                     reviewers.add(reviewer_match(short_reviewer, bugzilla_reviewers | bugzilla_authors, bug['cc_detail']))
