@@ -411,5 +411,23 @@ class PatchAnalysisTest(unittest.TestCase):
         # info = patchanalysis.bug_analysis(843733)
         # print(info)
 
+        # r=oops
+        info = patchanalysis.bug_analysis(843821)
+        self.assertEqual(info['backout_num'], 0)
+        self.assertEqual(info['blocks'], 1)
+        self.assertEqual(info['depends_on'], 1)
+        self.assertEqual(info['comments'], 21)
+        self.assertEqual(info['changes_size'], 148)
+        self.assertEqual(info['test_changes_size'], 0)
+        self.assertEqual(info['modules_num'], 2)
+        self.assertEqual(info['r-ed_patches'], 0)
+        self.assertEqual(info['code_churn_overall'], 887)
+        self.assertEqual(info['code_churn_last_3_releases'], 149)
+        self.assertEqual(info['developer_familiarity_overall'], 131)
+        self.assertEqual(info['developer_familiarity_last_3_releases'], 19)
+        self.assertEqual(info['reviewer_familiarity_overall'], 7)
+        self.assertEqual(info['reviewer_familiarity_last_3_releases'], 7)
+        self.assertGreaterEqual(info['crashes'], 0)
+
 if __name__ == '__main__':
     unittest.main()
