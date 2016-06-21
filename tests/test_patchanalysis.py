@@ -389,5 +389,27 @@ class PatchAnalysisTest(unittest.TestCase):
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 36)
         self.assertGreaterEqual(info['crashes'], 0)
 
+        # IRC handle is the beginning of the real name with a space after.
+        info = patchanalysis.bug_analysis(1029098)
+        self.assertEqual(info['backout_num'], 0)
+        self.assertEqual(info['blocks'], 1)
+        self.assertEqual(info['depends_on'], 0)
+        self.assertEqual(info['comments'], 15)
+        self.assertEqual(info['changes_size'], 94)
+        self.assertEqual(info['test_changes_size'], 97)
+        self.assertEqual(info['modules_num'], 1)
+        self.assertEqual(info['r-ed_patches'], 0)
+        self.assertEqual(info['code_churn_overall'], 277)
+        self.assertEqual(info['code_churn_last_3_releases'], 15)
+        self.assertEqual(info['developer_familiarity_overall'], 81)
+        self.assertEqual(info['developer_familiarity_last_3_releases'], 8)
+        self.assertEqual(info['reviewer_familiarity_overall'], 9)
+        self.assertEqual(info['reviewer_familiarity_last_3_releases'], 0)
+        self.assertGreaterEqual(info['crashes'], 0)
+
+        # Typo in the reviewer name.
+        # info = patchanalysis.bug_analysis(843733)
+        # print(info)
+
 if __name__ == '__main__':
     unittest.main()

@@ -32,6 +32,7 @@ def short_name_match(short_name, real_name, email):
            ':' + short_name + ')' in real_name or\
            ':' + short_name + ',' in real_name or\
            ':' + short_name + '.' in real_name or\
+           ':' + short_name + ' ' in real_name or\
            short_name + '@mozilla.com' in real_name or\
            (possible_short_name and short_name == possible_short_name) or\
            short_name == email[email.index('@') + 1:email.rindex('.')]
