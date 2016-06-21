@@ -371,5 +371,23 @@ class PatchAnalysisTest(unittest.TestCase):
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 6)
         self.assertGreaterEqual(info['crashes'], 0)
 
+        # IRC handle is ':IRC_HANDLE.SURNAME' and reviewer is not a reviewer of the patch on Bugzilla.
+        info = patchanalysis.bug_analysis(1021265)
+        self.assertEqual(info['backout_num'], 0)
+        self.assertEqual(info['blocks'], 3)
+        self.assertEqual(info['depends_on'], 0)
+        self.assertEqual(info['comments'], 111)
+        self.assertEqual(info['changes_size'], 173)
+        self.assertEqual(info['test_changes_size'], 0)
+        self.assertEqual(info['modules_num'], 5)
+        self.assertEqual(info['r-ed_patches'], 0)
+        self.assertEqual(info['code_churn_overall'], 1763)
+        self.assertEqual(info['code_churn_last_3_releases'], 150)
+        self.assertEqual(info['developer_familiarity_overall'], 66)
+        self.assertEqual(info['developer_familiarity_last_3_releases'], 17)
+        self.assertEqual(info['reviewer_familiarity_overall'], 325)
+        self.assertEqual(info['reviewer_familiarity_last_3_releases'], 36)
+        self.assertGreaterEqual(info['crashes'], 0)
+
 if __name__ == '__main__':
     unittest.main()
