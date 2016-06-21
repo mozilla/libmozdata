@@ -232,8 +232,8 @@ def bug_analysis(bug):
     reviewer_pattern = re.compile('r=([a-zA-Z0-9]+)')
     author_pattern = re.compile('<([^>]+)>')
     author_name_pattern = re.compile('([^<]+)')
-    backout_pattern = re.compile('(?:Backout|Back out|Backed out|Backedout) (?:changeset )?([a-z0-9]{12,})')
-    bug_pattern = re.compile('[\t ]*[Bb][Uu][Gg][\t ]*([0-9]+)')
+    backout_pattern = re.compile('(?:backout|back out|backed out|backedout) (?:changeset )?([a-z0-9]{12,})')
+    bug_pattern = re.compile('[\t ]*bug[\t ]*([0-9]+)')
     landings = Bugzilla.get_landing_comments(bug['comments'], ['inbound', 'central', 'fx-team'])
     revs = {}
     backed_out_revs = set()
@@ -255,10 +255,10 @@ def bug_analysis(bug):
             backout_revisions.add(match.group(1)[:12])
         if not backout_revisions:
             # TODO: Search in lowercase.
-            match = re.search('Backout|Back out|Backed out|Backedout', meta['desc'])
+            match = re.search('backout|back out|backed out|backedout', meta['desc'])
             if match:
                 for parent in meta['parents']:
-                    for match in backout_pattern.finditer(hgmozilla.Revision.get_revision(channel, parent)['desc']):
+                    for match in backout_pattern.finditer(hgmozilla.Revision.get_revision(channel, parent)['desc'].lower()):
                         backout_revisions.add(match.group(1)[:12])
 
                 # It's definitely a backout, but we couldn't find which revision was backed out.
@@ -281,7 +281,7 @@ def bug_analysis(bug):
                 continue
 
         # Skip merges (e.g. http://hg.mozilla.org/mozilla-central/rev/4ca898d7db5f from 914034)
-        if not bug_id_match and 'Merge' in meta['desc']:
+        if not bug_id_match and 'merge' in meta['desc']:
             continue
 
         reviewers = set()
@@ -297,7 +297,7 @@ def bug_analysis(bug):
         # Overwrite revisions from integration channels (inbound, fx-team).
         if rev not in revs or channel == 'central':
             revs[rev] = {
-                'diff': hgmozilla.RawRevision.get_revision(channel, rev),
+                'channel': channel,
                 'author_names': author_names,
                 'creation_date': meta['date'][0],
                 'reviewers': reviewers,
@@ -311,20 +311,20 @@ def bug_analysis(bug):
             del revs[rev]
 
     if len(revs) > 0:
-        for rev in revs.values():
+        for rev, obj in revs.items():
             reviewers = set()
 
-            short_reviewers = rev['reviewers']
+            short_reviewers = obj['reviewers']
 
             for short_reviewer in short_reviewers:
                 if short_reviewer == 'me' or short_reviewer == 'bustage':
-                    reviewers |= rev['author_names']
+                    reviewers |= obj['author_names']
                 else:
                     reviewers.add(reviewer_match(short_reviewer, bugzilla_reviewers, bug['cc_detail']))
 
-            rev['reviewers'] = reviewers
+            obj['reviewers'] = reviewers
 
-            info += patch_analysis(rev['diff'], rev['author_names'], reviewers, datetime.utcfromtimestamp(rev['creation_date']))
+            info += patch_analysis(hgmozilla.RawRevision.get_revision(obj['channel'], rev), obj['author_names'], reviewers, datetime.utcfromtimestamp(obj['creation_date']))
     else:
         def attachmenthandler(attachments, bugid, data):
             for i in range(0, len(bug['attachments'])):
