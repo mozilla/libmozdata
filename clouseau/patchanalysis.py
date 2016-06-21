@@ -242,10 +242,12 @@ def bug_analysis(bug):
         rev = landing['revision'][:12]
         channel = landing['channel']
 
-        diff = hgmozilla.RawRevision.get_revision(channel, rev)
         # TODO: No need to get the revision, we have everything in the raw format.
         #       We can use pylib/mozautomation/mozautomation/commitparser.py from version-control-tools
+        # Or maybe it's better this way, so we can avoid downloading a lot of changes when it's unneeded
+        # to do so (e.g. for backouts or merges we only need the description).
         meta = hgmozilla.Revision.get_revision(channel, rev)
+        meta['desc'] = meta['desc'].lower()
 
         # Check if it was a backout
         backout_revisions = set()
@@ -278,6 +280,10 @@ def bug_analysis(bug):
                 warnings.warn('Revision ' + rev + ' is related to another bug (' + bug_id_match.group(1) + ').', stacklevel=2)
                 continue
 
+        # Skip merges (e.g. http://hg.mozilla.org/mozilla-central/rev/4ca898d7db5f from 914034)
+        if not bug_id_match and 'Merge' in meta['desc']:
+            continue
+
         reviewers = set()
         for match in reviewer_pattern.finditer(meta['desc']):
             reviewers.add(match.group(1))
@@ -291,7 +297,7 @@ def bug_analysis(bug):
         # Overwrite revisions from integration channels (inbound, fx-team).
         if rev not in revs or channel == 'central':
             revs[rev] = {
-                'diff': diff,
+                'diff': hgmozilla.RawRevision.get_revision(channel, rev),
                 'author_names': author_names,
                 'creation_date': meta['date'][0],
                 'reviewers': reviewers,
