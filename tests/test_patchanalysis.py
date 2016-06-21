@@ -128,8 +128,9 @@ class PatchAnalysisTest(unittest.TestCase):
         # Author has a different name on Bugzilla and Mercurial and they don't use the email on Mercurial.
         with warnings.catch_warnings(record=True) as w:
             info = patchanalysis.bug_analysis(1220307)
-            self.assertEqual(len(w), 1)
+            self.assertEqual(len(w), 2)
             self.assertEqual(str(w[0].message), 'Looks like a backout, but we couldn\'t find which revision was backed out.')
+            self.assertEqual(str(w[1].message), 'Revision da10eecd0e76 is related to another bug (1276850).')
             self.assertEqual(info['backout_num'], 2)
             self.assertEqual(info['blocks'], 4)
             self.assertEqual(info['depends_on'], 1)

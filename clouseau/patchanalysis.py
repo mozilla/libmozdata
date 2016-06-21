@@ -259,6 +259,7 @@ def bug_analysis(bug):
         bug_id_match = re.search(bug_pattern, meta['desc'])
         if bug_id_match:
             if int(bug_id_match.group(1)) != bug['id']:
+                warnings.warn('Revision ' + rev + ' is related to another bug (' + bug_id_match.group(1) + ').', stacklevel=2)
                 continue
 
         reviewers = set()
