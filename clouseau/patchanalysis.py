@@ -218,6 +218,7 @@ def bug_analysis(bug):
     author_pattern = re.compile('<([^>]+)>')
     author_name_pattern = re.compile('([^<]+)')
     backout_pattern = re.compile('(?:Backout|Back out|Backed out|Backedout) changeset ([0-9a-z]+)')
+    bug_pattern = re.compile('[\t ]*[Bb][Uu][Gg][\t ]*([0-9]+)')
     landings = Bugzilla.get_landing_comments(bug['comments'], ['inbound', 'central', 'fx-team'])
     revs = {}
     backed_out_revs = set()
@@ -235,6 +236,7 @@ def bug_analysis(bug):
         for match in backout_pattern.finditer(meta['desc']):
             backout_revisions.add(match.group(1)[:12])
         if not backout_revisions:
+            # TODO: Search in lowercase.
             match = re.search('Backout|Back out|Backed out|Backedout', meta['desc'])
             if match:
                 for parent in meta['parents']:
@@ -253,6 +255,11 @@ def bug_analysis(bug):
 
         if backout_revisions:
             continue
+
+        bug_id_match = re.search(bug_pattern, meta['desc'])
+        if bug_id_match:
+            if int(bug_id_match.group(1)) != bug['id']:
+                continue
 
         reviewers = set()
         for match in reviewer_pattern.finditer(meta['desc']):
