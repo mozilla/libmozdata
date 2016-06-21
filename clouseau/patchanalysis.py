@@ -23,12 +23,12 @@ reviewer_cache = {}
 
 def short_name_match(short_name, real_name):
     names = real_name.split(' ')
-    possible_short_name = (names[0][0] + names[1][:]).lower()
+    possible_short_name = (names[0][0] + names[1]).lower() if names and len(names) >= 2 else ''
 
     return '[:' + short_name + ']' in real_name or\
            '(:' + short_name + ')' in real_name or\
            short_name + '@mozilla.com' in real_name or\
-           short_name == possible_short_name.lower()
+           (possible_short_name and short_name == possible_short_name)
 
 
 def reviewer_match(short_name, bugzilla_names, cc_list):
