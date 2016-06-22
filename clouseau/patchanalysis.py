@@ -21,23 +21,27 @@ from . import utils
 reviewer_cache = {}
 
 
-def short_name_match(short_name, real_name, email):
+def short_name_match(short_name, real_name, email, exact_matching=True):
     short_name = short_name.lower()
     real_name = real_name.lower()
 
-    names = real_name.split(' ')
-    possible_short_name1 = names[0][0] + names[1] if names and len(names) >= 2 else ''
-    possible_short_name2 = names[0] + names[1] if names and len(names) >= 2 else ''
+    if exact_matching:
+        names = real_name.split(' ')
+        possible_short_name1 = names[0][0] + names[1] if names and len(names) >= 2 else ''
+        possible_short_name2 = names[0] + names[1] if names and len(names) >= 2 else ''
 
-    return ':' + short_name + ']' in real_name or\
-           ':' + short_name + ')' in real_name or\
-           ':' + short_name + ',' in real_name or\
-           ':' + short_name + '.' in real_name or\
-           ':' + short_name + ' ' in real_name or\
-           short_name + '@mozilla.com' in real_name or\
-           (possible_short_name1 and short_name == possible_short_name1) or\
-           (possible_short_name2 and short_name == possible_short_name2) or\
-           short_name == email[email.index('@') + 1:email.rindex('.')]
+        return ':' + short_name + ']' in real_name or\
+               ':' + short_name + ')' in real_name or\
+               ':' + short_name + ',' in real_name or\
+               ':' + short_name + '.' in real_name or\
+               ':' + short_name + ' ' in real_name or\
+               email.startswith(short_name + '@') or\
+               short_name + '@mozilla.com' in real_name or\
+               (possible_short_name1 and short_name == possible_short_name1) or\
+               (possible_short_name2 and short_name == possible_short_name2) or\
+               short_name == email[email.index('@') + 1:email.rindex('.')]
+    else:
+        return short_name in real_name
 
 
 def reviewer_match(short_name, bugzilla_names, cc_list):
@@ -45,29 +49,32 @@ def reviewer_match(short_name, bugzilla_names, cc_list):
         assert reviewer_cache[short_name] in bugzilla_names
         return reviewer_cache[short_name]
 
-    found = set()
-
-    # Check if we can find the reviewer in the list of reviewers from the bug.
-    for bugzilla_name in bugzilla_names:
-        if bugzilla_name.startswith(short_name):
-            found.add(bugzilla_name)
-
-    if len(found) == 0:
-        # Otherwise, check if we can find him/her in the CC list.
-        found |= set([entry['email'] for entry in cc_list if short_name_match(short_name, entry['real_name'], entry['email'])])
-
-    if len(found) == 0:
-        # Otherwise, find matching users on Bugzilla.
+    for exact_matching in [True, False]:
+        found = set()
         bugzilla_users = []
 
-        def user_handler(u):
-            bugzilla_users.append(u)
-
-        BugzillaUser(search_strings='match=' + short_name, user_handler=user_handler).wait()
+        # Check if we can find the reviewer in the list of reviewers from the bug.
         for bugzilla_name in bugzilla_names:
-            BugzillaUser(bugzilla_name, user_handler=user_handler).wait()
+            if bugzilla_name.startswith(short_name):
+                found.add(bugzilla_name)
 
-        found |= set([user['email'] for user in bugzilla_users if short_name_match(short_name, user['real_name'], user['email'])])
+        if len(found) == 0:
+            # Otherwise, check if we can find him/her in the CC list.
+            found |= set([entry['email'] for entry in cc_list if short_name_match(short_name, entry['real_name'], entry['email'], exact_matching)])
+
+        if len(found) == 0:
+            # Otherwise, find matching users on Bugzilla.
+            def user_handler(u):
+                bugzilla_users.append(u)
+
+            BugzillaUser(search_strings='match=' + short_name, user_handler=user_handler).wait()
+            for bugzilla_name in bugzilla_names:
+                BugzillaUser(bugzilla_name, user_handler=user_handler).wait()
+
+            found |= set([user['email'] for user in bugzilla_users if short_name_match(short_name, user['real_name'], user['email'], exact_matching)])
+
+        if len(found) > 0:
+            break
 
     # We should always find a matching reviewer name.
     # If we're unable to find it, add a static entry in the
