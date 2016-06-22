@@ -47,13 +47,34 @@ class BugIDTest(unittest.TestCase):
 
         bugs = {}
 
-        # Query string
         bugzilla.Bugzilla('bug_id=12345%2C12346&bug_id_type=anyexact&list_id=12958345&resolution=FIXED&query_format=advanced', bughandler=bughandler, bugdata=bugs).get_data().wait()
 
         self.assertEqual(bugs[12345]['id'], 12345)
         self.assertEqual(bugs[12346]['id'], 12346)
 
-        # Dict query
+    def test_search_dict(self):
+
+        def bughandler(bug, data):
+            data[bug['id']] = bug
+
+        bugs = {}
+
+        # Unique bug id
+        terms = {
+          'bug_id' : 12345,
+          'bug_id_type' : 'anyexact',
+          'list_id' : 12958345,
+          'resolution' : 'FIXED',
+          'query_format' : 'advanced',
+        }
+        bugzilla.Bugzilla(terms, bughandler=bughandler, bugdata=bugs).get_data().wait()
+
+        self.assertEqual(len(bugs), 1)
+        self.assertEqual(bugs[12345]['id'], 12345)
+
+        bugs = {}
+
+        # Mutiple bugs
         terms = {
           'bug_id' : [12345, 12346],
           'bug_id_type' : 'anyexact',
@@ -63,6 +84,7 @@ class BugIDTest(unittest.TestCase):
         }
         bugzilla.Bugzilla(terms, bughandler=bughandler, bugdata=bugs).get_data().wait()
 
+        self.assertEqual(len(bugs), 2)
         self.assertEqual(bugs[12345]['id'], 12345)
         self.assertEqual(bugs[12346]['id'], 12346)
 
@@ -217,34 +239,6 @@ class BugAttachmentTest(unittest.TestCase):
 
         data = {}
         bugzilla.Bugzilla('bug_id=12345', bughandler=bughandler, bugdata=data, commenthandler=commenthandler, commentdata=data, historyhandler=historyhandler, historydata=data, attachmenthandler=attachmenthandler, attachmentdata=data).get_data().wait()
-
-        self.assertEqual(data['bug']['id'], 12345)
-        self.assertEqual(len(data['comment']), 19)
-        self.assertTrue(data['comment'][0]['text'].startswith(u'Steps to reproduce'))
-        self.assertEqual(len(data['history']['history']), 24)
-        self.assertEqual(len(data['attachment']), 1)
-        self.assertEqual(data['attachment'][0]['description'], 'Some patch.')
-        self.assertEqual(data['attachment'][0]['is_patch'], 1)
-        self.assertEqual(data['attachment'][0]['is_obsolete'], 1)
-
-    def test_search_dict(self):
-        def bughandler(bug, data):
-            data['bug'] = bug
-
-        def commenthandler(bug, bugid, data):
-            data['comment'] = bug['comments']
-
-        def historyhandler(bug, data):
-            data['history'] = bug
-
-        def attachmenthandler(bug, bugid, data):
-            data['attachment'] = bug
-
-        data = {}
-        query = {
-            'bug_id' : 12345,
-        }
-        bugzilla.Bugzilla(query, bughandler=bughandler, bugdata=data, commenthandler=commenthandler, commentdata=data, historyhandler=historyhandler, historydata=data, attachmenthandler=attachmenthandler, attachmentdata=data).get_data().wait()
 
         self.assertEqual(data['bug']['id'], 12345)
         self.assertEqual(len(data['comment']), 19)
