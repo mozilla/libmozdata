@@ -37,12 +37,12 @@ class Bugzilla(Connection):
             super(Bugzilla, self).__init__(Bugzilla.URL, queries=queries)
         else:
             super(Bugzilla, self).__init__(Bugzilla.URL)
-            if isinstance(bugids, six.string_types):
+            if isinstance(bugids, six.string_types) or isinstance(bugids, dict):
                 self.bugids = [bugids]
             elif isinstance(bugids, int):
                 self.bugids = [str(bugids)]
             else:
-                self.bugids = list(map(str, bugids))
+                self.bugids = bugids
             self.include_fields = include_fields
             self.bughandler = bughandler
             self.bugdata = bugdata
@@ -241,7 +241,7 @@ class Bugzilla(Connection):
         """
         if self.bugids:
             bugid = self.bugids[0]
-            if bugid.isdigit():
+            if not isinstance(bugid, dict) and str(bugid).isdigit():
                 return True
         return False
 
@@ -297,7 +297,7 @@ class Bugzilla(Connection):
         header = self.get_header()
         for bugids in Connection.chunks(self.bugids):
             self.bugs_results.append(self.session.get(Bugzilla.API_URL,
-                                                      params={'id': ','.join(bugids),
+                                                      params={'id': ','.join(map(str, bugids)),
                                                               'include_fields': self.include_fields},
                                                       headers=header,
                                                       verify=True,
@@ -310,7 +310,15 @@ class Bugzilla(Connection):
         url = Bugzilla.API_URL + '?'
         header = self.get_header()
         for query in self.bugids:
-            self.bugs_results.append(self.session.get(url + query,
+            if isinstance(query, six.string_types):
+                url = Bugzilla.API_URL + '?' + query
+                params = None
+            else:
+                url = Bugzilla.API_URL
+                params = query
+
+            self.bugs_results.append(self.session.get(url,
+                                                      params=params,
                                                       headers=header,
                                                       verify=True,
                                                       timeout=self.TIMEOUT,

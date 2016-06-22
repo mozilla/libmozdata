@@ -46,8 +46,62 @@ class BugIDTest(unittest.TestCase):
             data[bug['id']] = bug
 
         bugs = {}
+
         bugzilla.Bugzilla('bug_id=12345%2C12346&bug_id_type=anyexact&list_id=12958345&resolution=FIXED&query_format=advanced', bughandler=bughandler, bugdata=bugs).get_data().wait()
 
+        self.assertEqual(bugs[12345]['id'], 12345)
+        self.assertEqual(bugs[12346]['id'], 12346)
+
+    def test_search_dict(self):
+
+        def bughandler(bug, data):
+            data[bug['id']] = bug
+
+        bugs = {}
+
+        # Unique bug id
+        terms = {
+            'bug_id': 12345,
+            'bug_id_type': 'anyexact',
+            'list_id': 12958345,
+            'resolution': 'FIXED',
+            'query_format': 'advanced',
+        }
+        bugzilla.Bugzilla(terms, bughandler=bughandler, bugdata=bugs).get_data().wait()
+
+        self.assertEqual(len(bugs), 1)
+        self.assertEqual(bugs[12345]['id'], 12345)
+
+        bugs = {}
+
+        # Mutiple bugs
+        terms = {
+            'bug_id': [12345, 12346],
+            'bug_id_type': 'anyexact',
+            'list_id': 12958345,
+            'resolution': 'FIXED',
+            'query_format': 'advanced',
+        }
+        bugzilla.Bugzilla(terms, bughandler=bughandler, bugdata=bugs).get_data().wait()
+
+        self.assertEqual(len(bugs), 2)
+        self.assertEqual(bugs[12345]['id'], 12345)
+        self.assertEqual(bugs[12346]['id'], 12346)
+
+        bugs = {}
+
+        # Mutiple queries
+        terms = [
+            {
+                'bug_id': 12345,
+            },
+            {
+                'bug_id': 12346,
+            },
+        ]
+        bugzilla.Bugzilla(terms, bughandler=bughandler, bugdata=bugs).get_data().wait()
+
+        self.assertEqual(len(bugs), 2)
         self.assertEqual(bugs[12345]['id'], 12345)
         self.assertEqual(bugs[12346]['id'], 12346)
 
