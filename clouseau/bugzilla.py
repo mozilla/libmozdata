@@ -42,7 +42,7 @@ class Bugzilla(Connection):
             elif isinstance(bugids, int):
                 self.bugids = [str(bugids)]
             else:
-                self.bugids = bugids
+                self.bugids = list(bugids)
             self.include_fields = include_fields
             self.bughandler = bughandler
             self.bugdata = bugdata
