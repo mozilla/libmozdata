@@ -4,6 +4,12 @@
 
 import six
 import re
+try:
+    # Python 3
+    from urllib.parse import urlencode
+except ImportError:
+    # Python 2
+    from urllib import urlencode
 from .connection import (Connection, Query)
 from . import config
 
@@ -41,6 +47,12 @@ class Bugzilla(Connection):
                 self.bugids = [bugids]
             elif isinstance(bugids, int):
                 self.bugids = [str(bugids)]
+            elif isinstance(bugids, dict):
+                # Parameters to query string
+                if 'bug_id' in bugids and isinstance(bugids['bug_id'], list):
+                    # Special case for multiple bug_id
+                    bugids['bug_id'] = ','.join(map(str, bugids['bug_id']))
+                self.bugids = [urlencode(bugids), ]
             else:
                 self.bugids = list(map(str, bugids))
             self.include_fields = include_fields
