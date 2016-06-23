@@ -26,60 +26,70 @@ def short_name_match(short_name, real_name, email, exact_matching=True):
     real_name = real_name.lower()
 
     if exact_matching:
-        names = real_name.split(' ')
-        possible_short_name1 = names[0][0] + names[1] if names and len(names) >= 2 else ''
-        possible_short_name2 = names[0] + names[1] if names and len(names) >= 2 else ''
-
         return ':' + short_name + ']' in real_name or\
                ':' + short_name + ')' in real_name or\
                ':' + short_name + ',' in real_name or\
                ':' + short_name + '.' in real_name or\
-               ':' + short_name + ' ' in real_name or\
-               email.startswith(short_name + '@') or\
+               ':' + short_name + ' ' in real_name
+    else:
+        names = real_name.split(' ')
+        possible_short_name1 = names[0][0] + names[1] if names and len(names) >= 2 else ''
+        possible_short_name2 = names[0] + names[1] if names and len(names) >= 2 else ''
+
+        return short_name in real_name or\
                short_name + '@mozilla.com' in real_name or\
                (possible_short_name1 and short_name == possible_short_name1) or\
                (possible_short_name2 and short_name == possible_short_name2) or\
+               email.startswith(short_name + '@') or\
                short_name == email[email.index('@') + 1:email.rindex('.')]
-    else:
-        return short_name in real_name
 
 
 def reviewer_match(short_name, bugzilla_names, cc_list):
     if short_name in reviewer_cache:
-        assert reviewer_cache[short_name] in bugzilla_names
+        if reviewer_cache[short_name] not in bugzilla_names:
+            warnings.warn('Reviewer ' + reviewer_cache[short_name] + ' is not in the list of reviewers on Bugzilla.', stacklevel=3)
+
         return reviewer_cache[short_name]
 
-    for exact_matching in [True, False]:
-        found = set()
-        bugzilla_users = []
+    found = set()
+    bugzilla_users = []
 
-        # Check if we can find the reviewer in the list of reviewers from the bug.
+    # Check if we can find the reviewer in the list of reviewers from the bug.
+    for bugzilla_name in bugzilla_names:
+        if bugzilla_name.startswith(short_name):
+            found.add(bugzilla_name)
+
+    if len(found) == 0:
+        # Otherwise, check if we can find him/her in the CC list.
+        found |= set([entry['email'] for entry in cc_list if short_name_match(short_name, entry['real_name'], entry['email'])])
+
+    if len(found) == 0:
+        # Otherwise, find matching users on Bugzilla.
+        def user_handler(u):
+            bugzilla_users.append(u)
+
+        BugzillaUser(search_strings='match=' + short_name, user_handler=user_handler).wait()
         for bugzilla_name in bugzilla_names:
-            if bugzilla_name.startswith(short_name):
-                found.add(bugzilla_name)
+            BugzillaUser(bugzilla_name, user_handler=user_handler).wait()
 
-        if len(found) == 0:
-            # Otherwise, check if we can find him/her in the CC list.
-            found |= set([entry['email'] for entry in cc_list if short_name_match(short_name, entry['real_name'], entry['email'], exact_matching)])
+        found |= set([user['email'] for user in bugzilla_users if short_name_match(short_name, user['real_name'], user['email'])])
 
-        if len(found) == 0:
-            # Otherwise, find matching users on Bugzilla.
-            def user_handler(u):
-                bugzilla_users.append(u)
-
-            BugzillaUser(search_strings='match=' + short_name, user_handler=user_handler).wait()
-            for bugzilla_name in bugzilla_names:
-                BugzillaUser(bugzilla_name, user_handler=user_handler).wait()
-
-            found |= set([user['email'] for user in bugzilla_users if short_name_match(short_name, user['real_name'], user['email'], exact_matching)])
-
-        if len(found) > 0:
-            break
+    if len(found) == 0:
+        # Otherwise, check if we can find him/her in the CC list with a relaxed matching algorithm.
+        found |= set([entry['email'] for entry in cc_list if short_name_match(short_name, entry['real_name'], entry['email'], False)])
 
     # We should always find a matching reviewer name.
     # If we're unable to find it, add a static entry in the
     # reviewer_cache dict or find a new clever way to retrieve it.
-    assert len(found) == 1, 'Reviewer ' + short_name + ' not found.'
+    if len(found) == 0:
+        warnings.warn('Reviewer ' + short_name + ' could not be found.', stacklevel=3)
+        return None
+
+    for elem in found:
+        if elem not in bugzilla_names:
+            warnings.warn('Reviewer ' + elem + ' is not in the list of reviewers on Bugzilla.', stacklevel=3)
+
+    assert len(found) <= 1, 'Too many matching reviewers (' + str(found) + ') found for ' + short_name
 
     assert short_name not in reviewer_cache
     reviewer_cache[short_name] = found.pop()
@@ -112,7 +122,15 @@ def author_match(author_mercurial, author_real_name, bugzilla_names, cc_list):
             if author_real_name in user['real_name']:
                 found.add(user['email'])
 
-    assert len(found) == 1, 'Author ' + author_mercurial + ' not found.'
+    if len(found) == 0:
+        warnings.warn('Author ' + author_mercurial + ' could not be found.', stacklevel=3)
+        return set([])
+
+    for elem in found:
+        if elem not in bugzilla_names:
+            warnings.warn('Author ' + elem + ' is not in the list of authors on Bugzilla.', stacklevel=3)
+
+    assert len(found) <= 1, 'Too many matching authors (' + str(found) + ') found for ' + author_mercurial
 
     return set([author_mercurial, found.pop()])
 
@@ -264,8 +282,16 @@ def bug_analysis(bug):
         backout_revisions = set()
         for match in backout_pattern.finditer(meta['desc']):
             backout_revisions.add(match.group(1)[:12])
+
+        # TODO: Improve matching a backout of multiple changesets in a single line (e.g. bug 683280).
         if not backout_revisions:
-            # TODO: Search in lowercase.
+            match = re.search('(?:backout|back out|backed out|backedout) changesets', meta['desc'])
+            if match:
+                pattern = re.compile('([a-z0-9]{12,})')
+                for match in pattern.finditer(meta['desc']):
+                    backout_revisions.add(match.group(1)[:12])
+
+        if not backout_revisions:
             match = re.search('backout|back out|backed out|backedout', meta['desc'])
             if match:
                 for parent in meta['parents']:
@@ -274,7 +300,7 @@ def bug_analysis(bug):
 
                 # It's definitely a backout, but we couldn't find which revision was backed out.
                 if not backout_revisions:
-                    warnings.warn('Looks like a backout, but we couldn\'t find which revision was backed out.', stacklevel=2)
+                    warnings.warn(rev + ' looks like a backout, but we couldn\'t find which revision was backed out.', stacklevel=2)
                 # I wish we could assert instead of warn.
                 # assert backout_revisions
 

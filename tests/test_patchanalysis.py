@@ -9,6 +9,19 @@ from clouseau import patchanalysis
 
 
 class PatchAnalysisTest(unittest.TestCase):
+    def assertWarnings(self, warnings, expected_warnings):
+        missed_warnings = [ew for ew in expected_warnings if ew not in [str(w.message) for w in warnings]]
+
+        for missed_warning in missed_warnings:
+            print('Warning ("' + missed_warning + '") couldn\'t be found')
+
+        unexpected_warnings = [str(w.message) for w in warnings if str(w.message) not in expected_warnings]
+
+        for unexpected_warning in unexpected_warnings:
+            print('Unexpected warning ("' + unexpected_warning + '") found')
+
+        self.assertEqual(len(missed_warnings), 0)
+        self.assertEqual(len(unexpected_warnings), 0)
 
     def test_bug_analysis(self):
         info = patchanalysis.bug_analysis(547914)
@@ -66,9 +79,7 @@ class PatchAnalysisTest(unittest.TestCase):
         # Reviewer's email doesn't start with his nick, but he's in CC list.
         with warnings.catch_warnings(record=True) as w:
             info = patchanalysis.bug_analysis(1271794)
-            self.assertEqual(len(w), 2)
-            self.assertTrue(str(w[0].message) == 'Revision d0ab0d508a24 was not found.' or str(w[1].message) == 'Revision d0ab0d508a24 was not found.')
-            self.assertTrue(str(w[0].message) == 'Revision 9f4983dfd881 was not found.' or str(w[1].message) == 'Revision 9f4983dfd881 was not found.')
+            self.assertWarnings(w, ['Revision d0ab0d508a24 was not found.', 'Revision 9f4983dfd881 was not found.'])
             self.assertEqual(info['backout_num'], 1)
             self.assertEqual(info['blocks'], 1)
             self.assertEqual(info['depends_on'], 2)
@@ -110,7 +121,7 @@ class PatchAnalysisTest(unittest.TestCase):
         info = patchanalysis.bug_analysis(384458)
         self.assertEqual(info['backout_num'], 1)
         self.assertEqual(info['blocks'], 5)
-        self.assertEqual(info['depends_on'], 34)
+        self.assertEqual(info['depends_on'], 35)
         self.assertEqual(info['comments'], 101)
         self.assertEqual(info['changes_size'], 2752)
         self.assertEqual(info['test_changes_size'], 462)
@@ -128,9 +139,7 @@ class PatchAnalysisTest(unittest.TestCase):
         # Author has a different name on Bugzilla and Mercurial and they don't use the email on Mercurial.
         with warnings.catch_warnings(record=True) as w:
             info = patchanalysis.bug_analysis(1220307)
-            self.assertEqual(len(w), 2)
-            self.assertEqual(str(w[0].message), 'Looks like a backout, but we couldn\'t find which revision was backed out.')
-            self.assertEqual(str(w[1].message), 'Revision da10eecd0e76 is related to another bug (1276850).')
+            self.assertWarnings(w, ['da10eecd0e76 looks like a backout, but we couldn\'t find which revision was backed out.', 'Revision da10eecd0e76 is related to another bug (1276850).'])
             self.assertEqual(info['backout_num'], 2)
             self.assertEqual(info['blocks'], 4)
             self.assertEqual(info['depends_on'], 1)
@@ -149,8 +158,7 @@ class PatchAnalysisTest(unittest.TestCase):
 
         with warnings.catch_warnings(record=True) as w:
             info = patchanalysis.bug_analysis(1276850)
-            self.assertEqual(len(w), 1)
-            self.assertEqual(str(w[0].message), 'Looks like a backout, but we couldn\'t find which revision was backed out.')
+            self.assertWarnings(w, ['da10eecd0e76 looks like a backout, but we couldn\'t find which revision was backed out.', 'Author bugmail.mozilla@staktrace.com is not in the list of authors on Bugzilla.'])
             self.assertEqual(info['backout_num'], 0)
             self.assertEqual(info['blocks'], 1)
             self.assertEqual(info['depends_on'], 0)
@@ -245,8 +253,7 @@ class PatchAnalysisTest(unittest.TestCase):
         # Reviewer doesn't have his short name in his Bugzilla name.
         with warnings.catch_warnings(record=True) as w:
             info = patchanalysis.bug_analysis(853033)
-            self.assertEqual(len(w), 1)
-            self.assertEqual(str(w[0].message), 'Revision 8de609c5d378 is related to another bug (743252).')
+            self.assertWarnings(w, ['Revision 8de609c5d378 is related to another bug (743252).', 'Reviewer jlebar could not be found.'])
             self.assertEqual(info['backout_num'], 0)
             self.assertEqual(info['blocks'], 2)
             self.assertEqual(info['depends_on'], 0)
@@ -408,8 +415,9 @@ class PatchAnalysisTest(unittest.TestCase):
         self.assertGreaterEqual(info['crashes'], 0)
 
         # Typo in the reviewer name.
-        # info = patchanalysis.bug_analysis(843733)
-        # print(info)
+        with warnings.catch_warnings(record=True) as w:
+            info = patchanalysis.bug_analysis(843733)
+            self.assertWarnings(w, ['Reviewer mjronseb could not be found.'])
 
         # r=oops
         info = patchanalysis.bug_analysis(843821)
@@ -448,13 +456,37 @@ class PatchAnalysisTest(unittest.TestCase):
         self.assertGreaterEqual(info['crashes'], 0)
 
         # Bugzilla user is impossible to find from IRC handle.
-        # info = patchanalysis.bug_analysis(700583)
+        with warnings.catch_warnings(record=True) as w:
+            info = patchanalysis.bug_analysis(700583)
+            self.assertWarnings(w, ['Reviewer jocheng@mozilla.com is not in the list of reviewers on Bugzilla.'])
 
         # IRC handle is name+surname
         info = patchanalysis.bug_analysis(701262)
 
         # r=none
         info = patchanalysis.bug_analysis(733614)
+
+        # Reviewer on Bugzilla is a different person than the reviewer in the Mercurial commit.
+        with warnings.catch_warnings(record=True) as w:
+            info = patchanalysis.bug_analysis(963621)
+            self.assertWarnings(w, ['Reviewer doublec could not be found.'])
+
+        # IRC handle is part of the name.
+        info = patchanalysis.bug_analysis(829646)
+
+        # Multiple backouts with a commit message of one line.
+        info = patchanalysis.bug_analysis(683280)
+
+        # IRC handle on Bugzilla is different than the one used in Mercurial.
+        info = patchanalysis.bug_analysis(680802)
+
+        # Weird situation: the mozilla-central commit referenced in the comments is from some other
+        # bug and the actual patch from the bug never landed on mozilla-central but directly on
+        # other channels.
+        try:
+            info = patchanalysis.bug_analysis(846986)
+        except Exception as e:
+            self.assertTrue(str(e) == 'Too many matching authors ({\'jwalden+bmo@mit.edu\', \'anarchy@gentoo.org\'}) found for jwalden@mit.edu' or str(e) == 'Too many matching authors ({\'anarchy@gentoo.org\', \'jwalden+bmo@mit.edu\'}) found for jwalden@mit.edu')
 
 if __name__ == '__main__':
     unittest.main()
