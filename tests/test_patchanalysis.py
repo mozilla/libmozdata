@@ -486,7 +486,7 @@ class PatchAnalysisTest(unittest.TestCase):
         try:
             info = patchanalysis.bug_analysis(846986)
         except Exception as e:
-            self.assertTrue(str(e) == 'Too many matching authors ({\'jwalden+bmo@mit.edu\', \'anarchy@gentoo.org\'}) found for jwalden@mit.edu' or str(e) == 'Too many matching authors ({\'anarchy@gentoo.org\', \'jwalden+bmo@mit.edu\'}) found for jwalden@mit.edu')
+            self.assertEqual(str(e), 'Too many matching authors (jwalden+bmo@mit.edu, anarchy@gentoo.org) found for jwalden@mit.edu')
 
 if __name__ == '__main__':
     unittest.main()

@@ -89,7 +89,7 @@ def reviewer_match(short_name, bugzilla_names, cc_list):
         if elem not in bugzilla_names:
             warnings.warn('Reviewer ' + elem + ' is not in the list of reviewers on Bugzilla.', stacklevel=3)
 
-    assert len(found) <= 1, 'Too many matching reviewers (' + str(found) + ') found for ' + short_name
+    assert len(found) <= 1, 'Too many matching reviewers (' + ', '.join(found) + ') found for ' + short_name
 
     assert short_name not in reviewer_cache
     reviewer_cache[short_name] = found.pop()
@@ -130,7 +130,7 @@ def author_match(author_mercurial, author_real_name, bugzilla_names, cc_list):
         if elem not in bugzilla_names:
             warnings.warn('Author ' + elem + ' is not in the list of authors on Bugzilla.', stacklevel=3)
 
-    assert len(found) <= 1, 'Too many matching authors (' + str(found) + ') found for ' + author_mercurial
+    assert len(found) <= 1, 'Too many matching authors (' + ', '.join(found) + ') found for ' + author_mercurial
 
     return set([author_mercurial, found.pop()])
 
