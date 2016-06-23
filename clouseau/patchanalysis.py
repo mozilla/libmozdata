@@ -36,12 +36,12 @@ def short_name_match(short_name, real_name, email, exact_matching=True):
         possible_short_name1 = names[0][0] + names[1] if names and len(names) >= 2 else ''
         possible_short_name2 = names[0] + names[1] if names and len(names) >= 2 else ''
 
-        return short_name in real_name or\
-               short_name + '@mozilla.com' in real_name or\
+        return (short_name in real_name) or\
+               (short_name + '@mozilla.com' in real_name) or\
                (possible_short_name1 and short_name == possible_short_name1) or\
                (possible_short_name2 and short_name == possible_short_name2) or\
-               email.startswith(short_name + '@') or\
-               short_name == email[email.index('@') + 1:email.rindex('.')]
+               (email.startswith(short_name + '@')) or\
+               (short_name == email[email.index('@') + 1:email.rindex('.')])
 
 
 def reviewer_match(short_name, bugzilla_names, cc_list):
