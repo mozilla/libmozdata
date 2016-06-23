@@ -5,10 +5,17 @@
 import unittest
 import os
 from clouseau import bugzilla
+import responses
+from tests.auto_mock import MockTestCase
 
 
-class BugIDTest(unittest.TestCase):
+class BugIDTest(MockTestCase):
 
+    mock_urls = [
+        bugzilla.Bugzilla.URL,
+    ]
+
+    @responses.activate
     def test_bugid(self):
 
         def bughandler(bug, data):
@@ -22,6 +29,7 @@ class BugIDTest(unittest.TestCase):
         self.assertEqual(bug['assigned_to'], u'jefft@formerly-netscape.com.tld')
         self.assertEqual(bug['summary'], u'[DOGFOOD] Unable to Forward a message received as an Inline page or an attachment')
 
+    @responses.activate
     def test_bugids(self):
 
         def bughandler(bug, data):
@@ -40,6 +48,7 @@ class BugIDTest(unittest.TestCase):
         self.assertEqual(bugs[12346]['assigned_to'], u'dougt@mozilla.com')
         self.assertEqual(bugs[12346]['summary'], u'nsOutputFileStream should buffer the output')
 
+    @responses.activate
     def test_search(self):
 
         def bughandler(bug, data):
@@ -52,6 +61,7 @@ class BugIDTest(unittest.TestCase):
         self.assertEqual(bugs[12345]['id'], 12345)
         self.assertEqual(bugs[12346]['id'], 12346)
 
+    @responses.activate
     def test_search_dict(self):
 
         def bughandler(bug, data):
@@ -105,6 +115,7 @@ class BugIDTest(unittest.TestCase):
         self.assertEqual(bugs[12345]['id'], 12345)
         self.assertEqual(bugs[12346]['id'], 12346)
 
+    @responses.activate
     def test_search_multiple(self):
 
         def bughandler(bug, data):
@@ -121,8 +132,13 @@ class BugIDTest(unittest.TestCase):
         self.assertEqual(bugs[12350]['id'], 12350)
 
 
-class BugCommentHistoryTest(unittest.TestCase):
+class BugCommentHistoryTest(MockTestCase):
 
+    mock_urls = [
+        bugzilla.Bugzilla.URL,
+    ]
+
+    @responses.activate
     def test_bugid(self):
         def bughandler(bug, data):
             data['bug'] = bug
@@ -141,6 +157,7 @@ class BugCommentHistoryTest(unittest.TestCase):
         self.assertTrue(data['comment'][0]['text'].startswith(u'Steps to reproduce'))
         self.assertEqual(len(data['history']['history']), 24)
 
+    @responses.activate
     def test_search(self):
         def bughandler(bug, data):
             data['bug'] = bug
@@ -159,6 +176,7 @@ class BugCommentHistoryTest(unittest.TestCase):
         self.assertTrue(data['comment'][0]['text'].startswith(u'Steps to reproduce'))
         self.assertEqual(len(data['history']['history']), 24)
 
+    @responses.activate
     def test_search_history(self):
         def historyhandler(bug, data):
             data['history'] = bug['history']
@@ -184,6 +202,7 @@ class BugCommentHistoryTest(unittest.TestCase):
         multiple_changes = bugzilla.Bugzilla.get_history_matches(data['history'], {'added': 'approval-mozilla-release?'})
         self.assertEqual(multiple_changes, [{'changes': [{'added': 'approval-mozilla-aurora?, approval-mozilla-beta?, approval-mozilla-release?', 'attachment_id': 8417443, 'field_name': 'flagtypes.name', 'removed': ''}], 'when': '2014-05-05T20:25:06Z', 'who': 'hurley@todesschaf.org'}])
 
+    @responses.activate
     def test_search_landing(self):
         def commenthandler(bug, bugid, data):
             data['comments'] = bug['comments']
@@ -214,8 +233,13 @@ class BugCommentHistoryTest(unittest.TestCase):
         self.assertEqual(len(central), 8)
 
 
-class BugAttachmentTest(unittest.TestCase):
+class BugAttachmentTest(MockTestCase):
 
+    mock_urls = [
+        bugzilla.Bugzilla.URL,
+    ]
+
+    @responses.activate
     def test_bugid(self):
         def bughandler(bug, data):
             data['bug'] = bug
@@ -241,6 +265,7 @@ class BugAttachmentTest(unittest.TestCase):
         self.assertEqual(data['attachment'][0]['is_patch'], 1)
         self.assertEqual(data['attachment'][0]['is_obsolete'], 1)
 
+    @responses.activate
     def test_search(self):
         def bughandler(bug, data):
             data['bug'] = bug
@@ -266,6 +291,7 @@ class BugAttachmentTest(unittest.TestCase):
         self.assertEqual(data['attachment'][0]['is_patch'], 1)
         self.assertEqual(data['attachment'][0]['is_obsolete'], 1)
 
+    @responses.activate
     def test_search_only_attachment(self):
         def bughandler(bug, data):
             data['bug'] = bug
@@ -282,6 +308,7 @@ class BugAttachmentTest(unittest.TestCase):
         self.assertEqual(data['attachment'][0]['is_patch'], 1)
         self.assertEqual(data['attachment'][0]['is_obsolete'], 1)
 
+    @responses.activate
     def test_include_fields(self):
         def attachmenthandler(bug, bugid, data):
             data['attachment'] = bug
@@ -294,25 +321,38 @@ class BugAttachmentTest(unittest.TestCase):
         self.assertNotIn('is_obsolete', data['attachment'][0])
 
 
-class BugDuplicateTest(unittest.TestCase):
+class BugDuplicateTest(MockTestCase):
 
+    mock_urls = [
+        bugzilla.Bugzilla.URL,
+    ]
+
+    @responses.activate
     def test_duplicate(self):
         self.assertEqual(bugzilla.Bugzilla.follow_dup([1244129, 890156]), {'1244129': '1240533', '890156': None})
 
+    @responses.activate
     def test_double_duplicate(self):
         self.assertEqual(bugzilla.Bugzilla.follow_dup([784349]), {'784349': '784345'})
 
+    @responses.activate
     def test_not_duplicate(self):
         self.assertEqual(bugzilla.Bugzilla.follow_dup([890156, 1240533]), {'1240533': None, '890156': None})
 
 
-class User(unittest.TestCase):
+class User(MockTestCase):
+
+    mock_urls = [
+        bugzilla.BugzillaUser.URL,
+    ]
+
     def __init__(self, a):
         tok = os.environ.get('API_KEY_BUGZILLA')
         if tok:
             bugzilla.BugzillaUser.TOKEN = tok
         super(User, self).__init__(a)
 
+    @responses.activate
     def test_get_user(self):
         user = {}
         user_data = {}
@@ -328,6 +368,7 @@ class User(unittest.TestCase):
         self.assertEqual(user['real_name'], 'Nobody; OK to take it and work on it')
         self.assertEqual(user, user_data)
 
+    @responses.activate
     def test_get_user_include_fields(self):
         user = {}
         user_data = {}
@@ -344,6 +385,7 @@ class User(unittest.TestCase):
         self.assertNotIn('id', user)
         self.assertEqual(user, user_data)
 
+    @responses.activate
     def test_get_user_no_data(self):
         user = {}
 
@@ -356,6 +398,7 @@ class User(unittest.TestCase):
         self.assertEqual(user['name'], 'nobody@mozilla.org')
         self.assertEqual(user['real_name'], 'Nobody; OK to take it and work on it')
 
+    @responses.activate
     def test_get_user_id(self):
         user = {}
 
@@ -368,6 +411,7 @@ class User(unittest.TestCase):
         self.assertEqual(user['name'], 'nobody@mozilla.org')
         self.assertEqual(user['real_name'], 'Nobody; OK to take it and work on it')
 
+    @responses.activate
     def test_get_user_id_string(self):
         user = {}
 
@@ -380,6 +424,7 @@ class User(unittest.TestCase):
         self.assertEqual(user['name'], 'nobody@mozilla.org')
         self.assertEqual(user['real_name'], 'Nobody; OK to take it and work on it')
 
+    @responses.activate
     def test_get_user_array(self):
         user = {}
 
@@ -392,6 +437,7 @@ class User(unittest.TestCase):
         self.assertEqual(user['name'], 'nobody@mozilla.org')
         self.assertEqual(user['real_name'], 'Nobody; OK to take it and work on it')
 
+    @responses.activate
     def test_get_users(self):
         user = {
             'first': {},
@@ -415,6 +461,7 @@ class User(unittest.TestCase):
         self.assertEqual(user['second']['name'], 'bugbot@bugzilla.org')
         self.assertEqual(user['second']['real_name'], 'bugbot on irc.mozilla.org')
 
+    @responses.activate
     def test_get_users_ids(self):
         user = {
             'first': {},
@@ -438,6 +485,7 @@ class User(unittest.TestCase):
         self.assertEqual(user['second']['name'], 'bugbot@bugzilla.org')
         self.assertEqual(user['second']['real_name'], 'bugbot on irc.mozilla.org')
 
+    @responses.activate
     def test_search_single_result(self):
         user = {}
 
@@ -450,6 +498,7 @@ class User(unittest.TestCase):
         self.assertEqual(user['name'], 'nobody@mozilla.org')
         self.assertEqual(user['real_name'], 'Nobody; OK to take it and work on it')
 
+    @responses.activate
     def test_search_multiple_results(self):
         users = []
 
@@ -475,6 +524,7 @@ class User(unittest.TestCase):
         self.assertTrue(foundNobody1)
         self.assertTrue(foundNobody2)
 
+    @responses.activate
     def test_search_multiple_queries(self):
         users = []
 
