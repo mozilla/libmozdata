@@ -4,6 +4,7 @@
 
 import unittest
 import warnings
+from datetime import timedelta
 from clouseau.bugzilla import Bugzilla
 from clouseau import patchanalysis
 
@@ -121,7 +122,7 @@ class PatchAnalysisTest(unittest.TestCase):
         info = patchanalysis.bug_analysis(384458)
         self.assertEqual(info['backout_num'], 1)
         self.assertEqual(info['blocks'], 5)
-        self.assertEqual(info['depends_on'], 35)
+        self.assertEqual(info['depends_on'], 37)
         self.assertEqual(info['comments'], 101)
         self.assertEqual(info['changes_size'], 2752)
         self.assertEqual(info['test_changes_size'], 462)
@@ -487,6 +488,22 @@ class PatchAnalysisTest(unittest.TestCase):
             info = patchanalysis.bug_analysis(846986)
         except Exception as e:
             self.assertTrue(str(e) in ['Too many matching authors (jwalden+bmo@mit.edu, anarchy@gentoo.org) found for jwalden@mit.edu', 'Too many matching authors (anarchy@gentoo.org, jwalden+bmo@mit.edu) found for jwalden@mit.edu'])
+
+    def test_uplift_info(self):
+      info = patchanalysis.uplift_info(909494, 'release')
+      self.assertEqual(info['landing_delta'], timedelta(0, 1091))
+      self.assertEqual(info['release_delta'], timedelta(17, 19727))
+      self.assertEqual(info['uplift_accepted'], False)
+      self.assertEqual(info['response_delta'], timedelta(0, 843))
+
+      with warnings.catch_warnings(record=True) as w:
+          info = patchanalysis.uplift_info(859425, 'release')
+          self.assertWarnings(w, ['Bug 859425 doesn\'t have a uplift request date.'])
+          self.assertEqual(info['landing_delta'], timedelta(1, 60500))
+          self.assertEqual(info['release_delta'], timedelta(33, 25145))
+          self.assertEqual(info['uplift_accepted'], True)
+          self.assertEqual(info['response_delta'], timedelta(0))
+
 
 if __name__ == '__main__':
     unittest.main()

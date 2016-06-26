@@ -16,6 +16,7 @@ from .CrashInfo import CrashInfo
 from . import hgmozilla
 from . import modules
 from . import utils
+from . import versions
 
 
 reviewer_cache = {}
@@ -399,5 +400,79 @@ def bug_analysis(bug):
     # TODO: Add number of days since the landing (to check if the patch baked a little on nightly or not).
 
     info['backout_num'] = len(backout_comments)
+
+    return info
+
+
+def uplift_info(bug, channel):
+    if isinstance(bug, numbers.Number):
+        bug_id = bug
+        bug = {}
+
+        def bughandler(found_bug, data):
+            bug.update(found_bug)
+
+        def commenthandler(found_bug, bugid, data):
+            bug['comments'] = found_bug['comments']
+
+        def historyhandler(found_bug, data):
+            bug['history'] = found_bug['history']
+
+        def attachmenthandler(attachments, bugid, data):
+            bug['attachments'] = attachments
+
+        INCLUDE_FIELDS = [
+            'id',
+        ]
+
+        ATTACHMENT_INCLUDE_FIELDS = [
+            'flags',
+        ]
+
+        Bugzilla(bug_id, INCLUDE_FIELDS, bughandler=bughandler, commenthandler=commenthandler, historyhandler=historyhandler, attachmenthandler=attachmenthandler, attachment_include_fields=ATTACHMENT_INCLUDE_FIELDS).get_data().wait()
+
+    info = {}
+
+    uplift_accepted = sum(flag['name'] == ('approval-mozilla-' + channel) and flag['status'] == '+' for a in bug['attachments'] for flag in a['flags']) > 0
+    uplift_rejected = sum(flag['name'] == ('approval-mozilla-' + channel) and flag['status'] == '-' for a in bug['attachments'] for flag in a['flags']) > 0
+
+    info['uplift_accepted'] = uplift_accepted
+
+    # Delta between uplift request and uplift acceptation/rejection.
+    uplift_request = Bugzilla.get_history_matches(bug['history'], {'added': 'approval-mozilla-' + channel + '?', 'field_name': 'flagtypes.name'})
+    if len(uplift_request):
+        uplift_request_date = utils.get_date_ymd(uplift_request[-1]['when'])
+    else:
+        uplift_request_date = 0
+        warnings.warn('Bug ' + str(bug['id']) + ' doesn\'t have a uplift request date.', stacklevel=2)
+
+    if uplift_accepted:
+        uplift_response = Bugzilla.get_history_matches(bug['history'], {'added': 'approval-mozilla-' + channel + '+', 'field_name': 'flagtypes.name'})
+    elif uplift_rejected:
+        uplift_response = Bugzilla.get_history_matches(bug['history'], {'added': 'approval-mozilla-' + channel + '-', 'field_name': 'flagtypes.name'})
+    else:
+        uplift_response = None
+
+    if uplift_response:
+        uplift_response_date = utils.get_date_ymd(uplift_response[-1]['when'])
+        if uplift_request_date == 0:
+            uplift_request_date = uplift_response_date
+        info['response_delta'] = uplift_response_date - uplift_request_date
+        assert info['response_delta'] >= timedelta()
+
+    # Delta between uplift request and next merge date.
+    release_date = versions.getCloserMajorRelease(uplift_request_date)[1]
+    info['release_delta'] = release_date - uplift_request_date
+    assert info['release_delta'] > timedelta()
+
+    # Delta between patch landing on central and uplift request
+    landing_comments = Bugzilla.get_landing_comments(bug['comments'], 'central')
+    if landing_comments:
+        landing_date = utils.get_date_ymd(landing_comments[-1]['comment']['time'])
+        info['landing_delta'] = uplift_request_date - landing_date
+        # Sometimes the request is done earlier than landing on central.
+        # assert bug_data['landing_delta'] > timedelta()
+    else:
+        info['landing_delta'] = timedelta()
 
     return info
