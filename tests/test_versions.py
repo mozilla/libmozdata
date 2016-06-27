@@ -13,7 +13,7 @@ class VersionsTest(unittest.TestCase):
 
     def test_versions(self):
         v = versions.get(base=True)
-        self.assertTrue(v['release'] <= v['beta'] < v['aurora'] < v['nightly'])
+        self.assertTrue(v['esr'] <= v['release'] <= v['beta'] < v['aurora'] < v['nightly'])
 
     def test_version_dates(self):
         self.assertEqual(versions.getMajorDate(46), datetime.datetime(2016, 4, 26, 0, 0, tzinfo=tzutc()))

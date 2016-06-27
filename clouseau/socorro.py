@@ -431,6 +431,39 @@ class ProductVersions(Socorro):
 
         return info
 
+    @staticmethod
+    def get_info_from_major(major_numbers, product='Firefox', active=True):
+        """Get information for a given channel and major number version
+
+        Args:
+            major_numbers (dict): a dictionary channel->major_number_version
+            product (Optional[str]): the product to use, by default 'Firefox'
+            active (Optional[bool]): True for actives versions
+
+        Returns:
+            dict: version info
+        """
+        def handler(json, data, majors=major_numbers):
+            if json['total']:
+                ffs = json['hits']
+                for ff in ffs:
+                    build_type = ff['build_type'].lower()
+                    if build_type in majors:
+                        version = ff['version']  # 45.x
+                        version_n = ProductVersions.__get_version(version)
+                        if version_n == majors[build_type]:
+                            info = {'version': version,
+                                    'throttle': ff['throttle'],
+                                    'start_date': ff['start_date'],
+                                    'end_date': ff['end_date']}
+                            data[build_type].append(info)
+
+        data = {chan: [] for chan in major_numbers.keys()}
+        ProductVersions(params={'active': active,
+                                'product': product},
+                        handler=handler, handlerdata=data).wait()
+        return data
+
 
 class TCBS(Socorro):
     """TCBS: https://crash-stats.mozilla.com/api/#TCBS
@@ -754,18 +787,6 @@ class Bugs(Socorro):
             super(Bugs, self).__init__(Query(Bugs.URL, params, handler, handlerdata))
 
     @staticmethod
-    def default_handler(json, data):
-        """Default handler
-
-        Args:
-            json (dict): json
-            data (set): set to append the bugs id
-        """
-        if json['total']:
-            for hit in json['hits']:
-                data.add(hit['id'])
-
-    @staticmethod
     def get_bugs(signatures):
         """Get signatures bugs
 
@@ -775,22 +796,21 @@ class Bugs(Socorro):
         Returns:
             dict: the bugs for each signature
         """
-        data = {}
+        def default_handler(json, data):
+            if json['total']:
+                for hit in json['hits']:
+                    signature = hit['signature']
+                    if signature in data:
+                        data[signature].append(hit['id'])
 
         if isinstance(signatures, six.string_types):
-            _set = set()
-            data[signatures] = _set
-            Bugs(params={'signatures': signatures}, handler=Bugs.default_handler, handlerdata=_set).wait()
+            data = {signatures: []}
+            Bugs(params={'signatures': signatures}, handler=default_handler, handlerdata=data).wait()
         else:
+            data = {s: [] for s in signatures}
             queries = []
-            for signature in signatures:
-                _set = set()
-                data[signature] = _set
-                queries.append(Query(Bugs.URL, {'signatures': signature}, Bugs.default_handler, _set))
+            for sgns in Connection.chunks(signatures, 10):
+                queries.append(Query(Bugs.URL, {'signatures': sgns}, default_handler, data))
             Bugs(queries=queries).wait()
 
-        _data = {}
-        for s, b in data.items():
-            _data[s] = list(b)
-
-        return _data
+        return data

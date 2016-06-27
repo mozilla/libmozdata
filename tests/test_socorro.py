@@ -4,6 +4,7 @@
 
 import unittest
 from clouseau import socorro
+from clouseau import versions
 
 
 class SuperSearchTest(unittest.TestCase):
@@ -58,6 +59,11 @@ class ProductVersionsTest(unittest.TestCase):
     def test_cached_versions(self):
         cached_versions = socorro.ProductVersions.get_cached_versions()
         self.assertIsNotNone(cached_versions)
+
+    def test_info_from_major(self):
+        v = versions.get(base=True)
+        i = socorro.ProductVersions.get_info_from_major(v)
+        self.assertIsNotNone(i)
 
 
 class TCBSTest(unittest.TestCase):
