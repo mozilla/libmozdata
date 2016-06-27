@@ -69,9 +69,11 @@ def reviewer_match(short_name, bugzilla_names, cc_list):
         def user_handler(u):
             bugzilla_users.append(u)
 
-        BugzillaUser(search_strings='match=' + short_name, user_handler=user_handler).wait()
+        INCLUDE_FIELDS = ['email', 'real_name']
+
+        BugzillaUser(search_strings='match=' + short_name + '&include_fields=' + ','.join(INCLUDE_FIELDS), user_handler=user_handler).wait()
         for bugzilla_name in bugzilla_names:
-            BugzillaUser(bugzilla_name, user_handler=user_handler).wait()
+            BugzillaUser(bugzilla_name, include_fields=INCLUDE_FIELDS, user_handler=user_handler).wait()
 
         found |= set([user['email'] for user in bugzilla_users if short_name_match(short_name, user['real_name'], user['email'])])
 
@@ -118,7 +120,9 @@ def author_match(author_mercurial, author_real_name, bugzilla_names, cc_list):
         def user_handler(u):
             bugzilla_users.append(u)
 
-        BugzillaUser(search_strings='match=' + author_real_name, user_handler=user_handler).wait()
+        INCLUDE_FIELDS = ['email', 'real_name']
+
+        BugzillaUser(search_strings='match=' + author_real_name + '&include_fields=' + ','.join(INCLUDE_FIELDS), user_handler=user_handler).wait()
         for user in bugzilla_users:
             if author_real_name in user['real_name']:
                 found.add(user['email'])
