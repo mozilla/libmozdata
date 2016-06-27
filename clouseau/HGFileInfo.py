@@ -48,6 +48,7 @@ class HGFileInfo(object):
             result.wait()
 
         author_pattern = re.compile('<([^>]+)>')
+        email_pattern = re.compile('<?([\w\-\._\+%]+@[\w\-\._\+%]+)>?')
 
         entries = self.data[path]
 
@@ -64,6 +65,8 @@ class HGFileInfo(object):
                 continue
 
             m = author_pattern.search(entry['author'])
+            if m is None:
+                m = email_pattern.search(entry['author'])
             if m:
                 entry['author'] = m.group(1)
             patch_author = entry['author']
