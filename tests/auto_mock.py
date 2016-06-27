@@ -60,7 +60,7 @@ class MockTestCase(unittest.TestCase):
             with gzip.open(path, 'wb') as f:
                 # Use old pickle ascii protocol (default)
                 # to be compatible with Python 2
-                f.write(pickle.dumps(response))
+                f.write(pickle.dumps(response, 0))
 
         return (
             response['status'],
