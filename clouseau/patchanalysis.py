@@ -148,7 +148,7 @@ hginfos = weakref.WeakValueDictionary()
 
 
 def patch_analysis(patch, authors, reviewers, creation_date=utils.get_date_ymd('today')):
-    info = Counter({
+    info = {
         'changes_size': 0,
         'test_changes_size': 0,
         'modules_num': 0,
@@ -159,7 +159,7 @@ def patch_analysis(patch, authors, reviewers, creation_date=utils.get_date_ymd('
         'reviewer_familiarity_overall': 0,
         'reviewer_familiarity_last_3_releases': 0,
         'crashes': 0,
-    })
+    }
 
     paths = []
     for diff in whatthepatch.parse_patch(patch):
@@ -238,13 +238,13 @@ def bug_analysis(bug):
 
         Bugzilla(bug_id, INCLUDE_FIELDS, bughandler=bughandler, commenthandler=commenthandler, attachmenthandler=attachmenthandler, attachment_include_fields=ATTACHMENT_INCLUDE_FIELDS).get_data().wait()
 
-    info = Counter({
+    info = {
         'backout_num': 0,
         'blocks': len(bug['blocks']),
         'depends_on': len(bug['depends_on']),
         'comments': len(bug['comments']),
         'r-ed_patches': sum((a['is_patch'] == 1 or a['content_type'] == 'text/x-review-board-request') and sum(flag['name'] == 'review' and flag['status'] == '-' for flag in a['flags']) > 0 for a in bug['attachments']),
-    })
+    }
 
     # Get all reviewers and authors, we will match them with the changeset description (r=XXX).
     bugzilla_reviewers = set()
@@ -264,6 +264,7 @@ def bug_analysis(bug):
             bugzilla_reviewers.add(flag['setter'])
 
     reviewer_pattern = re.compile('r=([a-zA-Z0-9]+)')
+    # TODO: Directly match email instead (e.g. for bug 1277522).
     author_pattern = re.compile('<([^>]+)>')
     author_name_pattern = re.compile('([^<]+)')
     backout_pattern = re.compile('(?:backout|back out|backed out|backedout) (?:changeset )?([a-z0-9]{12,})')
@@ -371,7 +372,12 @@ def bug_analysis(bug):
 
             obj['reviewers'] = reviewers
 
-            info += patch_analysis(hgmozilla.RawRevision.get_revision(obj['channel'], rev), obj['author_names'], reviewers, datetime.utcfromtimestamp(obj['creation_date']))
+            patch_info = patch_analysis(hgmozilla.RawRevision.get_revision(obj['channel'], rev), obj['author_names'], reviewers, datetime.utcfromtimestamp(obj['creation_date']))
+            for k, v in patch_info.items():
+                if k not in info:
+                    info[k] = v
+                else:
+                    info[k] += v
     else:
         def attachmenthandler(attachments, bugid, data):
             for i in range(0, len(bug['attachments'])):
@@ -398,7 +404,12 @@ def bug_analysis(bug):
             reviewers = [flag['setter'] for flag in attachment['flags'] if flag['name'] == 'review' and flag['status'] == '+']
 
             if data is not None:
-                info += patch_analysis(data, [attachment['creator']], reviewers, utils.get_date_ymd(attachment['creation_time']))
+                patch_info = patch_analysis(data, [attachment['creator']], reviewers, utils.get_date_ymd(attachment['creation_time']))
+                for k, v in patch_info.items():
+                    if k not in info:
+                        info[k] = v
+                    else:
+                        info[k] += v
 
     # TODO: Add number of crashes with signatures from the bug (also before/after the patch?).
 
