@@ -4,11 +4,18 @@
 
 import unittest
 from clouseau.HGFileInfo import HGFileInfo
+from clouseau.hgmozilla import Mercurial
 from clouseau import utils
+from tests.auto_mock import MockTestCase
+import responses
 
 
-class HGFileInfoTest(unittest.TestCase):
+class HGFileInfoTest(MockTestCase):
+    mock_urls = [
+        Mercurial.HG_URL,
+    ]
 
+    @responses.activate
     def test_hgfileinfo(self):
         path = 'netwerk/protocol/http/nsHttpConnectionMgr.cpp'
         hi = HGFileInfo(path)
@@ -19,6 +26,7 @@ class HGFileInfoTest(unittest.TestCase):
         self.assertIn('bugs', fi)
         self.assertIsNotNone(fi['bugs'])
 
+    @responses.activate
     def test_hgfileinfo_date(self):
         path = 'LICENSE'
         hi = HGFileInfo(path)
@@ -76,6 +84,7 @@ class HGFileInfoTest(unittest.TestCase):
         self.assertEqual(fi['patches'][0]['author'], 'philringnalda@gmail.com')
         self.assertEqual(fi['patches'][1]['author'], 'hg@mozilla.com')
 
+    @responses.activate
     def test_hgfileinfo_creation_vs_push_date(self):
         path = 'LICENSE'
         hi = HGFileInfo(path, date_type='creation')
@@ -122,6 +131,7 @@ class HGFileInfoTest(unittest.TestCase):
         self.assertEqual(fi['patches'][0]['author'], 'philringnalda@gmail.com')
         self.assertEqual(fi['patches'][1]['author'], 'hg@mozilla.com')
 
+    @responses.activate
     def test_hgfileinfo_author(self):
         path = 'LICENSE'
         hi = HGFileInfo(path)
@@ -147,6 +157,7 @@ class HGFileInfoTest(unittest.TestCase):
         self.assertEqual(fi['patches'][0]['author'], 'philringnalda@gmail.com')
         self.assertEqual(fi['patches'][1]['author'], 'hg@mozilla.com')
 
+    @responses.activate
     def test_hgfileinfo_multiple(self):
         path1 = 'netwerk/protocol/http/nsHttpConnectionMgr.cpp'
         path2 = 'LICENSE'
