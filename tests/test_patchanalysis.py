@@ -6,10 +6,20 @@ import unittest
 import warnings
 from datetime import timedelta
 from clouseau.bugzilla import Bugzilla
+from clouseau.socorro import Socorro
+from clouseau.hgmozilla import Mercurial
 from clouseau import patchanalysis
+from tests.auto_mock import MockTestCase
+import responses
 
 
-class PatchAnalysisTest(unittest.TestCase):
+class PatchAnalysisTest(MockTestCase):
+    mock_urls = [
+        Bugzilla.URL,
+        Socorro.CRASH_STATS_URL,
+        Mercurial.HG_URL,
+    ]
+
     def assertWarnings(self, warnings, expected_warnings):
         missed_warnings = [ew for ew in expected_warnings if ew not in [str(w.message) for w in warnings]]
 
@@ -24,6 +34,7 @@ class PatchAnalysisTest(unittest.TestCase):
         self.assertEqual(len(missed_warnings), 0)
         self.assertEqual(len(unexpected_warnings), 0)
 
+    @responses.activate
     def test_bug_analysis(self):
         info = patchanalysis.bug_analysis(547914)
         self.assertEqual(info['backout_num'], 0)
@@ -494,6 +505,7 @@ class PatchAnalysisTest(unittest.TestCase):
             info = patchanalysis.bug_analysis(1156913)
             self.assertWarnings(w, ['Revision fa8854bd0029 doesn\'t exist.'])
 
+    @responses.activate
     def test_uplift_info(self):
         info = patchanalysis.uplift_info(909494, 'release')
         self.assertEqual(info['landing_delta'], timedelta(0, 1091))
