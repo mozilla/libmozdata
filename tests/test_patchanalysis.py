@@ -489,6 +489,11 @@ class PatchAnalysisTest(unittest.TestCase):
         except Exception as e:
             self.assertTrue(str(e) in ['Too many matching authors (jwalden+bmo@mit.edu, anarchy@gentoo.org) found for jwalden@mit.edu', 'Too many matching authors (anarchy@gentoo.org, jwalden+bmo@mit.edu) found for jwalden@mit.edu'])
 
+        # A comment contains a non-existing revision.
+        with warnings.catch_warnings(record=True) as w:
+            info = patchanalysis.bug_analysis(1156913)
+            self.assertWarnings(w, ['Revision fa8854bd0029 doesn\'t exist.'])
+
     def test_uplift_info(self):
         info = patchanalysis.uplift_info(909494, 'release')
         self.assertEqual(info['landing_delta'], timedelta(0, 1091))

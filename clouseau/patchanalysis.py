@@ -277,6 +277,9 @@ def bug_analysis(bug):
         # Or maybe it's better this way, so we can avoid downloading a lot of changes when it's unneeded
         # to do so (e.g. for backouts or merges we only need the description).
         meta = hgmozilla.Revision.get_revision(channel, rev)
+        if not meta:
+            warnings.warn('Revision ' + rev + ' doesn\'t exist.', stacklevel=2)
+            continue
         meta['desc'] = meta['desc'].lower()
 
         # Check if it was a backout
