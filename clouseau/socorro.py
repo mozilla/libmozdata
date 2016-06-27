@@ -458,7 +458,7 @@ class ProductVersions(Socorro):
                                     'end_date': ff['end_date']}
                             data[build_type].append(info)
 
-        data = {chan: [] for chan in major_numbers.iterkeys()}
+        data = {chan: [] for chan in major_numbers.keys()}
         ProductVersions(params={'active': active,
                                 'product': product},
                         handler=handler, handlerdata=data).wait()
