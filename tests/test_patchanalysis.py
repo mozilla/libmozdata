@@ -505,6 +505,9 @@ class PatchAnalysisTest(MockTestCase):
             info = patchanalysis.bug_analysis(1156913)
             self.assertWarnings(w, ['Revision fa8854bd0029 doesn\'t exist.'])
 
+        # Author in mercurial doesn't use the same format as usual ("Full Name email" instead of "Full Name <email>").
+        info = patchanalysis.bug_analysis(1277522)
+
     @responses.activate
     def test_uplift_info(self):
         info = patchanalysis.uplift_info(909494, 'release')

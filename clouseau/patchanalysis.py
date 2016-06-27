@@ -263,9 +263,8 @@ def bug_analysis(bug):
             bugzilla_reviewers.add(flag['setter'])
 
     reviewer_pattern = re.compile('r=([a-zA-Z0-9]+)')
-    # TODO: Directly match email instead (e.g. for bug 1277522).
     author_pattern = re.compile('<([^>]+)>')
-    author_name_pattern = re.compile('([^<]+)')
+    email_pattern = re.compile('<?([\w\-\._\+%]+@[\w\-\._\+%]+)>?')
     backout_pattern = re.compile('(?:backout|back out|backed out|backedout) (?:changeset )?([a-z0-9]{12,})')
     bug_pattern = re.compile('[\t ]*bug[\t ]*([0-9]+)')
     landings = Bugzilla.get_landing_comments(bug['comments'], ['inbound', 'central', 'fx-team'])
@@ -333,8 +332,11 @@ def bug_analysis(bug):
         for match in reviewer_pattern.finditer(meta['desc']):
             reviewers.add(match.group(1))
 
-        author_mercurial = author_pattern.search(meta['user']).group(1)
-        author_real_name = author_name_pattern.search(meta['user']).group(1)
+        author_mercurial_match = author_pattern.search(meta['user'])
+        if author_mercurial_match is None:
+            author_mercurial_match = email_pattern.search(meta['user'])
+        author_mercurial = author_mercurial_match.group(1)
+        author_real_name = meta['user'][:author_mercurial_match.start() - 1]
         # Multiple names because sometimes authors use different emails on Bugzilla and Mercurial and sometimes
         # they change it.
         author_names = author_match(author_mercurial, author_real_name, bugzilla_authors, bug['cc_detail'])
