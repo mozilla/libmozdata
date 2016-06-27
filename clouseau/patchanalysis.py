@@ -7,7 +7,6 @@ except ImportError:
     from urllib import urlopen
 import weakref
 import numbers
-from collections import Counter
 import warnings
 import whatthepatch
 from .HGFileInfo import HGFileInfo
@@ -453,6 +452,8 @@ def uplift_info(bug, channel):
 
     uplift_accepted = sum(flag['name'] == ('approval-mozilla-' + channel) and flag['status'] == '+' for a in bug['attachments'] for flag in a['flags']) > 0
     uplift_rejected = sum(flag['name'] == ('approval-mozilla-' + channel) and flag['status'] == '-' for a in bug['attachments'] for flag in a['flags']) > 0
+
+    assert uplift_accepted != uplift_rejected, 'Uplift either accepted or rejected.'
 
     info['uplift_accepted'] = uplift_accepted
 

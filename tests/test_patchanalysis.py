@@ -513,6 +513,7 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['uplift_accepted'], False)
         self.assertEqual(info['response_delta'], timedelta(0, 843))
 
+        # Approved without request.
         with warnings.catch_warnings(record=True) as w:
             info = patchanalysis.uplift_info(859425, 'release')
             self.assertWarnings(w, ['Bug 859425 doesn\'t have a uplift request date.'])
@@ -521,6 +522,11 @@ class PatchAnalysisTest(MockTestCase):
             self.assertEqual(info['uplift_accepted'], True)
             self.assertEqual(info['response_delta'], timedelta(0))
 
+        # Multiple requests in the same bug, one accepted, one rejected.
+        try:
+            info = patchanalysis.uplift_info(1229760, 'release')
+        except Exception as e:
+            self.assertEqual(str(e), 'Uplift either accepted or rejected.')
 
 if __name__ == '__main__':
     unittest.main()
