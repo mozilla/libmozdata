@@ -431,6 +431,39 @@ class ProductVersions(Socorro):
 
         return info
 
+    @staticmethod
+    def get_info_from_major(major_numbers, product='Firefox', active=True):
+        """Get information for a given channel and major number version
+
+        Args:
+            major_numbers (dict): a dictionary channel->major_number_version
+            product (Optional[str]): the product to use, by default 'Firefox'
+            active (Optional[bool]): True for actives versions
+
+        Returns:
+            dict: version info
+        """
+        def handler(json, data, majors=major_numbers):
+            if json['total']:
+                ffs = json['hits']
+                for ff in ffs:
+                    build_type = ff['build_type'].lower()
+                    if build_type in majors:
+                        version = ff['version']  # 45.x
+                        version_n = ProductVersions.__get_version(version)
+                        if version_n == majors[build_type]:
+                            info = {'version': version,
+                                    'throttle': ff['throttle'],
+                                    'start_date': ff['start_date'],
+                                    'end_date': ff['end_date']}
+                            data[build_type].append(info)
+
+        data = {chan: [] for chan in major_numbers.iterkeys()}
+        ProductVersions(params={'active': active,
+                                'product': product},
+                        handler=handler, handlerdata=data).wait()
+        return data
+
 
 class TCBS(Socorro):
     """TCBS: https://crash-stats.mozilla.com/api/#TCBS
