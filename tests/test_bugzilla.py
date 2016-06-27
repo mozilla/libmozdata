@@ -328,6 +328,22 @@ class User(unittest.TestCase):
         self.assertEqual(user['real_name'], 'Nobody; OK to take it and work on it')
         self.assertEqual(user, user_data)
 
+    def test_get_user_include_fields(self):
+        user = {}
+        user_data = {}
+
+        def user_handler(u, data):
+            user.update(u)
+            data.update(u)
+
+        bugzilla.BugzillaUser(user_names='nobody@mozilla.org', include_fields=['email', 'real_name'], user_handler=user_handler, user_data=user_data).wait()
+
+        self.assertEqual(user['email'], 'nobody@mozilla.org')
+        self.assertEqual(user['real_name'], 'Nobody; OK to take it and work on it')
+        self.assertNotIn('name', user)
+        self.assertNotIn('id', user)
+        self.assertEqual(user, user_data)
+
     def test_get_user_no_data(self):
         user = {}
 
