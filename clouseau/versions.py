@@ -39,10 +39,17 @@ def __getVersions():
 
     aurora = data['FIREFOX_AURORA']
     nightly = '%d.0a1' % (__get_major(aurora) + 1)
+    esr = data['FIREFOX_ESR_NEXT']
+    if not esr:
+        esr = data['FIREFOX_ESR']
+    if esr.endswith('esr'):
+        esr = esr[:-3]
+
     return {'release': data['LATEST_FIREFOX_VERSION'],
             'beta': data['LATEST_FIREFOX_RELEASED_DEVEL_VERSION'],
             'aurora': str(aurora),
-            'nightly': nightly}
+            'nightly': nightly,
+            'esr': esr}
 
 
 def __getVersionDates():
