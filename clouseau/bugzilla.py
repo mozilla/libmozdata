@@ -77,13 +77,14 @@ class Bugzilla(Connection):
                 ids = self.__get_bugs_list()
 
             url = Bugzilla.API_URL + '/'
+            header = self.get_header()
             for _ids in Connection.chunks(ids):
                 first_id = _ids[0]
                 if len(_ids) >= 2:
                     data['ids'] = _ids[1:]
                 elif 'ids' in data:
                     del data['ids']
-                self.session.put(url + first_id, json=data)
+                self.session.put(url + first_id, json=data, headers=header)
 
     def get_data(self):
         """Collect the data
@@ -124,11 +125,12 @@ class Bugzilla(Connection):
             r.result()
 
     @staticmethod
-    def follow_dup(bugids):
+    def follow_dup(bugids, only_final=True):
         """Follow the duplicated bugs
 
         Args:
             bugids (List[str]): list of bug ids
+            only_final (bool): if True only the final bug is returned else all the chain
 
         Returns:
             dict: each bug in entry is mapped to the last bug in the duplicate chain (None if there's no dup and 'cycle' if a cycle is detected)
@@ -151,8 +153,7 @@ class Bugzilla(Connection):
         def bughandler2(bug, data):
             if bug['resolution'] == 'DUPLICATE':
                 bugid = str(bug['id'])
-                for _id in dup.keys():
-                    dupid = dup[_id]
+                for _id, dupid in dup.items():
                     if dupid and dupid[-1] == bugid:
                         dupeofid = str(bug['dupe_of'])
                         if dupeofid == _id or dupeofid in dupid:
@@ -170,9 +171,9 @@ class Bugzilla(Connection):
             bz.got_data = False
             bz.get_data().wait_bugs()
 
-        for k in dup.keys():
-            v = dup[k]
-            dup[k] = v[-1] if v else None
+        if only_final:
+            for k, v in dup.items():
+                dup[k] = v[-1] if v else None
 
         return dup
 
@@ -359,17 +360,20 @@ class Bugzilla(Connection):
         if res.status_code == 200:
             json = res.json()
             if 'bugs' in json and json['bugs']:
-                history = json['bugs'][0]
-                self.historyhandler(history, self.historydata)
+                for h in json['bugs']:
+                    self.historyhandler(h, self.historydata)
 
     def __get_history(self):
         """Get the bug history
         """
         url = Bugzilla.API_URL + '/%s/history'
         header = self.get_header()
-        for bugid in self.bugids:
-            self.history_results.append(self.session.get(url % bugid,
+        for _bugids in Connection.chunks(self.bugids):
+            first = _bugids[0]
+            remainder = _bugids[1:] if len(_bugids) >= 2 else []
+            self.history_results.append(self.session.get(url % first,
                                                          headers=header,
+                                                         params={'ids': remainder},
                                                          verify=True,
                                                          timeout=self.TIMEOUT,
                                                          background_callback=self.__history_cb))
@@ -390,16 +394,18 @@ class Bugzilla(Connection):
                         if isinstance(key, six.string_types) and key.isdigit():
                             comments = bugs[key]
                             self.commenthandler(comments, key, self.commentdata)
-                            break
 
     def __get_comment(self):
         """Get the bug comment
         """
         url = Bugzilla.API_URL + '/%s/comment'
         header = self.get_header()
-        for bugid in self.bugids:
-            self.comment_results.append(self.session.get(url % bugid,
+        for _bugids in Connection.chunks(self.bugids):
+            first = _bugids[0]
+            remainder = _bugids[1:] if len(_bugids) >= 2 else []
+            self.comment_results.append(self.session.get(url % first,
                                                          headers=header,
+                                                         params={'ids': remainder},
                                                          verify=True,
                                                          timeout=self.TIMEOUT,
                                                          background_callback=self.__comment_cb))
