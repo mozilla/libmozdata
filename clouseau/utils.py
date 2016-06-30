@@ -189,3 +189,7 @@ def rate(x, y):
         float: x / y or Nan if y == 0
     """
     return float(x) / float(y) if y else float('nan')
+
+
+def get_guttenberg_death():
+    return get_date_ymd('1468-02-03T00:00:00Z')
