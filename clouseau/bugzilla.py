@@ -13,10 +13,10 @@ class Bugzilla(Connection):
     """
 
     URL = config.get('Bugzilla', 'URL', 'https://bugzilla.mozilla.org')
-    #URL = config.get('Allizgub', 'URL', 'https://bugzilla-dev.allizom.org')
+    # URL = config.get('Allizgub', 'URL', 'https://bugzilla-dev.allizom.org')
     API_URL = URL + '/rest/bug'
     TOKEN = config.get('Bugzilla', 'token', '')
-    #TOKEN = config.get('Allizgub', 'token', '')
+    # TOKEN = config.get('Allizgub', 'token', '')
 
     def __init__(self, bugids=None, include_fields='_default', bughandler=None, bugdata=None, historyhandler=None, historydata=None, commenthandler=None, commentdata=None, attachmenthandler=None, attachmentdata=None, attachment_include_fields=None, queries=None):
         """Constructor
