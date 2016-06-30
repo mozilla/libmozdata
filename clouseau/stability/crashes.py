@@ -16,6 +16,9 @@ import clouseau.versions
 
 v = clouseau.versions.get(base=True)
 
+# http://bugs.python.org/issue7980
+datetime.strptime('', '')
+
 
 def __trend_handler(default_trend, json, data):
     for facets in json['facets']['histogram_date']:
