@@ -801,16 +801,19 @@ class Bugs(Socorro):
                 for hit in json['hits']:
                     signature = hit['signature']
                     if signature in data:
-                        data[signature].append(hit['id'])
+                        data[signature].add(hit['id'])
 
         if isinstance(signatures, six.string_types):
-            data = {signatures: []}
+            data = {signatures: set()}
             Bugs(params={'signatures': signatures}, handler=default_handler, handlerdata=data).wait()
         else:
-            data = {s: [] for s in signatures}
+            data = {s: set() for s in signatures}
             queries = []
             for sgns in Connection.chunks(signatures, 10):
                 queries.append(Query(Bugs.URL, {'signatures': sgns}, default_handler, data))
             Bugs(queries=queries).wait()
+
+        for k, v in data.items():
+            data[k] = list(v)
 
         return data
