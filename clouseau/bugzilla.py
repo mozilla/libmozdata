@@ -234,6 +234,24 @@ class Bugzilla(Connection):
 
         return results
 
+    @staticmethod
+    def remove_private_bugs(bugids):
+        """Remove private bugs from the list
+
+        Args:
+            bugids (list): list of bug ids
+
+        Returns:
+            (list): list of accessible bugs
+        """
+        def bughandler(bug, data):
+            data.append(str(bug['id']))
+
+        data = []
+        Bugzilla(bugids, include_fields=['id'], bughandler=bughandler, bugdata=data).wait()
+
+        return data
+
     def __is_bugid(self):
         """Check if the first bugid is a bug id or a search query
 
@@ -368,7 +386,9 @@ class Bugzilla(Connection):
         """
         url = Bugzilla.API_URL + '/%s/history'
         header = self.get_header()
-        for _bugids in Connection.chunks(self.bugids):
+        # TODO: remove next line after the fix of bug 1283392
+        bugids = Bugzilla.remove_private_bugs(self.bugids)
+        for _bugids in Connection.chunks(bugids):
             first = _bugids[0]
             remainder = _bugids[1:] if len(_bugids) >= 2 else []
             self.history_results.append(self.session.get(url % first,
@@ -400,7 +420,9 @@ class Bugzilla(Connection):
         """
         url = Bugzilla.API_URL + '/%s/comment'
         header = self.get_header()
-        for _bugids in Connection.chunks(self.bugids):
+        # TODO: remove next line after the fix of bug 1283392
+        bugids = Bugzilla.remove_private_bugs(self.bugids)
+        for _bugids in Connection.chunks(bugids):
             first = _bugids[0]
             remainder = _bugids[1:] if len(_bugids) >= 2 else []
             self.comment_results.append(self.session.get(url % first,
