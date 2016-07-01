@@ -79,6 +79,19 @@ def __get_bugs_info(bugids):
     return data['bugs']
 
 
+def get_bug_with_one_signature(bugids):
+    def bug_handler(bug, data):
+        signatures = bug.get('cf_crash_signature', None)
+        if signatures and '\r\n' not in signatures:
+            # we should have only one signature
+            data.add(bug['id'])
+
+    data = set()
+    Bugzilla(bugids=bugids, include_fields=['id', 'cf_crash_signature'], bughandler=bug_handler, bugdata=data).wait()
+
+    return data
+
+
 def get_last_bug(bugids, bugsinfo, min_date=None):
     if not bugids:
         return None
@@ -153,7 +166,7 @@ def __analyze(signatures, status_flags):
     return result
 
 
-def get(product='Firefox', limit=1000):
+def get(product='Firefox', limit=1000, verbose=False):
     """Get crashes info
 
     Args:
@@ -190,8 +203,9 @@ def get(product='Firefox', limit=1000):
             if d < start_date_by_channel[chan]:
                 start_date_by_channel[chan] = d
 
-    # print 'Versions: %s' % (', '.join(all_versions))
-    # print 'Start dates:', start_date_by_channel
+    if verbose:
+        print('Versions: %s' % ', '.join(all_versions))
+        print('Start dates: %s' % start_date_by_channel)
 
     start_date = utils.get_date_str(start_date)
     end_date = utils.get_date('today')
@@ -228,12 +242,14 @@ def get(product='Firefox', limit=1000):
                                 '_results_number': 0},
                         handler=handler_ss, handlerdata=signatures).wait()
 
-    # print 'Collected signatures:', len(signatures)
+    if verbose:
+        print('Collected signatures: %d' % len(signatures))
 
     # get the bugs for each signatures
     bugs_by_signature = socorro.Bugs.get_bugs(signatures.keys())
 
-    # print 'Collected bugs in Socorro: Ok'
+    if verbose:
+        print('Collected bugs in Socorro: Ok')
 
     # we remove dup bugs
     # for example if we've {1,2,3,4,5} and if 2 is a dup of 5 then the set will be reduced to {1,3,4,5}
@@ -262,8 +278,14 @@ def get(product='Firefox', limit=1000):
         bugs_count += len(diff)
         bugs = bugs.union(diff)
 
-    # print 'Remove duplicates: Ok'
-    # print 'Bugs to analyze: %d' % bugs_count
+    if verbose:
+        print('Remove duplicates: Ok')
+        print('Bugs to analyze: %d' % bugs_count)
+
+    # TODO: for now we remove the bugs with several signatures
+    #       we should handle the different possible cases in a v2
+    #       e.g. foo@1234, foo@5678, ...
+    bugs = get_bug_with_one_signature(bugs)
 
     # we get the "better" bug where to update the info
     bugs_history_info = __get_bugs_info(bugs)
@@ -275,7 +297,8 @@ def get(product='Firefox', limit=1000):
         info['bugs'] = v
         bugs.add(info['selected_bug'])
 
-    # print 'Collected last bugs: ', len(bugs)
+    if verbose:
+        print('Collected last bugs: %d' % len(bugs))
 
     # get bug info
     include_fields = ['status', 'id', 'cf_crash_signature']
@@ -296,7 +319,8 @@ def get(product='Firefox', limit=1000):
 
     Bugzilla(list(bugs), include_fields=include_fields, bughandler=bug_handler, bugdata=bug_info).get_data().wait()
 
-    # print 'Collected bug info: Ok'
+    if verbose:
+        print('Collected bug info: Ok')
 
     for info in signatures.values():
         bug = info['selected_bug']
@@ -308,7 +332,8 @@ def get(product='Firefox', limit=1000):
 
     analyzis = __analyze(signatures, status_flags)
 
-    # print 'Analysis: Ok\n'
+    if verbose:
+        print('Analysis: Ok\n')
 
     return {'status_flags': status_flags, 'signatures': analyzis}
 
@@ -370,9 +395,10 @@ if __name__ == "__main__":
     parser.add_argument('-l', '--limit', action='store', default=1000, type=int, help='the max number of signatures to get')
     parser.add_argument('-o', '--output', action='store', help='output file (html)')
     parser.add_argument('-u', '--update', action='store_true', help='update Bugzilla')
+    parser.add_argument('-v', '--verbose', action='store_true', help='verbose mode')
     args = parser.parse_args()
 
-    info = get(product=args.product, limit=args.limit)
+    info = get(product=args.product, limit=args.limit, verbose=args.verbose)
 
     if args.output:
         to_html(args.output, info)
