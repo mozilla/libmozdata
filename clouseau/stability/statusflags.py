@@ -3,12 +3,21 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import argparse
+import re
+import functools
+from dateutil.relativedelta import relativedelta
 from pprint import pprint
 from requests.utils import quote
 import clouseau.socorro as socorro
 import clouseau.utils as utils
 from clouseau.bugzilla import Bugzilla
 import clouseau.versions
+
+
+args_pattern = re.compile('\([^\)]*\)')
+template_pattern = re.compile('<[^>]*>')
+dll_pattern = re.compile('([^@]+)@0x[a-fA-F0-9]+')
+extra_pattern = re.compile('[0-9]+|\.|-')
 
 
 def __get_bugs_info(bugids):
@@ -79,11 +88,95 @@ def __get_bugs_info(bugids):
     return data['bugs']
 
 
+def __foo_at_address(signature):
+    # Simplify foo.dll@0x1234 to foo.dll
+    m = dll_pattern.match(signature)
+    if m:
+        lib = m.group(1)
+
+        # we remove numbers, dot, dash
+        lib = extra_pattern.sub('', lib)
+        lib = lib.lower()
+
+        return lib
+    else:
+        return signature
+
+
+def __foo_args(signature):
+    # Simplify foo<A>(T, U) or foo or foo<B>(V) ... to foo
+    signature = args_pattern.sub('', signature)
+    signature = template_pattern.sub('', signature)
+
+    return signature
+
+
+def __name(names, signature):
+    return '' if signature in names else signature
+
+
+def __const(signature):
+    return signature.replace('const ', '').replace(' const', '')
+
+
+def __namespace(signature):
+    if '|' not in signature and '::' in signature:
+        return signature.split('::')[-1]
+
+    return signature
+
+
+def __is_same_signatures(signatures, simplifiers):
+    # Check of the signatures are the same
+    s = set()
+    for signature in filter(None, signatures):
+        signature = map(lambda s: s.strip(' \t'), signature.split('|'))
+        for simplifier in simplifiers:
+            signature = map(lambda s: simplifier(s), signature)
+        signature = '|'.join(filter(None, signature))
+        if signature:
+            s.add(signature)
+
+    n = len(s)
+    if n in [0, 1]:
+        return True
+    elif n == 2:
+        s = map(lambda sgn: __namespace(sgn), s)
+        return s[0] == s[1]
+    else:
+        return False
+
+
 def get_bug_with_one_signature(bugids):
-    def bug_handler(bug, data):
+    bad = []
+
+    def bug_handler(bug, data, bad=bad):
         signatures = bug.get('cf_crash_signature', None)
-        if signatures and '\r\n' not in signatures:
-            # we should have only one signature
+        if signatures:
+            if '\r\n' not in signatures:
+                # we should have only one signature
+                data.add(bug['id'])
+            else:
+                if '[@' in signatures:
+                    signatures = map(lambda s: s.strip(' \t\r\n'), signatures.split('[@'))
+                    signatures = map(lambda s: s[:-1].strip(' \t\r\n'), filter(None, signatures))
+
+                    if __is_same_signatures(signatures, [functools.partial(__name, ['@0x0',
+                                                                                    'F1398665248_____________________________',
+                                                                                    'unknown',
+                                                                                    'OOM',
+                                                                                    'hang',
+                                                                                    'small',
+                                                                                    '_purecall',
+                                                                                    'je_free',
+                                                                                    'large']),
+                                                         __foo_at_address,
+                                                         __foo_args,
+                                                         __const]):
+                        data.add(bug['id'])
+                    else:
+                        bad.append(signatures)
+        else:
             data.add(bug['id'])
 
     data = set()
@@ -119,13 +212,15 @@ def get_last_bug(bugids, bugsinfo, min_date=None):
                     i[0] = bugid
                     i[1] = info['last_change']
 
+    one_year_ago = utils.get_date_ymd('today') - relativedelta(years=1)
+
     if lasts['resolved-fixed-patched'][1] >= min_date:  # We've a patch in the last days
         return lasts['resolved-fixed-patched'][0]
     elif lasts['resolved-fixed-unpatched'][1] >= min_date:  # The bug has been fixed without a patch (probably a side effect)
         return lasts['resolved-fixed-unpatched'][0]
     elif lasts['resolved-unfixed'][1] >= min_date:  # The bug has been resolved (not fixed)
         return lasts['resolved-unfixed'][0]
-    elif lasts['unresolved-assigned'][0]:  # We take the last touched open and assigned bug
+    elif lasts['unresolved-assigned'][1] >= one_year_ago:  # We take the last touched open and assigned bug
         return lasts['unresolved-assigned'][0]
     elif lasts['unresolved-unassigned'][0]:  # We take the last touched open and unassigned bug
         return lasts['unresolved-unassigned'][0]
@@ -289,16 +384,34 @@ def get(product='Firefox', limit=1000, verbose=False):
 
     # we get the "better" bug where to update the info
     bugs_history_info = __get_bugs_info(bugs)
+
+    crashes_to_reopen = []
     bugs.clear()
     for s, v in bugs_by_signature.items():
         info = signatures[s]
-        d = min([start_date_by_channel[c] for c in info['affected_channels']])
-        info['selected_bug'] = get_last_bug(v, bugs_history_info, d)
+        if v:
+            affected_channels = info['affected_channels']
+            if len(affected_channels) >= 2 and 'esr' in affected_channels:
+                affected_channels = affected_channels.copy()
+                affected_channels.remove('esr')
+
+            d = min([start_date_by_channel[c] for c in affected_channels])
+            bug_to_touch = get_last_bug(v, bugs_history_info, d)
+            if not bug_to_touch:
+                crashes_to_reopen.append(s)
+        else:
+            bug_to_touch = None
+
+        info['selected_bug'] = bug_to_touch
         info['bugs'] = v
-        bugs.add(info['selected_bug'])
+        if bug_to_touch:
+            bugs.add(bug_to_touch)
 
     if verbose:
         print('Collected last bugs: %d' % len(bugs))
+        # if crashes_to_reopen:
+        #     print('Crashes to reopen:')
+        #     pprint(crashes_to_reopen)
 
     # get bug info
     include_fields = ['status', 'id', 'cf_crash_signature']
@@ -388,6 +501,7 @@ def to_html(filename, info):
                     Out.write(')&nbsp;')
                 Out.write(', '.join(i['affected']) + '<br>\n')
         Out.write('</body>\n</html>\n')
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Update status flags in Bugzilla')
