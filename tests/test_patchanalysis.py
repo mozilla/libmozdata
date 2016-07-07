@@ -527,7 +527,7 @@ class PatchAnalysisTest(MockTestCase):
 
         # Multiple requests in the same bug, one accepted, one rejected.
         try:
-            info = patchanalysis.uplift_info(1229760, 'release')
+            info = patchanalysis.uplift_info(1283017, 'aurora')
         except Exception as e:
             self.assertEqual(str(e), 'Uplift either accepted or rejected.')
 

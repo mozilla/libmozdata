@@ -453,8 +453,10 @@ def uplift_info(bug, channel):
     info = {}
     approval_flag = 'approval-mozilla-' + channel
 
-    uplift_accepted = sum(flag['name'] == approval_flag and flag['status'] == '+' for a in bug['attachments'] for flag in a['flags']) > 0
-    uplift_rejected = sum(flag['name'] == approval_flag and flag['status'] == '-' for a in bug['attachments'] for flag in a['flags']) > 0
+    app_flags = filter(lambda f: f['name'] == approval_flag, [flag for a in bug['attachments'] for flag in a['flags']])
+    status = [flag['status'] for flag in app_flags]
+    uplift_accepted = any(filter(lambda s: s == '+', status))
+    uplift_rejected = any(filter(lambda s: s == '-', status))
 
     assert uplift_accepted != uplift_rejected, 'Uplift either accepted or rejected.'
 
