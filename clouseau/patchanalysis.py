@@ -451,28 +451,25 @@ def uplift_info(bug, channel):
         Bugzilla(bug_id, INCLUDE_FIELDS, bughandler=bughandler, commenthandler=commenthandler, historyhandler=historyhandler, attachmenthandler=attachmenthandler, attachment_include_fields=ATTACHMENT_INCLUDE_FIELDS).get_data().wait()
 
     info = {}
+    approval_flag = 'approval-mozilla-' + channel
 
-    uplift_accepted = sum(flag['name'] == ('approval-mozilla-' + channel) and flag['status'] == '+' for a in bug['attachments'] for flag in a['flags']) > 0
-    uplift_rejected = sum(flag['name'] == ('approval-mozilla-' + channel) and flag['status'] == '-' for a in bug['attachments'] for flag in a['flags']) > 0
+    uplift_accepted = sum(flag['name'] == approval_flag and flag['status'] == '+' for a in bug['attachments'] for flag in a['flags']) > 0
+    uplift_rejected = sum(flag['name'] == approval_flag and flag['status'] == '-' for a in bug['attachments'] for flag in a['flags']) > 0
 
     assert uplift_accepted != uplift_rejected, 'Uplift either accepted or rejected.'
 
     info['uplift_accepted'] = uplift_accepted
 
     # Delta between uplift request and uplift acceptation/rejection.
-    uplift_request = Bugzilla.get_history_matches(bug['history'], {'added': 'approval-mozilla-' + channel + '?', 'field_name': 'flagtypes.name'})
+    uplift_request = Bugzilla.get_history_matches(bug['history'], {'added': approval_flag + '?', 'field_name': 'flagtypes.name'})
     if len(uplift_request):
         uplift_request_date = utils.get_date_ymd(uplift_request[-1]['when'])
     else:
         uplift_request_date = 0
         warnings.warn('Bug ' + str(bug['id']) + ' doesn\'t have a uplift request date.', stacklevel=2)
 
-    if uplift_accepted:
-        uplift_response = Bugzilla.get_history_matches(bug['history'], {'added': 'approval-mozilla-' + channel + '+', 'field_name': 'flagtypes.name'})
-    elif uplift_rejected:
-        uplift_response = Bugzilla.get_history_matches(bug['history'], {'added': 'approval-mozilla-' + channel + '-', 'field_name': 'flagtypes.name'})
-    else:
-        uplift_response = None
+    sign = '+' if uplift_accepted else '-'
+    uplift_response = Bugzilla.get_history_matches(bug['history'], {'added': approval_flag + sign, 'field_name': 'flagtypes.name'})
 
     if uplift_response:
         uplift_response_date = utils.get_date_ymd(uplift_response[-1]['when'])
