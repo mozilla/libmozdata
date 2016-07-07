@@ -4,3 +4,4 @@
 .coverage
 htmlcov/
 config.ini
+.ipynb_checkpoints/
