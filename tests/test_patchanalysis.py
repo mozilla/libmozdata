@@ -525,11 +525,19 @@ class PatchAnalysisTest(MockTestCase):
             self.assertEqual(info['uplift_accepted'], True)
             self.assertEqual(info['response_delta'], timedelta(0))
 
+        # Pending request.
+        with warnings.catch_warnings(record=True) as w:
+            info = patchanalysis.uplift_info(1283017, 'aurora')
+            self.assertEqual(info['landing_delta'], timedelta(-1, 65459))
+            self.assertEqual(info['release_delta'], timedelta(31, 73541))
+            self.assertEqual(info['uplift_accepted'], False)
+
         # Multiple requests in the same bug, one accepted, one rejected.
         try:
-            info = patchanalysis.uplift_info(1283017, 'aurora')
+            info = patchanalysis.uplift_info(1229760, 'release')
         except Exception as e:
             self.assertEqual(str(e), 'Uplift either accepted or rejected.')
+
 
 if __name__ == '__main__':
     unittest.main()

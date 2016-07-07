@@ -458,7 +458,7 @@ def uplift_info(bug, channel):
     uplift_accepted = any(filter(lambda s: s == '+', status))
     uplift_rejected = any(filter(lambda s: s == '-', status))
 
-    assert uplift_accepted != uplift_rejected, 'Uplift either accepted or rejected.'
+    assert not (uplift_accepted and uplift_rejected), 'Uplift either accepted or rejected.'
 
     info['uplift_accepted'] = uplift_accepted
 
