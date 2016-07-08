@@ -126,16 +126,31 @@ def get(channel, date, product='Firefox', duration=11, tc_limit=50, crash_type='
 
     # TODO: too many requests... should be improved with chunks
     bugs = {}
+    # TODO: Use regexp, when the Bugzilla bug that prevents them from working will be fixed.
     base = {
+        'j_top': 'OR',
+        'o1': 'substring',
         'f1': 'cf_crash_signature',
         'v1': None,
-        'o1': 'substring',
+        'o2': 'substring',
+        'f2': 'cf_crash_signature',
+        'v2': None,
+        'o3': 'substring',
+        'f3': 'cf_crash_signature',
+        'v3': None,
+        'o4': 'substring',
+        'f4': 'cf_crash_signature',
+        'v4': None,
         'include_fields': bug_flags
     }
+
     queries = []
     for sgn in signatures.keys():
         cparams = base.copy()
-        cparams['v1'] = sgn
+        cparams['v1'] = '[@' + sgn + ']'
+        cparams['v2'] = '[@ ' + sgn + ' ]'
+        cparams['v3'] = '[@ ' + sgn + ']'
+        cparams['v4'] = '[@' + sgn + ' ]'
         bugs[sgn] = []
         queries.append(Query(Bugzilla.API_URL, cparams, __bug_handler, bugs[sgn]))
     res_bugs = Bugzilla(queries=queries)
