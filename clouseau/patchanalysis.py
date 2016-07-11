@@ -142,6 +142,17 @@ def author_match(author_mercurial, author_real_name, bugzilla_names, cc_list):
 def _is_test(path):
     return 'test' in path and not path.endswith(('ini', 'list', 'in', 'py', 'json', 'manifest'))
 
+def get_user_details(username):
+
+    output = {}
+    def user_handler(user):
+        output.update(user)
+
+    BugzillaUser(username, user_handler=user_handler).wait()
+
+    return output
+
+
 
 hginfos = weakref.WeakValueDictionary()
 
@@ -229,6 +240,7 @@ def bug_analysis(bug):
             'id', 'flags', 'depends_on', 'keywords', 'blocks', 'whiteboard', 'resolution', 'status',
             'url', 'version', 'summary', 'priority', 'product', 'component', 'severity',
             'platform', 'op_sys', 'cc',
+            'assigned_to', 'creator',
         ]
 
         ATTACHMENT_INCLUDE_FIELDS = [
@@ -244,6 +256,21 @@ def bug_analysis(bug):
         'comments': len(bug['comments']),
         'r-ed_patches': sum((a['is_patch'] == 1 or a['content_type'] == 'text/x-review-board-request') and sum(flag['name'] == 'review' and flag['status'] == '-' for flag in a['flags']) > 0 for a in bug['attachments']),
     }
+
+    # Store bug creator & assignee
+    assignee = bug.get('assigned_to_detail')
+    creator = bug.get('creator_detail')
+
+    # Search uplift requester & raw request from comment
+    uplift_requester = None
+    uplift_request = None
+    uplift_pattern = re.compile('Approval Request Comment')
+    for comment in bug['comments']:
+        for match in uplift_pattern.finditer(comment['text']):
+            # Use first one only
+            uplift_requester = get_user_details(comment['author'])
+            uplift_request = comment
+            break
 
     # Get all reviewers and authors, we will match them with the changeset description (r=XXX).
     bugzilla_reviewers = set()
@@ -350,6 +377,7 @@ def bug_analysis(bug):
                 'reviewers': reviewers,
             }
 
+
     # Remove backed out changesets
     for rev in backed_out_revs:
         if rev not in revs:
@@ -419,6 +447,18 @@ def bug_analysis(bug):
     # TODO: Add number of days since the landing (to check if the patch baked a little on nightly or not).
 
     info['backout_num'] = len(backout_comments)
+
+    # Add users
+    info['users'] = {
+        'creator' : creator,
+        'assignee' : assignee,
+        'uplift_requester' : uplift_requester,
+        'authors' : bugzilla_authors,
+        'reviewers' : bugzilla_reviewers,
+    }
+
+    # Add uplift request
+    info['uplift_request'] = uplift_request
 
     return info
 

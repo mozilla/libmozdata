@@ -51,6 +51,12 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['developer_familiarity_last_3_releases'], 1)
         self.assertEqual(info['reviewer_familiarity_overall'], 0)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 0)
+        self.assertIsNone(info['uplift_request'])
+        self.assertIsNone(info['users']['uplift_requester'])
+        self.assertIn('shaver@mozilla.org', info['users']['reviewers'])
+        self.assertIn('gerv@mozilla.org', info['users']['reviewers'])
+        self.assertEqual(info['users']['assignee']['email'], 'philringnalda@gmail.com')
+
         self.assertGreater(info['crashes'], 0)
 
         bug = {}
@@ -132,8 +138,8 @@ class PatchAnalysisTest(MockTestCase):
         # Landing comment with long revision (Entire hash instead of first 12 characters).
         info = patchanalysis.bug_analysis(384458)
         self.assertEqual(info['backout_num'], 1)
-        self.assertEqual(info['blocks'], 5)
-        self.assertEqual(info['depends_on'], 43)
+        self.assertEqual(info['blocks'], 6)
+        self.assertEqual(info['depends_on'], 46)
         self.assertEqual(info['comments'], 102)
         self.assertEqual(info['changes_size'], 2752)
         self.assertEqual(info['test_changes_size'], 462)
@@ -170,7 +176,7 @@ class PatchAnalysisTest(MockTestCase):
 
         with warnings.catch_warnings(record=True) as w:
             info = patchanalysis.bug_analysis(1276850)
-            self.assertWarnings(w, ['da10eecd0e76 looks like a backout, but we couldn\'t find which revision was backed out.', 'Author bugmail.mozilla@staktrace.com is not in the list of authors on Bugzilla.'])
+            self.assertWarnings(w, ['da10eecd0e76 looks like a backout, but we couldn\'t find which revision was backed out.', 'Author bugmail@mozilla.staktrace.com is not in the list of authors on Bugzilla.'])
             self.assertEqual(info['backout_num'], 0)
             self.assertEqual(info['blocks'], 1)
             self.assertEqual(info['depends_on'], 0)
@@ -507,6 +513,15 @@ class PatchAnalysisTest(MockTestCase):
 
         # Author in mercurial doesn't use the same format as usual ("Full Name email" instead of "Full Name <email>").
         info = patchanalysis.bug_analysis(1277522)
+
+        # Check uplift request
+        info = patchanalysis.bug_analysis(1230065)
+
+        self.assertIsNotNone(info['uplift_request'])
+        self.assertEqual(info['uplift_request']['id'], 11222288)
+        self.assertIsNotNone(info['users']['uplift_requester'])
+        self.assertEqual(info['users']['uplift_requester']['email'], 'karlt@mozbugz.karlt.net')
+
 
     @responses.activate
     def test_uplift_info(self):
