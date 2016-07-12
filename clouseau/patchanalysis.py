@@ -143,6 +143,17 @@ def _is_test(path):
     return 'test' in path and not path.endswith(('ini', 'list', 'in', 'py', 'json', 'manifest'))
 
 
+def get_user_details(username):
+    output = {}
+
+    def user_handler(user):
+        output.update(user)
+
+    BugzillaUser(username, user_handler=user_handler).wait()
+
+    return output
+
+
 hginfos = weakref.WeakValueDictionary()
 
 
@@ -211,7 +222,7 @@ MOZREVIEW_URL_PATTERN = 'https://reviewboard.mozilla.org/r/([0-9]+)/'
 
 
 # TODO: Consider feedback+ and feedback- as review+ and review-
-def bug_analysis(bug):
+def bug_analysis(bug, uplift_channel='release'):
     if isinstance(bug, numbers.Number):
         bug_id = bug
         bug = {}
@@ -225,17 +236,21 @@ def bug_analysis(bug):
         def attachmenthandler(attachments, bugid, data):
             bug['attachments'] = attachments
 
+        def historyhandler(found_bug, data):
+            bug['history'] = found_bug['history']
+
         INCLUDE_FIELDS = [
             'id', 'flags', 'depends_on', 'keywords', 'blocks', 'whiteboard', 'resolution', 'status',
             'url', 'version', 'summary', 'priority', 'product', 'component', 'severity',
             'platform', 'op_sys', 'cc',
+            'assigned_to', 'creator',
         ]
 
         ATTACHMENT_INCLUDE_FIELDS = [
             'flags', 'is_patch', 'creator', 'content_type',
         ]
 
-        Bugzilla(bug_id, INCLUDE_FIELDS, bughandler=bughandler, commenthandler=commenthandler, attachmenthandler=attachmenthandler, attachment_include_fields=ATTACHMENT_INCLUDE_FIELDS).get_data().wait()
+        Bugzilla(bug_id, INCLUDE_FIELDS, bughandler=bughandler, commenthandler=commenthandler, attachmenthandler=attachmenthandler, historyhandler=historyhandler, attachment_include_fields=ATTACHMENT_INCLUDE_FIELDS).get_data().wait()
 
     info = {
         'backout_num': 0,
@@ -244,6 +259,10 @@ def bug_analysis(bug):
         'comments': len(bug['comments']),
         'r-ed_patches': sum((a['is_patch'] == 1 or a['content_type'] == 'text/x-review-board-request') and sum(flag['name'] == 'review' and flag['status'] == '-' for flag in a['flags']) > 0 for a in bug['attachments']),
     }
+
+    # Store bug creator & assignee
+    assignee = bug.get('assigned_to_detail')
+    creator = bug.get('creator_detail')
 
     # Get all reviewers and authors, we will match them with the changeset description (r=XXX).
     bugzilla_reviewers = set()
@@ -420,6 +439,17 @@ def bug_analysis(bug):
 
     info['backout_num'] = len(backout_comments)
 
+    # Add users
+    info['users'] = {
+        'creator': creator,
+        'assignee': assignee,
+        'authors': bugzilla_authors,
+        'reviewers': bugzilla_reviewers,
+    }
+
+    # Add uplift request
+    info.update(uplift_info(bug, uplift_channel))
+
     return info
 
 
@@ -450,7 +480,15 @@ def uplift_info(bug, channel):
 
         Bugzilla(bug_id, INCLUDE_FIELDS, bughandler=bughandler, commenthandler=commenthandler, historyhandler=historyhandler, attachmenthandler=attachmenthandler, attachment_include_fields=ATTACHMENT_INCLUDE_FIELDS).get_data().wait()
 
-    info = {}
+    # Default structure
+    info = {
+        'uplift_accepted': False,
+        'uplift_comment': None,
+        'uplift_author': None,
+        'landing_delta': timedelta(),
+        'response_delta': timedelta(),
+        'release_delta': timedelta(),
+    }
     approval_flag = 'approval-mozilla-' + channel
 
     app_flags = filter(lambda f: f['name'] == approval_flag, [flag for a in bug['attachments'] for flag in a['flags']])
@@ -464,6 +502,7 @@ def uplift_info(bug, channel):
 
     # Delta between uplift request and uplift acceptation/rejection.
     uplift_request = Bugzilla.get_history_matches(bug['history'], {'added': approval_flag + '?', 'field_name': 'flagtypes.name'})
+    uplift_pattern = re.compile('Approval Request Comment')
     if len(uplift_request):
         uplift_request_date = utils.get_date_ymd(uplift_request[-1]['when'])
     else:
@@ -479,6 +518,20 @@ def uplift_info(bug, channel):
             uplift_request_date = uplift_response_date
         info['response_delta'] = uplift_response_date - uplift_request_date
         assert info['response_delta'] >= timedelta()
+
+    # Search the uplift request comment
+    for comment in bug['comments']:
+        for match in uplift_pattern.finditer(comment['text']):
+            # Use first one only
+            info['uplift_author'] = get_user_details(comment['author'])
+            info['uplift_comment'] = comment
+            break
+        if info['uplift_comment'] and info['uplift_author']:
+            break
+
+    if uplift_request_date == 0:
+        # No deltas calculations
+        return info
 
     # Delta between uplift request and next merge date.
     release_date = versions.getCloserMajorRelease(uplift_request_date)[1]
