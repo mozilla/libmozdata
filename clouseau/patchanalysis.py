@@ -482,12 +482,12 @@ def uplift_info(bug, channel):
 
     # Default structure
     info = {
-        'uplift_accepted' : False,
-        'uplift_comment' : None,
-        'uplift_author' : None,
-        'landing_delta' : timedelta(),
-        'response_delta' : timedelta(),
-        'release_delta' : timedelta(),
+        'uplift_accepted': False,
+        'uplift_comment': None,
+        'uplift_author': None,
+        'landing_delta': timedelta(),
+        'response_delta': timedelta(),
+        'release_delta': timedelta(),
     }
     approval_flag = 'approval-mozilla-' + channel
 
