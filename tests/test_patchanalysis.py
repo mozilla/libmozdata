@@ -51,8 +51,6 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['developer_familiarity_last_3_releases'], 1)
         self.assertEqual(info['reviewer_familiarity_overall'], 0)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 0)
-        self.assertIsNone(info['uplift_request'])
-        self.assertIsNone(info['users']['uplift_requester'])
         self.assertIn('shaver@mozilla.org', info['users']['reviewers'])
         self.assertIn('gerv@mozilla.org', info['users']['reviewers'])
         self.assertEqual(info['users']['assignee']['email'], 'philringnalda@gmail.com')
@@ -67,10 +65,13 @@ class PatchAnalysisTest(MockTestCase):
         def commenthandler(found_bug, bugid, data):
             bug['comments'] = found_bug['comments']
 
+        def historyhandler(found_bug, data):
+            bug['history'] = found_bug['history']
+
         def attachmenthandler(attachments, bugid, data):
             bug['attachments'] = attachments
 
-        Bugzilla('id=547914', bughandler=bughandler, commenthandler=commenthandler, attachmenthandler=attachmenthandler).get_data().wait()
+        Bugzilla('id=547914', bughandler=bughandler, commenthandler=commenthandler, attachmenthandler=attachmenthandler, historyhandler=historyhandler).get_data().wait()
 
         info2 = patchanalysis.bug_analysis(bug)
         self.assertEqual(info2, info)
@@ -97,7 +98,7 @@ class PatchAnalysisTest(MockTestCase):
         # Reviewer's email doesn't start with his nick, but he's in CC list.
         with warnings.catch_warnings(record=True) as w:
             info = patchanalysis.bug_analysis(1271794)
-            self.assertWarnings(w, ['Revision d0ab0d508a24 was not found.', 'Revision 9f4983dfd881 was not found.'])
+            self.assertWarnings(w, ['Revision d0ab0d508a24 was not found.', 'Revision 9f4983dfd881 was not found.', 'Bug 1271794 doesn\'t have a uplift request date.'])
             self.assertEqual(info['backout_num'], 1)
             self.assertEqual(info['blocks'], 1)
             self.assertEqual(info['depends_on'], 2)
@@ -157,7 +158,7 @@ class PatchAnalysisTest(MockTestCase):
         # Author has a different name on Bugzilla and Mercurial and they don't use the email on Mercurial.
         with warnings.catch_warnings(record=True) as w:
             info = patchanalysis.bug_analysis(1220307)
-            self.assertWarnings(w, ['da10eecd0e76 looks like a backout, but we couldn\'t find which revision was backed out.', 'Revision da10eecd0e76 is related to another bug (1276850).'])
+            self.assertWarnings(w, ['da10eecd0e76 looks like a backout, but we couldn\'t find which revision was backed out.', 'Revision da10eecd0e76 is related to another bug (1276850).', 'Bug 1220307 doesn\'t have a uplift request date.'])
             self.assertEqual(info['backout_num'], 2)
             self.assertEqual(info['blocks'], 4)
             self.assertEqual(info['depends_on'], 1)
@@ -176,7 +177,7 @@ class PatchAnalysisTest(MockTestCase):
 
         with warnings.catch_warnings(record=True) as w:
             info = patchanalysis.bug_analysis(1276850)
-            self.assertWarnings(w, ['da10eecd0e76 looks like a backout, but we couldn\'t find which revision was backed out.', 'Author bugmail@mozilla.staktrace.com is not in the list of authors on Bugzilla.'])
+            self.assertWarnings(w, ['da10eecd0e76 looks like a backout, but we couldn\'t find which revision was backed out.', 'Author bugmail@mozilla.staktrace.com is not in the list of authors on Bugzilla.', 'Bug 1276850 doesn\'t have a uplift request date.'])
             self.assertEqual(info['backout_num'], 0)
             self.assertEqual(info['blocks'], 1)
             self.assertEqual(info['depends_on'], 0)
@@ -476,7 +477,7 @@ class PatchAnalysisTest(MockTestCase):
         # Bugzilla user is impossible to find from IRC handle.
         with warnings.catch_warnings(record=True) as w:
             info = patchanalysis.bug_analysis(700583)
-            self.assertWarnings(w, ['Reviewer jocheng@mozilla.com is not in the list of reviewers on Bugzilla.'])
+            self.assertWarnings(w, ['Reviewer jocheng@mozilla.com is not in the list of reviewers on Bugzilla.', 'Bug 700583 doesn\'t have a uplift request date.'])
 
         # IRC handle is name+surname
         info = patchanalysis.bug_analysis(701262)
@@ -517,11 +518,11 @@ class PatchAnalysisTest(MockTestCase):
         # Check uplift request
         info = patchanalysis.bug_analysis(1230065)
 
-        self.assertIsNotNone(info['uplift_request'])
-        self.assertEqual(info['uplift_request']['id'], 11222288)
-        self.assertIsNotNone(info['users']['uplift_requester'])
-        self.assertEqual(info['users']['uplift_requester']['email'], 'karlt@mozbugz.karlt.net')
-
+        self.assertIsNotNone(info['uplift_comment'])
+        self.assertEqual(len(info['uplift_comment']['text'].split('\n')), 11)
+        self.assertEqual(info['uplift_comment']['id'], 11222288)
+        self.assertIsNotNone(info['uplift_author'])
+        self.assertEqual(info['uplift_author']['email'], 'karlt@mozbugz.karlt.net')
 
     @responses.activate
     def test_uplift_info(self):
@@ -530,6 +531,9 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['release_delta'], timedelta(17, 19727))
         self.assertEqual(info['uplift_accepted'], False)
         self.assertEqual(info['response_delta'], timedelta(0, 843))
+        self.assertEqual(info['uplift_author']['email'], 'sunfish@mozilla.com')
+        self.assertEqual(info['uplift_comment']['id'], 7810070)
+        self.assertEqual(len(info['uplift_comment']['text'].split('\n')), 14)
 
         # Approved without request.
         with warnings.catch_warnings(record=True) as w:
@@ -539,6 +543,9 @@ class PatchAnalysisTest(MockTestCase):
             self.assertEqual(info['release_delta'], timedelta(33, 25145))
             self.assertEqual(info['uplift_accepted'], True)
             self.assertEqual(info['response_delta'], timedelta(0))
+            self.assertEqual(info['uplift_author']['email'], 'mark.finkle@gmail.com')
+            self.assertEqual(info['uplift_comment']['id'], 7292379)
+            self.assertEqual(len(info['uplift_comment']['text'].split('\n')), 9)
 
         # Pending request.
         with warnings.catch_warnings(record=True) as w:
@@ -546,6 +553,9 @@ class PatchAnalysisTest(MockTestCase):
             self.assertEqual(info['landing_delta'], timedelta(-1, 65459))
             self.assertEqual(info['release_delta'], timedelta(31, 73541))
             self.assertEqual(info['uplift_accepted'], False)
+            self.assertEqual(info['uplift_author']['email'], 'cyu@mozilla.com')
+            self.assertEqual(info['uplift_comment']['id'], 11516158)
+            self.assertEqual(len(info['uplift_comment']['text'].split('\n')), 9)
 
         # Multiple requests in the same bug, one accepted, one rejected.
         try:
