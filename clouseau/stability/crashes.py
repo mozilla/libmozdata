@@ -7,6 +7,7 @@ import json
 import six
 import functools
 from datetime import (datetime, timedelta)
+import os
 import clouseau.socorro as socorro
 import clouseau.utils as utils
 from clouseau.redash import Redash
@@ -239,6 +240,7 @@ def get(channel, date, product='Firefox', duration=11, tc_limit=50, crash_type='
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Track')
+    parser.add_argument('-o', '--output-directory', action='store', required=True, help='the output directory')
     parser.add_argument('-c', '--channels', action='store', nargs='+', default=['release', 'beta', 'aurora'], help='the channels')
     parser.add_argument('-d', '--date', action='store', default='yesterday', help='the end date')
     parser.add_argument('-D', '--duration', action='store', default=11, help='the duration')
@@ -250,5 +252,5 @@ if __name__ == "__main__":
         for startup in [False, True]:
             stats = get(channel, args.date, duration=int(args.duration), tc_limit=int(args.tclimit), startup=startup)
 
-            with open(channel + ('-startup' if startup else '') + '.json', 'w') as f:
+            with open(os.path.join(args.output_directory, channel + ('-startup' if startup else '') + '.json'), 'w') as f:
                 json.dump(stats, f, allow_nan=False)
