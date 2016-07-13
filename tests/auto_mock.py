@@ -7,6 +7,7 @@ import pickle
 import re
 import hashlib
 import logging
+import sys
 try:
     from urllib.parse import urlparse, parse_qsl
     from urllib.request import Request, urlopen
@@ -111,7 +112,11 @@ class MockTestCase(unittest.TestCase):
         if 'accept-encoding' in headers:
             del headers['accept-encoding']
 
-        real_req = Request(request.url, request.body, headers=headers, method=request.method)
+        # Method arg is not supported by Python 2
+        if sys.version_info >= (3, 0):
+            real_req = Request(request.url, request.body, headers=headers, method=request.method)
+        else:
+            real_req = Request(request.url, request.body, headers=headers)
         try:
             resp = urlopen(real_req)
         except HTTPError as e:
