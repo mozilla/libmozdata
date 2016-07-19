@@ -14,14 +14,14 @@ class Mercurial(Connection):
     HG_URL = config.get('Mercurial', 'URL', 'https://hg.mozilla.org')
     remote = HG_URL == 'https://hg.mozilla.org'
 
-    def __init__(self, queries, channel='nightly'):
+    def __init__(self, queries, channel='nightly', **kwargs):
         """Constructor
 
         Args:
             queries (List[Query]): queries to pass to mercurial server
             channel (Optional[str]): the channel, by default 'nightly'
         """
-        super(Mercurial, self).__init__(self.HG_URL, queries)
+        super(Mercurial, self).__init__(self.HG_URL, queries, **kwargs)
         self.channel = channel
 
     @staticmethod
@@ -61,7 +61,7 @@ class Revision(Mercurial):
     """Connection to get a revision
     """
 
-    def __init__(self, channel='nightly', params=None, handler=None, handlerdata=None, queries=None):
+    def __init__(self, channel='nightly', params=None, handler=None, handlerdata=None, queries=None, **kwargs):
         """Constructor
 
         Args:
@@ -72,9 +72,9 @@ class Revision(Mercurial):
             queries (List[Query]): queries to pass to mercurial server
         """
         if queries:
-            super(Revision, self).__init__(queries)
+            super(Revision, self).__init__(queries, **kwargs)
         else:
-            super(Revision, self).__init__(Query(Revision.get_url(channel), params, handler, handlerdata))
+            super(Revision, self).__init__(Query(Revision.get_url(channel), params, handler, handlerdata), **kwargs)
 
     @staticmethod
     def get_url(channel):
@@ -118,7 +118,7 @@ class RawRevision(Mercurial):
     """Connection to get a raw revision
     """
 
-    def __init__(self, channel='nightly', params=None, handler=None, queries=None):
+    def __init__(self, channel='nightly', params=None, handler=None, queries=None, **kwargs):
         """Constructor
 
         Args:
@@ -129,9 +129,9 @@ class RawRevision(Mercurial):
             queries (List[Query]): queries to pass to mercurial server
         """
         if queries:
-            super(RawRevision, self).__init__(queries)
+            super(RawRevision, self).__init__(queries, **kwargs)
         else:
-            super(RawRevision, self).__init__(Query(RawRevision.get_url(channel), params, handler))
+            super(RawRevision, self).__init__(Query(RawRevision.get_url(channel), params, handler), **kwargs)
 
     @staticmethod
     def get_url(channel):
@@ -170,7 +170,7 @@ class FileInfo(Mercurial):
     """Connection to get file info
     """
 
-    def __init__(self, channel='nightly', params=None, handler=None, handlerdata=None, queries=None):
+    def __init__(self, channel='nightly', params=None, handler=None, handlerdata=None, queries=None, **kwargs):
         """Constructor
 
         Args:
@@ -181,9 +181,9 @@ class FileInfo(Mercurial):
             queries (List[Query]): queries to pass to mercurial server
         """
         if queries:
-            super(FileInfo, self).__init__(queries)
+            super(FileInfo, self).__init__(queries, **kwargs)
         else:
-            super(FileInfo, self).__init__(Query(FileInfo.get_url(channel), params, handler, handlerdata))
+            super(FileInfo, self).__init__(Query(FileInfo.get_url(channel), params, handler, handlerdata), **kwargs)
 
     @staticmethod
     def get_url(channel):

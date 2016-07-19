@@ -23,13 +23,13 @@ class Socorro(Connection):
     API_URL = CRASH_STATS_URL + '/api'
     TOKEN = config.get('Socorro', 'token', '')
 
-    def __init__(self, queries):
+    def __init__(self, queries, **kwargs):
         """Constructor
 
         Args:
             queries (List[Query]): queries to pass to Socorro
         """
-        super(Socorro, self).__init__(self.CRASH_STATS_URL, queries=queries)
+        super(Socorro, self).__init__(self.CRASH_STATS_URL, queries=queries, **kwargs)
 
     def get_header(self):
         header = super(Socorro, self).get_header()
@@ -44,7 +44,7 @@ class SuperSearch(Socorro):
     URL = Socorro.API_URL + '/SuperSearch'
     URL_UNREDACTED = URL + 'Unredacted'
 
-    def __init__(self, params=None, handler=None, handlerdata=None, queries=None):
+    def __init__(self, params=None, handler=None, handlerdata=None, queries=None, **kwargs):
         """Constructor
 
         Args:
@@ -54,7 +54,7 @@ class SuperSearch(Socorro):
             queries (Optional[List[Query]]): queries to execute
         """
         if queries is not None:
-            super(SuperSearch, self).__init__(queries)
+            super(SuperSearch, self).__init__(queries, **kwargs)
         else:
             url = SuperSearch.URL
             unredacted = False
@@ -74,7 +74,7 @@ class SuperSearch(Socorro):
                         unredacted = True
                         break
 
-            super(SuperSearch, self).__init__(Query(url, params, handler, handlerdata))
+            super(SuperSearch, self).__init__(Query(url, params, handler, handlerdata), **kwargs)
 
     @staticmethod
     def get_search_date(start, end):
@@ -104,7 +104,7 @@ class ProcessedCrash(Socorro):
 
     URL = Socorro.API_URL + '/ProcessedCrash'
 
-    def __init__(self, params=None, handler=None, handlerdata=None, queries=None):
+    def __init__(self, params=None, handler=None, handlerdata=None, queries=None, **kwargs):
         """Constructor
 
         Args:
@@ -114,9 +114,9 @@ class ProcessedCrash(Socorro):
             queries (Optional[List[Query]]): queries to execute
         """
         if queries:
-            super(ProcessedCrash, self).__init__(queries)
+            super(ProcessedCrash, self).__init__(queries, **kwargs)
         else:
-            super(ProcessedCrash, self).__init__(Query(ProcessedCrash.URL, params, handler, handlerdata))
+            super(ProcessedCrash, self).__init__(Query(ProcessedCrash.URL, params, handler, handlerdata), **kwargs)
 
     @staticmethod
     def default_handler(json, data):
@@ -168,7 +168,7 @@ class Platforms(Socorro):
     URL = Socorro.API_URL + '/Platforms'
     __cached_platforms = None
 
-    def __init__(self, params=None, handler=None, handlerdata=None):
+    def __init__(self, params=None, handler=None, handlerdata=None, **kwargs):
         """Constructor
 
         Args:
@@ -177,7 +177,7 @@ class Platforms(Socorro):
             handlerdata (Optional): data used in second argument of the handler
             queries (Optional[List[Query]]): queries to execute
         """
-        super(Platforms, self).__init__(Query(Platforms.URL, params, handler, handlerdata))
+        super(Platforms, self).__init__(Query(Platforms.URL, params, handler, handlerdata), **kwargs)
 
     @staticmethod
     def get_cached_all():
@@ -221,7 +221,7 @@ class ProductVersions(Socorro):
     URL = Socorro.API_URL + '/ProductVersions'
     __cached_versions = {}
 
-    def __init__(self, params=None, handler=None, handlerdata=None):
+    def __init__(self, params=None, handler=None, handlerdata=None, **kwargs):
         """Constructor
 
         Args:
@@ -229,7 +229,7 @@ class ProductVersions(Socorro):
             handler (Optional[function]): handler to use with the result of the query
             handlerdata (Optional): data used in second argument of the handler
         """
-        super(ProductVersions, self).__init__(Query(ProductVersions.URL, params, handler, handlerdata))
+        super(ProductVersions, self).__init__(Query(ProductVersions.URL, params, handler, handlerdata), **kwargs)
 
     @staticmethod
     def get_cached_versions(product='Firefox'):
@@ -471,7 +471,7 @@ class TCBS(Socorro):
 
     URL = Socorro.API_URL + '/TCBS'
 
-    def __init__(self, params=None, handler=None, handlerdata=None, queries=None):
+    def __init__(self, params=None, handler=None, handlerdata=None, queries=None, **kwargs):
         """Constructor
 
         Args:
@@ -481,9 +481,9 @@ class TCBS(Socorro):
             queries (Optional[List[Query]]): queries to execute
         """
         if queries:
-            super(TCBS, self).__init__(queries)
+            super(TCBS, self).__init__(queries, **kwargs)
         else:
-            super(TCBS, self).__init__(Query(TCBS.URL, params, handler, handlerdata))
+            super(TCBS, self).__init__(Query(TCBS.URL, params, handler, handlerdata), **kwargs)
 
     @staticmethod
     def default_handler(json, data):
@@ -533,7 +533,7 @@ class SignatureTrend(Socorro):
 
     URL = Socorro.API_URL + '/SignatureTrend'
 
-    def __init__(self, params=None, handler=None, handlerdata=None, queries=None):
+    def __init__(self, params=None, handler=None, handlerdata=None, queries=None, **kwargs):
         """Constructor
 
         Args:
@@ -543,9 +543,9 @@ class SignatureTrend(Socorro):
             queries (Optional[List[Query]]): queries to execute
         """
         if queries:
-            super(SignatureTrend, self).__init__(queries)
+            super(SignatureTrend, self).__init__(queries, **kwargs)
         else:
-            super(SignatureTrend, self).__init__(Query(SignatureTrend.URL, params, handler, handlerdata))
+            super(SignatureTrend, self).__init__(Query(SignatureTrend.URL, params, handler, handlerdata), **kwargs)
 
     @staticmethod
     def default_handler(json, data):
@@ -610,7 +610,7 @@ class ADI(Socorro):
 
     URL = Socorro.API_URL + '/ADI'
 
-    def __init__(self, params=None, handler=None, handlerdata=None, queries=None):
+    def __init__(self, params=None, handler=None, handlerdata=None, queries=None, **kwargs):
         """Constructor
 
         Args:
@@ -620,9 +620,9 @@ class ADI(Socorro):
             queries (Optional[List[Query]]): queries to execute
         """
         if queries:
-            super(ADI, self).__init__(queries)
+            super(ADI, self).__init__(queries, **kwargs)
         else:
-            super(ADI, self).__init__(Query(ADI.URL, params, handler, handlerdata))
+            super(ADI, self).__init__(Query(ADI.URL, params, handler, handlerdata), **kwargs)
 
     @staticmethod
     def default_handler(json, data):
@@ -683,7 +683,7 @@ class SignatureURLs(Socorro):
 
     URL = Socorro.API_URL + '/SignatureURLs'
 
-    def __init__(self, params=None, handler=None, handlerdata=None, queries=None):
+    def __init__(self, params=None, handler=None, handlerdata=None, queries=None, **kwargs):
         """Constructor
 
         Args:
@@ -693,9 +693,9 @@ class SignatureURLs(Socorro):
             queries (Optional[List[Query]]): queries to execute
         """
         if queries:
-            super(SignatureURLs, self).__init__(queries)
+            super(SignatureURLs, self).__init__(queries, **kwargs)
         else:
-            super(SignatureURLs, self).__init__(Query(SignatureURLs.URL, params, handler, handlerdata))
+            super(SignatureURLs, self).__init__(Query(SignatureURLs.URL, params, handler, handlerdata), **kwargs)
 
     @staticmethod
     def get_default_handler(trunc):
@@ -772,7 +772,7 @@ class Bugs(Socorro):
 
     URL = Socorro.API_URL + '/Bugs'
 
-    def __init__(self, params=None, handler=None, handlerdata=None, queries=None):
+    def __init__(self, params=None, handler=None, handlerdata=None, queries=None, **kwargs):
         """Constructor
 
         Args:
@@ -782,9 +782,9 @@ class Bugs(Socorro):
             queries (Optional[List[Query]]): queries to execute
         """
         if queries:
-            super(Bugs, self).__init__(queries)
+            super(Bugs, self).__init__(queries, **kwargs)
         else:
-            super(Bugs, self).__init__(Query(Bugs.URL, params, handler, handlerdata))
+            super(Bugs, self).__init__(Query(Bugs.URL, params, handler, handlerdata), **kwargs)
 
     @staticmethod
     def get_bugs(signatures):

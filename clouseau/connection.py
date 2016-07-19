@@ -53,7 +53,7 @@ class Connection(object):
     # Error 429 is for 'Too many requests' => we retry
     STATUS_FORCELIST = [429]
 
-    def __init__(self, base_url, queries=None):
+    def __init__(self, base_url, queries=None, **kwargs):
         """Constructor
 
         Args:
@@ -66,6 +66,15 @@ class Connection(object):
         self.session.mount(base_url, HTTPAdapter(max_retries=retries))
         self.results = []
         self.queries = queries
+
+        if kwargs:
+            if 'timeout' in kwargs:
+                self.TIMEOUT = kwargs['timeout']
+            if 'max_retries' in kwargs:
+                self.MAX_RETRIES = kwargs['max_retries']
+            if 'max_workers' in kwargs:
+                self.MAX_WORKERS = kwargs['max_workers']
+
         self.exec_queries()
 
     def __get_cb(self, query):

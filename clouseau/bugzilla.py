@@ -18,7 +18,7 @@ class Bugzilla(Connection):
     TOKEN = config.get('Bugzilla', 'token', '')
     # TOKEN = config.get('Allizgub', 'token', '')
 
-    def __init__(self, bugids=None, include_fields='_default', bughandler=None, bugdata=None, historyhandler=None, historydata=None, commenthandler=None, commentdata=None, attachmenthandler=None, attachmentdata=None, attachment_include_fields=None, queries=None):
+    def __init__(self, bugids=None, include_fields='_default', bughandler=None, bugdata=None, historyhandler=None, historydata=None, commenthandler=None, commentdata=None, attachmenthandler=None, attachmentdata=None, attachment_include_fields=None, queries=None, **kwargs):
         """Constructor
 
         Args:
@@ -36,9 +36,9 @@ class Bugzilla(Connection):
             queries (List[Query]): queries rather than single query
         """
         if queries:
-            super(Bugzilla, self).__init__(Bugzilla.URL, queries=queries)
+            super(Bugzilla, self).__init__(Bugzilla.URL, queries=queries, **kwargs)
         else:
-            super(Bugzilla, self).__init__(Bugzilla.URL)
+            super(Bugzilla, self).__init__(Bugzilla.URL, **kwargs)
             if isinstance(bugids, six.string_types) or isinstance(bugids, dict):
                 self.bugids = [bugids]
             elif isinstance(bugids, int):
@@ -203,16 +203,16 @@ class Bugzilla(Connection):
         return history_entries
 
     @staticmethod
-    def get_landing_comments(comments, channels):
+    def get_landing_patterns(channels=['release', 'beta', 'aurora', 'nightly']):
         if not isinstance(channels, list):
             channels = [channels]
 
         landing_patterns = []
         for channel in channels:
-            if channel == 'central':
+            if channel in ['central', 'nightly']:
                 landing_patterns += [
-                    (re.compile('://hg.mozilla.org/mozilla-central/rev/([0-9a-z]+)'), 'central'),
-                    (re.compile('://hg.mozilla.org/mozilla-central/pushloghtml\?changeset=([0-9a-z]+)'), 'central'),
+                    (re.compile('://hg.mozilla.org/mozilla-central/rev/([0-9a-z]+)'), channel),
+                    (re.compile('://hg.mozilla.org/mozilla-central/pushloghtml\?changeset=([0-9a-z]+)'), channel),
                 ]
             elif channel == 'inbound':
                 landing_patterns += [(re.compile('://hg.mozilla.org/integration/mozilla-inbound/rev/([0-9a-z]+)'), 'inbound')]
@@ -222,6 +222,13 @@ class Bugzilla(Connection):
                 landing_patterns += [(re.compile('://hg.mozilla.org/integration/fx-team/rev/([0-9a-z]+)'), 'inbound')]
             else:
                 raise Exception('Unexpected channel: ' + channel)
+
+        return landing_patterns
+
+    @staticmethod
+    def get_landing_comments(comments, channels, landing_patterns=None):
+        if not landing_patterns:
+            landing_patterns = Bugzilla.get_landing_patterns(channels)
 
         results = []
 
@@ -475,7 +482,7 @@ class BugzillaUser(Connection):
     API_URL = URL + '/rest/user'
     TOKEN = config.get('Bugzilla', 'token', '')
 
-    def __init__(self, user_names=None, search_strings=None, include_fields='_default', user_handler=None, user_data=None):
+    def __init__(self, user_names=None, search_strings=None, include_fields='_default', user_handler=None, user_data=None, **kwargs):
         """Constructor
 
         Args:
@@ -498,7 +505,7 @@ class BugzillaUser(Connection):
                 'ids': [str(user_id) for user_id in user_names if isinstance(user_id, int) or user_id.isdigit()],
             }
 
-            super(BugzillaUser, self).__init__(BugzillaUser.URL, Query(BugzillaUser.API_URL, params, self.__users_cb))
+            super(BugzillaUser, self).__init__(BugzillaUser.URL, Query(BugzillaUser.API_URL, params, self.__users_cb), **kwargs)
         elif search_strings is not None:
             if isinstance(search_strings, six.string_types):
                 search_strings = [search_strings]
@@ -507,7 +514,7 @@ class BugzillaUser(Connection):
             for search_string in search_strings:
                 queries.append(Query(BugzillaUser.API_URL + '?' + search_string, handler=self.__users_cb))
 
-            super(BugzillaUser, self).__init__(BugzillaUser.URL, queries)
+            super(BugzillaUser, self).__init__(BugzillaUser.URL, queries, **kwargs)
 
     def get_header(self):
         header = super(BugzillaUser, self).get_header()
