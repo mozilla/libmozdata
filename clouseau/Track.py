@@ -325,7 +325,7 @@ class Track(object):
                         break
         return fileinfo
 
-    def __handler(self, json, data):
+    def __handler(self, json):
         """Handler for Socorro supersearch
 
         Args:
@@ -389,7 +389,7 @@ class Track(object):
                                     'date': search_date,
                                     'release_channel': self.channel,
                                     '_results_number': 0},
-                            handler=lambda json, data: nb_hits.append(json['total'])).wait()
+                            handler=lambda json: nb_hits.append(json['total'])).wait()
 
         if nb_hits[0] > 1000:
             nb_hits[0] = 1000
