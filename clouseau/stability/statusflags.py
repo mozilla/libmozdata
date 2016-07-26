@@ -345,8 +345,8 @@ def __get_signatures(limit, product, versions, channel, search_date, signatures,
                     pprint('Unknown os: %s' % os)
 
     if signatures or bug_ids:
-        s = __get_signatures_from_bug_ids(bug_ids)
-        signatures = list(s.union(signatures))
+        _sgns = __get_signatures_from_bug_ids(bug_ids)
+        signatures = list(_sgns.union(signatures))
         queries = []
         for sgns in Connection.chunks(signatures, 10):
             queries.append(Query(socorro.SuperSearch.URL,
