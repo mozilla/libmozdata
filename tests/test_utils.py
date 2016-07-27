@@ -23,9 +23,12 @@ class UtilsTest(unittest.TestCase):
 
     def test_get_date_ymd(self):
         self.assertIsNotNone(utils.get_date_ymd('today'))
+        self.assertIsNotNone(utils.get_date_ymd('today_utc'))
         self.assertIsNotNone(utils.get_date_ymd('yesterday'))
+        self.assertIsNotNone(utils.get_date_ymd('yesterday_utc'))
         self.assertIsNotNone(utils.get_date_ymd('tomorrow'))
         self.assertTrue(utils.get_date_ymd('yesterday') < utils.get_date_ymd('today') < utils.get_date_ymd('tomorrow'))
+        self.assertTrue(utils.get_date_ymd('yesterday_utc') < utils.get_date_ymd('today_utc'))
         date = datetime.datetime.strptime('1991-04-16', '%Y-%m-%d')
         self.assertEqual(utils.get_date_ymd('1991/04/16'), date)
         self.assertEqual(utils.get_date_ymd('1991-04-16'), date)
