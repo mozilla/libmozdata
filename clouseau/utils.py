@@ -9,6 +9,7 @@ from datetime import (datetime, date, timedelta)
 import math
 import random
 import dateutil.parser
+import pytz
 
 
 def get_best(stats):
@@ -50,6 +51,9 @@ def get_date_ymd(dt):
         datetime: a datetime object
     """
     assert dt
+
+    if isinstance(dt, datetime):
+        return dt
 
     if dt == 'today':
         today = date.today()
@@ -98,7 +102,8 @@ def get_date(_date, delta=None):
     Returns:
         str: the date as a string 'Year-month-day'
     """
-    _date = get_date_ymd(_date)
+    if isinstance(_date, six.string_types):
+        _date = get_date_ymd(_date)
     if delta:
         _date -= timedelta(delta)
     return get_date_str(_date)
@@ -177,11 +182,17 @@ def get_date_from_buildid(bid):
         date: date object
     """
     # 20160407164938 == 2016 04 07 16 49 38
-    year = int(str(bid)[:4])
-    month = int(str(bid)[4:6])
-    day = int(str(bid)[6:8])
+    bid = str(bid)
+    year = int(bid[:4])
+    month = int(bid[4:6])
+    day = int(bid[6:8])
+    hour = int(bid[8:10])
+    minute = int(bid[10:12])
+    second = int(bid[12:14])
 
-    return datetime(year, month, day)
+    pacific = pytz.timezone('US/Pacific')
+
+    return pacific.localize(datetime(year, month, day, hour, minute, second)).astimezone(pytz.utc)
 
 
 def rate(x, y):

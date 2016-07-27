@@ -4,6 +4,7 @@
 
 import unittest
 import datetime
+from dateutil.tz import tzutc
 import math
 from clouseau import utils
 
@@ -81,8 +82,8 @@ class UtilsTest(unittest.TestCase):
         self.assertEqual(len(utils.get_sample(arr, 0.1)), 1)
 
     def test_get_date_from_buildid(self):
-        self.assertEqual(utils.get_date_from_buildid('20160407164938'), datetime.datetime(2016, 4, 7, 0, 0))
-        self.assertEqual(utils.get_date_from_buildid(20160407164938), datetime.datetime(2016, 4, 7, 0, 0))
+        self.assertEqual(utils.get_date_from_buildid('20160407164938'), datetime.datetime(2016, 4, 7, 23, 49, 38, tzinfo=tzutc()))
+        self.assertEqual(utils.get_date_from_buildid(20160407164938), datetime.datetime(2016, 4, 7, 23, 49, 38, tzinfo=tzutc()))
 
     def test_rate(self):
         self.assertEqual(utils.rate(1.0, 2.0), 0.5)

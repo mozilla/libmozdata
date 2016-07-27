@@ -11,6 +11,7 @@ from os.path import commonprefix
 import json
 import re
 from datetime import timedelta
+import pytz
 from icalendar import Calendar
 from . import utils
 
@@ -63,7 +64,7 @@ def __getVersionDates():
         resp.close()
 
     def __as_utc(date_str):
-        return utils.get_date_ymd(date_str + 'T00:00:00Z')
+        return pytz.timezone('US/Pacific').localize(utils.get_date_ymd(date_str)).astimezone(pytz.utc)
 
     data = dict([(v, __as_utc(d)) for v, d in data.items()])
 

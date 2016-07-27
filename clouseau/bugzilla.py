@@ -4,6 +4,7 @@
 
 import six
 import re
+import functools
 from .connection import (Connection, Query)
 from . import config
 
@@ -79,14 +80,30 @@ class Bugzilla(Connection):
                 ids = self.__get_bugs_list()
 
             url = Bugzilla.API_URL + '/'
+            failed = ids
             header = self.get_header()
-            for _ids in Connection.chunks(ids):
-                first_id = _ids[0]
-                if len(_ids) >= 2:
-                    data['ids'] = _ids
-                elif 'ids' in data:
-                    del data['ids']
-                self.session.put(url + first_id, json=data, headers=header)
+
+            def cb(data, sess, res):
+                if res.status_code == 200:
+                    json = res.json()
+                    if json.get('error', False):
+                        failed.extend(data)
+
+            while failed:
+                _failed = list(failed)
+                failed = []
+                for _ids in Connection.chunks(_failed):
+                    first_id = _ids[0]
+                    if len(_ids) >= 2:
+                        data['ids'] = _ids
+                    elif 'ids' in data:
+                        del data['ids']
+                    self.session.put(url + first_id,
+                                     json=data,
+                                     headers=header,
+                                     verify=True,
+                                     timeout=self.TIMEOUT,
+                                     background_callback=functools.partial(cb, _ids)).result()
 
     def get_data(self):
         """Collect the data
@@ -125,6 +142,13 @@ class Bugzilla(Connection):
         """
         for r in self.bugs_results:
             r.result()
+
+    @staticmethod
+    def get_links(bugids):
+        if isinstance(bugids, six.string_types):
+            return 'https://bugzil.la/' + bugids
+        else:
+            return ['https://bugzil.la/' + str(bugid) for bugid in bugids]
 
     @staticmethod
     def follow_dup(bugids, only_final=True):
