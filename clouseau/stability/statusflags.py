@@ -257,6 +257,7 @@ def __analyze(signatures, status_flags):
                'firefox': True,
                'resolved': False,
                'affected': [],
+               'leftovers': [],
                'platforms': [],
                'bugs': None,
                'trend': {}}
@@ -266,6 +267,7 @@ def __analyze(signatures, status_flags):
                 res['resolved'] = True
             for ac in data['affected_channels']:
                 channel = ac[0]
+                added = False
                 sflag = status_flags[channel]
                 if sflag not in bug:
                     # probably a Thunderbird bug
@@ -273,7 +275,10 @@ def __analyze(signatures, status_flags):
                 else:
                     sflag = bug[sflag]
                     if sflag == '---':
+                        added = True
                         res['affected'].append(ac)
+                if not added:
+                    res['leftovers'].append(ac)
             if res['affected'] or not res['firefox']:
                 res['bugid'] = bug['id']
                 res['bugs'] = data['bugs']
@@ -624,15 +629,18 @@ def update_status_flags(info, update=False):
         start_date_by_channel[c] = utils.get_date_str(d)
 
     bugids = []
+    default_volumes = {c: 0 for c in channel_order.keys()}
 
     for sgn, i in info['signatures'].items():
         if i['firefox']:
-            volumes = {}
+            volumes = default_volumes.copy()
             data = {}
             bugid = i['bugid']
             bugids.append(str(bugid))
             for channel, volume in i['affected']:
                 data[status_flags_by_channel[channel]] = 'affected'
+                volumes[channel] = volume
+            for channel, volume in i['leftovers']:
                 volumes[channel] = volume
             if volumes:
                 comment = 'Crash volume for signature \'%s\':\n' % sgn
@@ -642,7 +650,7 @@ def update_status_flags(info, update=False):
                     affected_version = base_versions[p[0]]
                     start_date = start_date_by_channel[p[0]]
                     volume = p[1]
-                    plural = '' if volume == 1 else 'es'
+                    plural = 'es' if volume > 1 else ''
                     table.append(['- %s' % affected_chan,
                                   '(version %d):' % affected_version,
                                   '%d crash%s from %s.' % (volume, plural, start_date)])
@@ -681,7 +689,7 @@ def update_status_flags(info, update=False):
                         comment += 's'
                         platforms = sorted(platforms, key=lambda k: platform_order[k])
                     comment += ': ' + ', '.join(platforms)
-                # print(comment)
+                print(comment)
                 data['comment'] = {'body': comment}
             if update:
                 Bugzilla([str(bugid)]).put(data)
