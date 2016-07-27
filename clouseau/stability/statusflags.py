@@ -347,7 +347,7 @@ def __get_signatures(limit, product, versions, channel, search_date, signatures,
                         os = 'Windows'
                     l2.append(os)
                 elif os not in known_wtf_platforms:
-                    pprint('Unknown os: %s' % os)
+                    __warn('Unknown os: %s' % os)
 
     if signatures or bug_ids:
         _sgns = __get_signatures_from_bug_ids(bug_ids)
@@ -384,7 +384,7 @@ def __warn(str, verbose):
     logging.debug(str)
 
 
-def get(product='Firefox', limit=1000, verbose=False, search_start_date='', signatures=[], bug_ids=[]):
+def get(product='Firefox', limit=1000, verbose=False, search_start_date='', signatures=[], bug_ids=[], max_bugs=-1):
     """Get crashes info
 
     Args:
@@ -467,7 +467,7 @@ def get(product='Firefox', limit=1000, verbose=False, search_start_date='', sign
                     if e in _bugids:
                         elems.append(e)
                 if elems:
-                    elems[-1] = bugid
+                    elems[-1] = bugid  # we remove the final and put the initial
                     toremove = toremove.union(elems)
         diff = _bugids - toremove
         bugs_by_signature[s] = list(diff)
@@ -540,6 +540,17 @@ def get(product='Firefox', limit=1000, verbose=False, search_start_date='', sign
                 info['selected_bug'] = 'private'
 
     analysis = __analyze(signatures, status_flags)
+
+    if max_bugs > 0:
+        __analysis = {}
+        count = 0
+        for signature, info in analysis.items():
+            if info['firefox']:
+                __analysis[signature] = info
+                count += 1
+                if count == max_bugs:
+                    analysis = __analysis
+                    break
 
     __warn('Analysis: Ok', verbose)
 
@@ -735,6 +746,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Update status flags in Bugzilla')
     parser.add_argument('-p', '--product', action='store', default='Firefox', help='the product')
     parser.add_argument('-l', '--limit', action='store', default=1000, type=int, help='the max number of signatures to get')
+    parser.add_argument('-m', '--max', action='store', default=-1, type=int, help='the max number of bugs to change')
     parser.add_argument('-o', '--output', action='store', help='output file (html)')
     parser.add_argument('-s', '--start-date', dest='start_date', action='store', default='', help='Start date to use to search signatures')
     parser.add_argument('-u', '--update', action='store_true', help='update Bugzilla')
@@ -750,7 +762,7 @@ if __name__ == "__main__":
         logging.basicConfig(filename=args.log, filemode='w', level=logging.DEBUG)
 
     try:
-        info = get(product=args.product, limit=args.limit, verbose=args.verbose, search_start_date=args.start_date, signatures=args.signatures, bug_ids=args.bug_ids)
+        info = get(product=args.product, limit=args.limit, verbose=args.verbose, search_start_date=args.start_date, signatures=args.signatures, bug_ids=args.bug_ids, max_bugs=args.max)
 
         if args.output:
             to_html(args.output, info)
