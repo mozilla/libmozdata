@@ -3,11 +3,11 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
-import unittest
 import responses
 from clouseau.CrashInfo import CrashInfo
 from clouseau.socorro import SuperSearch
 from tests.auto_mock import MockTestCase
+
 
 class CrashInfoTest(MockTestCase):
 
