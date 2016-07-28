@@ -175,9 +175,20 @@ def get(channel, date, product='Firefox', duration=11, tc_limit=50, crash_type='
 
     queries = []
     for sgns in Connection.chunks(list(map(lambda sgn: '=' + sgn, signatures.keys())), 10):
-        cparams = base.copy()
-        cparams['signature'] = sgns
-        queries.append(Query(socorro.SuperSearch.URL, cparams, functools.partial(__trend_handler, default_trend), trends))
+        sgn_group = []
+        for sgn in sgns:
+            if sum(len(s) for s in sgn_group) >= 1000:
+                cparams = base.copy()
+                cparams['signature'] = sgn_group
+                queries.append(Query(socorro.SuperSearch.URL, cparams, functools.partial(__trend_handler, default_trend), trends))
+                sgn_group = []
+
+            sgn_group.append(sgn)
+
+        if len(sgn_group) > 0:
+            cparams = base.copy()
+            cparams['signature'] = sgn_group
+            queries.append(Query(socorro.SuperSearch.URL, cparams, functools.partial(__trend_handler, default_trend), trends))
 
     socorro.SuperSearch(queries=queries).wait()
 
