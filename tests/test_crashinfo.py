@@ -4,27 +4,36 @@
 
 import os
 import unittest
+import responses
 from clouseau.CrashInfo import CrashInfo
+from clouseau.socorro import SuperSearch
+from tests.auto_mock import MockTestCase
 
+class CrashInfoTest(MockTestCase):
 
-class CrashInfoTest(unittest.TestCase):
+    mock_urls = [
+        SuperSearch.URL,
+    ]
 
+    @responses.activate
     def test_single(self):
         path = 'toolkit/components/terminator/nsterminator.cpp'
 
         ci = CrashInfo(path).get()
 
-        self.assertGreaterEqual(ci[path], 150000)
+        self.assertEqual(ci[path], 146204)
 
+    @responses.activate
     def test_multiple(self):
         path1 = 'toolkit/components/terminator/nsterminator.cpp'
         path2 = 'gfx/layers/d3d11/textured3d11.cpp'
 
         ci = CrashInfo([path1, path2]).get()
 
-        self.assertGreaterEqual(ci[path1], 150000)
-        self.assertGreaterEqual(ci[path2], 9000)
+        self.assertEqual(ci[path1], 146204)
+        self.assertEqual(ci[path2], 9097)
 
+    @responses.activate
     def test_not_lower(self):
         path = 'toolkit/components/terminator/nsTerminator.cpp'
 
@@ -33,6 +42,7 @@ class CrashInfoTest(unittest.TestCase):
 
         self.assertEqual(ci[path], ci2[path.lower()])
 
+    @responses.activate
     def test_basename(self):
         path = 'toolkit/components/terminator/nsTerminator.cpp'
 
@@ -41,5 +51,6 @@ class CrashInfoTest(unittest.TestCase):
 
         self.assertEqual(ci[path], ci2[os.path.basename(path)])
 
+    @responses.activate
     def test_empty_array(self):
         self.assertEqual(CrashInfo([]).get(), {})
