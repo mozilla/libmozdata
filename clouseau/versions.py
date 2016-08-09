@@ -30,7 +30,7 @@ def __getVersions():
         dict: versions for each channel
     """
     try:
-        resp = urlopen('https://product-details.mozilla.org/firefox_versions.json')
+        resp = urlopen('https://product-details.mozilla.org/1.0/firefox_versions.json')
         data = json.loads(resp.read().decode('utf-8'))
         resp.close()
     except:
