@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from collections import defaultdict
 import clouseau.utils as utils
 import argparse
 import clouseau.socorro as socorro
@@ -71,10 +72,7 @@ def get(signature, module, addon, product='Firefox', channel=['all'], versions=[
                     if len(a) == 2 and addon_id in addon:
                         versions = data['versions']
                         addon_version = a[1]
-                        if addon_id in versions:
-                            versions[addon_id].add(addon_version)
-                        else:
-                            versions[addon_id] = {addon_version}
+                        versions[addon_id][addon_version] += 1
                         break
 
             if not addon_version:
@@ -88,10 +86,7 @@ def get(signature, module, addon, product='Firefox', channel=['all'], versions=[
                 if filename in module:
                     versions = data['versions']
                     dll_version = m['version']
-                    if filename in versions:
-                        versions[filename].add(dll_version)
-                    else:
-                        versions[filename] = {dll_version}
+                    versions[filename][dll_version] += 1
                     break
 
             # if addon_version and dll_version and (addon_version == dll_version):
@@ -107,7 +102,7 @@ def get(signature, module, addon, product='Firefox', channel=['all'], versions=[
                 if not in_bt:
                     data['not_in_bt'].append(json['uuid'])
 
-    info = {'versions': {}, 'limit': limit, 'not_in_bt': [], 'not_in_addon': [], 'match': []}
+    info = {'versions': defaultdict(lambda: defaultdict(int)), 'limit': limit, 'not_in_bt': [], 'not_in_addon': [], 'match': []}
     queries = []
     for uuid in uuids:
         queries.append(Query(socorro.ProcessedCrash.URL, params={'crash_id': uuid}, handler=handler_pc, handlerdata=info))
@@ -138,8 +133,10 @@ if __name__ == "__main__":
     info = get(args.signature, args.module, args.addon, args.product, args.channel, args.versions, args.start_date, args.limit, args.check)
 
     print('%d crash reports has been analyzed and the following versions have been found:' % info['limit'])
-    for k, v in info['versions'].items():
-        print(' - %s: %s' % (k, ', '.join(v)))
+    for k, vers in info['versions'].items():
+        print(' - ' + k)
+        for v, c in vers.items():
+            print('   - ' + v + ': ' + str(c))
 
     print('')
 
