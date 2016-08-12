@@ -10,7 +10,7 @@ from clouseau.connection import Query
 import clouseau.versions
 
 
-def get(signature, module, addon, product='Firefox', channel=['all'], versions=[], start_date='', limit=0, check_bt=False):
+def get(signature, matching_mode, module, addon, product='Firefox', channel=['all'], versions=[], start_date='', limit=0, check_bt=False):
     if product.lower() == 'firefox':
         product = 'Firefox'
 
@@ -36,7 +36,7 @@ def get(signature, module, addon, product='Firefox', channel=['all'], versions=[
         count = []
         socorro.SuperSearch(params={'product': product,
                                     'version': versions,
-                                    'signature': '=' + signature,
+                                    'signature': matching_mode + signature,
                                     'release_channel': channel,
                                     'date': '>=' + start_date,
                                     '_facets_size': 1,
@@ -46,13 +46,14 @@ def get(signature, module, addon, product='Firefox', channel=['all'], versions=[
 
     def handler_ss(json, data):
         if json['total']:
-            for hit in json['facets']['signature'][0]['facets']['uuid']:
-                data.append(hit['term'])
+            for signature in json['facets']['signature']:
+                for hit in signature['facets']['uuid']:
+                    data.append(hit['term'])
 
     uuids = []
     socorro.SuperSearch(params={'product': product,
                                 'version': versions,
-                                'signature': '=' + signature,
+                                'signature': matching_mode + signature,
                                 'release_channel': channel,
                                 'date': '>=' + start_date,
                                 '_aggs.signature': 'uuid',
@@ -122,6 +123,7 @@ if __name__ == "__main__":
     parser.add_argument('-a', '--addon', action='store', nargs='+', default=[], help='the addon name')
     parser.add_argument('-s', '--start-date', dest='start_date', action='store', default='', help='Start date to use to search signatures')
     parser.add_argument('-S', '--signature', action='store', default='', help='signatures to analyze')
+    parser.add_argument('-M', '--matching-mode', action='store', default='=', help='a Socorro operator for the signature (e.g. \'=\' for \'is\' or \'~\' for \'contains\')')
     parser.add_argument('-C', '--check', dest='check', action='store_true', default='', help='Check if module is in the backtrace or if addon is in addons list')
     args = parser.parse_args()
 
@@ -130,7 +132,7 @@ if __name__ == "__main__":
     if not args.signature:
         raise Exception('Signature is mandatory (-S)')
 
-    info = get(args.signature, args.module, args.addon, args.product, args.channel, args.versions, args.start_date, args.limit, args.check)
+    info = get(args.signature, args.matching_mode, args.module, args.addon, args.product, args.channel, args.versions, args.start_date, args.limit, args.check)
 
     print('%d crash reports has been analyzed and the following versions have been found:' % info['limit'])
     for k, vers in info['versions'].items():
