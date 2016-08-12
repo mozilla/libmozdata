@@ -134,7 +134,7 @@ if __name__ == "__main__":
 
     info = get(args.signature, args.matching_mode, args.module, args.addon, args.product, args.channel, args.versions, args.start_date, args.limit, args.check)
 
-    print('%d crash reports has been analyzed and the following versions have been found:' % info['limit'])
+    print('%d crash reports have been analyzed and the following versions have been found:' % info['limit'])
     for k, vers in info['versions'].items():
         print(' - ' + k)
         for v, c in vers.items():
