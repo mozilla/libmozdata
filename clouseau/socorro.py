@@ -77,7 +77,7 @@ class SuperSearch(Socorro):
             super(SuperSearch, self).__init__(Query(url, params, handler, handlerdata), **kwargs)
 
     @staticmethod
-    def get_search_date(start, end):
+    def get_search_date(start, end=None):
         """Get a search date list for [start, end[ (end can be in the future)
 
         Args:
@@ -85,15 +85,19 @@ class SuperSearch(Socorro):
             end (str): start date in 'YYYY-mm-dd' format por 'today'
 
         Returns:
-            List(str): containing acceptabl interval for Socorro.SuperSearch
+            List(str): containing acceptable interval for Socorro.SuperSearch
         """
         _start = utils.get_date(start)
-        _end = utils.get_date_ymd(end) + timedelta(1)
-        today = utils.get_date_ymd('today')
-        if _end > today:
-            search_date = ['>=' + _start]
+
+        if end:
+            _end = utils.get_date_ymd(end) + timedelta(1)
+            today = utils.get_date_ymd('today')
+            if _end > today:
+                search_date = ['>=' + _start]
+            else:
+                search_date = ['>=' + _start, '<' + utils.get_date_str(_end)]
         else:
-            search_date = ['>=' + _start, '<' + utils.get_date_str(_end)]
+            search_date = ['>=' + _start]
 
         return search_date
 
