@@ -3,8 +3,8 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import numpy as np
-import matplotlib as mpl
-import mpl.pyplot as plt
+import matplotlib
+import matplotlib.pyplot as plt
 import pytz
 import os
 from . import socorro
@@ -12,7 +12,7 @@ from . import utils
 from .connection import Query
 
 
-mpl.use('Agg')
+matplotlib.use('Agg')
 
 
 def mean(x):
@@ -87,8 +87,8 @@ def moving(x, f=mean, coeff=2.0):
         else:
             pieces.append([i, i])
 
-    yp = np.zeros(l)
-    yd = np.zeros(l)
+    yp = np.empty(l)
+    yd = np.empty(l)
     pos = 0
     for piece in pieces:
         p, d = f(x[piece[0]:(piece[1] + 1)])
@@ -114,8 +114,8 @@ def multimoving(x, f=mean, coeff=2.0):
     """
     x = __convert(x)
     l = len(x)
-    ys = np.zeros((l, l))
-    ds = np.zeros((l, l))
+    ys = np.empty((l, l))
+    ds = np.empty((l, l))
     for i in range(l):
         x1 = x[:(i + 1)]
         x2 = x[i:]
@@ -126,8 +126,8 @@ def multimoving(x, f=mean, coeff=2.0):
         ds[i][:len(d1)] = d1[::-1]
         ds[i][len(d1):] = d2[1:]
 
-    y = np.zeros(l)
-    d = np.zeros(l)
+    y = np.empty(l)
+    d = np.empty(l)
     mins_index = np.argmin(ds, axis=0)
     for i in range(l):
         y[i] = ys[mins_index[i]][i]
