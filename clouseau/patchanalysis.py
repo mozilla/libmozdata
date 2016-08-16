@@ -1,5 +1,6 @@
 import base64
 import re
+import pytz
 from datetime import (datetime, timedelta)
 try:
     from urllib.request import urlopen
@@ -16,7 +17,7 @@ from . import hgmozilla
 from . import modules
 from . import utils
 from . import versions
-
+from .connection import Query
 
 reviewer_cache = {}
 
@@ -547,5 +548,129 @@ def uplift_info(bug, channel):
         # assert bug_data['landing_delta'] > timedelta()
     else:
         info['landing_delta'] = timedelta()
+
+    return info
+
+
+def get_patch_info(bugs, base_versions=None):
+    channels = ['release', 'beta', 'aurora', 'nightly']
+    landing_patterns = Bugzilla.get_landing_patterns(channels=channels)
+    approval_pattern = re.compile('approval-mozilla-([a-zA-Z0-9]+)\+')
+
+    def comment_handler(bug, bugid, data):
+        r = Bugzilla.get_landing_comments(bug['comments'], [], landing_patterns)
+        bugid = str(bugid)
+        if r:
+            d = {}
+            for i in r:
+                revision = i['revision']
+                channel = i['channel']
+
+                dr = {'date': None, 'backedout': False, 'bugid': bugid}
+                if channel in d:
+                    if revision not in d[channel]:
+                        d[channel][revision] = dr
+                else:
+                    d[channel] = {revision: dr}
+
+            data[bugid]['land'] = d
+
+    def history_handler(_history, data):
+        bugid = str(_history['id'])
+        history = _history['history']
+        approval = set()
+        if history:
+            for changes in history:
+                for change in changes['changes']:
+                    field_name = change.get('field_name', None)
+                    if field_name == 'flagtypes.name':
+                        if 'added' in change:
+                            for m in approval_pattern.finditer(change['added']):
+                                approval.add(m.group(1))
+                        if 'removed' in change:
+                            for m in approval_pattern.finditer(change['removed']):
+                                approval.discard(m.group(1))
+
+        data[bugid]['approval'] = approval
+
+    info = {str(bugid): {'land': None, 'approval': None, 'affected': set()} for bugid in bugs}
+    status_flags = Bugzilla.get_status_flags(base_versions)
+    status_flags = {c: status_flags[c] for c in channels}
+
+    toremove = set()
+
+    def bug_handler(bug, data):
+        bugid = str(bug['id'])
+        for chan, flag in status_flags.items():
+            if flag in bug:
+                if bug[flag] == 'affected':
+                    data[bugid]['affected'].add(chan)
+            else:
+                # Bug for thunderbird or anything else except Firefox
+                toremove.add(bugid)
+
+    Bugzilla(bugs, include_fields=['id'] + status_flags.values(), bughandler=bug_handler, bugdata=info, commenthandler=comment_handler, commentdata=info, historyhandler=history_handler, historydata=info).get_data().wait()
+
+    for r in toremove:
+        del info[r]
+
+    toremove.clear()
+    queries = []
+
+    bug_pattern = re.compile('[\t ]*[Bb][Uu][Gg][\t ]*([0-9]+)')
+
+    def handler_revision(json, data):
+        data['date'] = pytz.utc.localize(datetime.utcfromtimestamp(json['date'][0]))
+        data['backedout'] = json.get('backedoutby', '') != ''
+        m = bug_pattern.search(json['desc'])
+        if not m or m.group(1) != data['bugid']:
+            data['bugid'] = ''
+
+    for bugid, i in info.items():
+        land = i['land']
+        if land:
+            # we need to check that patches haven't been backed out
+            # so prepare query for mercurial
+            approval = i['approval']
+            chan_toremove = set()
+            for chan, revs in land.items():
+                if chan == 'nightly' or chan in approval:
+                    url = hgmozilla.Revision.get_url(chan)
+                    for rev_num, rev_info in revs.items():
+                        queries.append(Query(url, {'node': rev_num}, handler_revision, rev_info))
+                else:
+                    # no approval
+                    chan_toremove.add(chan)
+            for c in chan_toremove:
+                del land[c]
+            if not land:
+                toremove.add(bugid)
+        else:  # nothing landed so useless...
+            toremove.add(bugid)
+
+    if queries:
+        hgmozilla.Revision(queries=queries).wait()
+
+    for r in toremove:
+        del info[r]
+
+    toremove.clear()
+
+    guttemberg = utils.get_guttenberg_death()
+    for bugid, i in info.items():
+        for chan, revs in i['land'].items():
+            last_date = guttemberg
+            for rev_num, rev_info in revs.items():
+                if not rev_info['backedout'] and rev_info['bugid'] != '':
+                    rev_date = rev_info['date']
+                    if last_date < rev_date:
+                        last_date = rev_date
+            if last_date != guttemberg:
+                i['land'][chan] = last_date
+            else:
+                toremove.add(bugid)
+
+    for r in toremove:
+        del info[r]
 
     return info

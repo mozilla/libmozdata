@@ -7,6 +7,8 @@ import re
 import functools
 from .connection import (Connection, Query)
 from . import config
+from . import utils
+import clouseau.versions
 
 
 class Bugzilla(Connection):
@@ -266,6 +268,51 @@ class Bugzilla(Connection):
                     })
 
         return results
+
+    @staticmethod
+    def get_status_flags(base_versions=None):
+        if not base_versions:
+            base_versions = clouseau.versions.get(base=True)
+
+        status_flags = {}
+        for c, v in base_versions.iteritems():
+            v = str(v)
+            if c == 'esr':
+                f = 'cf_status_firefox_esr' + v
+            else:
+                f = 'cf_status_firefox' + v
+            status_flags[c] = f
+
+        return status_flags
+
+    @staticmethod
+    def get_signatures(bugids):
+        """Get the signatures in the bugs
+
+        Args:
+            bugids (list): list of bug ids
+
+        Returns:
+            (list): list of accessible bugs
+        """
+        if not bugids:
+            return None
+
+        def bug_handler(bug, data):
+            signatures = bug.get('cf_crash_signature', None)
+            if signatures:
+                signatures = map(lambda s: s.strip(' \t\r\n'), signatures.split('[@'))
+                signatures = map(lambda s: s[:-1].strip(' \t\r\n'), filter(None, signatures))
+                _set = set()
+                for s in filter(None, signatures):
+                    _set.add(s)
+                data[str(bug['id'])] = list(_set)
+
+        bugids = utils.get_str_list(bugids)
+        data = {bugid: [] for bugid in bugids}
+        Bugzilla(bugids=bugids, include_fields=['id', 'cf_crash_signature'], bughandler=bug_handler, bugdata=data).wait()
+
+        return data
 
     @staticmethod
     def remove_private_bugs(bugids):
