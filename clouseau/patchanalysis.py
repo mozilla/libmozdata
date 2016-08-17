@@ -593,7 +593,7 @@ def get_patch_info(bugs, base_versions=None):
 
         data[bugid]['approval'] = approval
 
-    info = {str(bugid): {'land': None, 'approval': None, 'affected': set()} for bugid in bugs}
+    info = {str(bugid): {'land': None, 'approval': None, 'affected': set(), 'signatures': []} for bugid in bugs}
     status_flags = Bugzilla.get_status_flags(base_versions)
     status_flags = {c: status_flags[c] for c in channels}
 
@@ -601,6 +601,7 @@ def get_patch_info(bugs, base_versions=None):
 
     def bug_handler(bug, data):
         bugid = str(bug['id'])
+        data[bugid]['signatures'] = utils.signatures_parser(bug.get('cf_crash_signature', None))
         for chan, flag in status_flags.items():
             if flag in bug:
                 if bug[flag] == 'affected':
@@ -609,7 +610,7 @@ def get_patch_info(bugs, base_versions=None):
                 # Bug for thunderbird or anything else except Firefox
                 toremove.add(bugid)
 
-    Bugzilla(bugs, include_fields=['id'] + status_flags.values(), bughandler=bug_handler, bugdata=info, commenthandler=comment_handler, commentdata=info, historyhandler=history_handler, historydata=info).get_data().wait()
+    Bugzilla(bugs, include_fields=['id', 'cf_crash_signature'] + status_flags.values(), bughandler=bug_handler, bugdata=info, commenthandler=comment_handler, commentdata=info, historyhandler=history_handler, historydata=info).get_data().wait()
 
     for r in toremove:
         del info[r]
