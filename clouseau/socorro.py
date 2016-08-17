@@ -4,6 +4,7 @@
 
 import six
 import functools
+import pytz
 from operator import itemgetter
 try:
     from urllib.parse import urlparse
@@ -12,6 +13,7 @@ except ImportError:
 from .connection import (Connection, Query)
 from . import utils
 from datetime import timedelta
+from dateutil.relativedelta import relativedelta
 from . import config
 
 
@@ -82,7 +84,7 @@ class SuperSearch(Socorro):
 
         Args:
             start (str): start date in 'YYYY-mm-dd' format or 'today'
-            end (str): start date in 'YYYY-mm-dd' format por 'today'
+            end (str): start date in 'YYYY-mm-dd' format or 'today'
 
         Returns:
             List(str): containing acceptable interval for Socorro.SuperSearch
@@ -90,7 +92,7 @@ class SuperSearch(Socorro):
         _start = utils.get_date(start)
 
         if end:
-            _end = utils.get_date_ymd(end) + timedelta(1)
+            _end = (utils.get_date_ymd(end) + timedelta(1)).replace(tzinfo=None)
             today = utils.get_date_ymd('today')
             if _end > today:
                 search_date = ['>=' + _start]
@@ -466,6 +468,50 @@ class ProductVersions(Socorro):
         ProductVersions(params={'active': active,
                                 'product': product},
                         handler=handler, handlerdata=data).wait()
+        return data
+
+    @staticmethod
+    def get_all_versions(product='Firefox'):
+        """Get information for a given channel and major number version
+
+        Args:
+            major_numbers (dict): a dictionary channel->major_number_version
+            product (Optional[str]): the product to use, by default 'Firefox'
+            active (Optional[bool]): True for actives versions
+
+        Returns:
+            dict: version info
+        """
+        def handler(json, data):
+            if json['total']:
+                ffs = json['hits']
+                for ff in ffs:
+                    channel = ff['build_type'].lower()
+                    start_date = pytz.utc.localize(utils.get_date_ymd(ff['start_date']))
+                    version = ff['version']  # 45.x
+                    version_n = ProductVersions.__get_version(version)  # 45
+                    info = data[channel]
+                    if version_n in info:
+                        if start_date < info[version_n]['dates'][0]:
+                            info[version_n]['dates'][0] = start_date
+                    else:
+                        info[version_n] = {'dates': [start_date], 'all': []}
+                    if not version.endswith('b'):
+                        info[version_n]['all'].append(version)
+
+        data = {'nightly': {}, 'aurora': {}, 'beta': {}, 'release': {}, 'esr': {}}
+        ProductVersions(params={'product': product},
+                        handler=handler, handlerdata=data).wait()
+
+        for info in data.values():
+            keys = sorted(info.keys())
+            for i in range(len(keys)):
+                if i != len(keys) - 1:
+                    end_date = info[keys[i + 1]]['dates'][0] - relativedelta(days=1)
+                else:
+                    end_date = None
+                info[keys[i]]['dates'].append(end_date)
+
         return data
 
 
