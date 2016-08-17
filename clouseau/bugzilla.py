@@ -299,14 +299,7 @@ class Bugzilla(Connection):
             return None
 
         def bug_handler(bug, data):
-            signatures = bug.get('cf_crash_signature', None)
-            if signatures:
-                signatures = map(lambda s: s.strip(' \t\r\n'), signatures.split('[@'))
-                signatures = map(lambda s: s[:-1].strip(' \t\r\n'), filter(None, signatures))
-                _set = set()
-                for s in filter(None, signatures):
-                    _set.add(s)
-                data[str(bug['id'])] = list(_set)
+            data[str(bug['id'])] = utils.signatures_parser(bug.get('cf_crash_signature', None))
 
         bugids = utils.get_str_list(bugids)
         data = {bugid: [] for bugid in bugids}
