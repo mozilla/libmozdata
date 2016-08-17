@@ -3,16 +3,17 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import numpy as np
-import matplotlib
-import matplotlib.pyplot as plt
 import pytz
 import os
+from dateutil.relativedelta import relativedelta
+from datetime import datetime
 from . import socorro
 from . import utils
 from .connection import Query
-
-
+from . import patchanalysis
+import matplotlib
 matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 
 def mean(x):
@@ -148,12 +149,14 @@ def plot(data, f=mean, coeff=2., multi=True, filename=''):
         x1.append(piece[1])
         y1.append(sx[piece[1]])
 
-    plt.plot(r, x, color='blue')
-    plt.plot(r, sx, color='red')
-    plt.plot(x1, y1, color='green')
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.plot(r, x, color='blue')
+    ax.plot(r, sx, color='red')
+    ax.plot(x1, y1, color='green')
 
     if filename:
-        plt.savefig(filename)
+        fig.savefig(filename)
         plt.close()
     else:
         plt.show()
@@ -214,9 +217,15 @@ def trends(data, f=mean, coeff=2., multi=True):
         info = [p0, p1, percent]
         if piece[2] == 1:
             incr.append(info)
-        else:
+        elif piece[2] == -1:
             info[2] = abs(info[2])
             decr.append(info)
+        elif p0 == 0:
+            info[2] = abs(info[2])
+            decr.append(info)
+        else:
+            info[2] = info[2]
+            incr.append(info)
 
     if sorted_data:
         for i in incr:
@@ -229,7 +238,7 @@ def trends(data, f=mean, coeff=2., multi=True):
     return {'increases': incr, 'decreases': decr, 'pieces': pieces, 'data': x, 'smooth_data': m}
 
 
-def has_crash_stopped(data, date, threshold=80, f=mean, coeff=2., multi=True):
+def has_crash_stopped(data, date, threshold=51, f=mean, coeff=2., multi=True):
     """Chack if a crash has stopped after a date
 
     Args:
@@ -245,41 +254,118 @@ def has_crash_stopped(data, date, threshold=80, f=mean, coeff=2., multi=True):
     """
     tr = trends(data, f=f, coeff=coeff, multi=multi)
     for dec in tr['decreases']:
-        if dec[2] >= threshold and dec[0] <= date <= dec[1]:
+        if dec[0] <= date <= dec[1] and dec[2] >= threshold:
             return True
     return False
 
 
-def have_crashes_stopped(crashes_info, product='Firefox', path=None):
+def have_crashes_stopped(crashes_info, product='Firefox', thresholds={}, path=None):
     def handler(json, data):
         trend = data['trend']
         for info in json['facets']['build_id']:
             date = utils.get_date_from_buildid(info['term'])
-            trend[date] = info['facets']['cardinality_install_time']['value']
+            date = pytz.utc.localize(datetime(date.year, date.month, date.day))
+            trend[date] += info['facets']['cardinality_install_time']['value']
+
+        if thresholds:
+            ts = thresholds.get(data['channel'], -1)
+            for k, v in trend.items():
+                if v <= ts:
+                    trend[k] = 0
+
         data['stop'] = has_crash_stopped(trend, data['push_date'])
-        if path and not data['stop']:
+        if True or path and not data['stop']:
             signature = json['facets']['signature'][0]['term']
             count = json['facets']['signature'][0]['count']
             filename = os.path.join(path, '%s_%d.png' % (signature, count))
             plot(trend, filename=filename)
 
-    data = {}
+    def trends_handler(json, data):
+        for info in json['facets']['build_id']:
+            date = utils.get_date_from_buildid(info['term'])
+            date = pytz.utc.localize(datetime(date.year, date.month, date.day))
+            data[date] = 0
+
     queries = []
-    for sgn, info in crashes_info.items():
-        d = {'trend': {}, 'stop': False, 'push_date': pytz.utc.localize(utils.get_date_ymd(info['push_date']))}
-        data[sgn] = d
+    for info in crashes_info:
+        d = {}
+        info['trend'] = d
         search_date = socorro.SuperSearch.get_search_date(info['start_date'], info['end_date'])
         queries.append(Query(socorro.SuperSearch.URL,
-                             {'signature': '=' + sgn,
-                              'product': product,
+                             {'product': product,
                               'version': info.get('versions', None),
                               'release_channel': info.get('channel', None),
+                              'build_id': info.get('build_id'),
                               'date': search_date,
                               '_aggs.build_id': '_cardinality.install_time',
                               '_facets_size': 1000,
                               '_results_number': 0},
-                             handler=handler, handlerdata=d))
+                             handler=trends_handler, handlerdata=d))
 
     socorro.SuperSearch(queries=queries).wait()
 
-    return data
+    queries = []
+    for info in crashes_info:
+        search_date = socorro.SuperSearch.get_search_date(info['start_date'], info['end_date'])
+        queries.append(Query(socorro.SuperSearch.URL,
+                             {'signature': '=' + info['signature'],
+                              'product': product,
+                              'version': info.get('versions', None),
+                              'release_channel': info.get('channel', None),
+                              'build_id': info.get('build_id'),
+                              'date': search_date,
+                              '_aggs.build_id': '_cardinality.install_time',
+                              '_facets_size': 1000,
+                              '_results_number': 0},
+                             handler=handler, handlerdata=info))
+
+    socorro.SuperSearch(queries=queries).wait()
+
+
+def analyze_bugs(bugs, thresholds={'nightly': 5, 'aurora': 5, 'beta': 10, 'release': 50}):
+    patch_info = patchanalysis.get_patch_info(bugs)
+    all_versions = socorro.ProductVersions.get_all_versions()
+
+    # prepare the data
+    data = []
+    for bugid, info in patch_info.items():
+        for sgn in info['signatures']:
+            for chan, date in info['land'].items():
+                d = {'signature': sgn, 'push_date': date, 'channel': chan, 'versions': None, 'bugid': bugid}
+                chan_versions = all_versions[chan]
+                for v in chan_versions.values():
+                    dates = v['dates']
+                    if dates[0] <= date <= dates[1]:
+                        d['start_date'] = dates[0]
+                        d['end_date'] = dates[1]
+                        if dates[1]:
+                            d['build_id'] = ['>=' + utils.get_buildid_from_date(dates[0]),
+                                             '<' + utils.get_buildid_from_date(dates[1] + relativedelta(days=1))]
+                        else:
+                            d['build_id'] = '>=' + utils.get_buildid_from_date(dates[0])
+                        d['versions'] = v['all']
+                        break
+                data.append(d)
+
+    have_crashes_stopped(data, thresholds=thresholds, path='/tmp')
+
+    for d in data:
+        pi = patch_info[d['bugid']]
+        sgn = d['signature']
+        if 'stops' in pi:
+            stops = pi['stops']
+        else:
+            stops = {}
+            pi['stops'] = stops
+
+        if sgn in stops:
+            stops[sgn][d['channel']] = d['stop']
+        else:
+            stops[sgn] = {d['channel']: d['stop']}
+
+    for bugid in bugs:
+        bugid = str(bugid)
+        if bugid not in patch_info:
+            patch_info[bugid] = {}
+
+    return patch_info
