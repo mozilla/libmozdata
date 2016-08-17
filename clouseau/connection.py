@@ -6,6 +6,7 @@ import multiprocessing
 from requests.adapters import HTTPAdapter
 from requests_futures.sessions import FuturesSession
 from requests.packages.urllib3.util.retry import Retry
+from requests.utils import quote
 
 
 class Query(object):
@@ -29,7 +30,7 @@ class Query(object):
         self.handlerdata = handlerdata
 
     def params_repr(self, params):
-        return '?' + '&'.join([name + '=' + str(value) if not isinstance(value, list) else '&'.join([name + '=' + str(intValue) for intValue in value]) for name, value in params.items() if value is not None]) if params else ''
+        return '?' + '&'.join([quote(name) + '=' + quote(str(value)) if not isinstance(value, list) else '&'.join([quote(name) + '=' + str(intValue) for intValue in value]) for name, value in params.items() if value is not None]) if params else ''
 
     def __repr__(self):
         params_list = self.params
