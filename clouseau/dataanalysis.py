@@ -239,7 +239,7 @@ def trends(data, f=mean, coeff=2., multi=True):
 
 
 def has_crash_stopped(data, date, threshold=51, f=mean, coeff=2., multi=True):
-    """Chack if a crash has stopped after a date
+    """Check if a crash has stopped after a date
 
     Args:
         data (list or dict): the data
