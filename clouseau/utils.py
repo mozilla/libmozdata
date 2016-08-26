@@ -12,6 +12,9 @@ import dateutil.parser
 import pytz
 
 
+__pacific = pytz.timezone('US/Pacific')
+
+
 def get_best(stats):
     """Get the key which has the higher value
 
@@ -190,9 +193,19 @@ def get_date_from_buildid(bid):
     minute = int(bid[10:12])
     second = int(bid[12:14])
 
-    pacific = pytz.timezone('US/Pacific')
+    return __pacific.localize(datetime(year, month, day, hour, minute, second)).astimezone(pytz.utc)
 
-    return pacific.localize(datetime(year, month, day, hour, minute, second)).astimezone(pytz.utc)
+
+def get_buildid_from_date(d):
+    """Get a buildid from a date
+
+    Args:
+        d (datetime.datetime): the date
+
+    Returns:
+        str: the build_id
+    """
+    return d.astimezone(__pacific).strftime('%Y%m%d%H%M%S')
 
 
 def rate(x, y):
@@ -210,3 +223,13 @@ def rate(x, y):
 
 def get_guttenberg_death():
     return get_date_ymd('1468-02-03T00:00:00Z')
+
+
+def signatures_parser(signatures):
+    _set = set()
+    if signatures:
+        signatures = map(lambda s: s.strip(' \t\r\n'), signatures.split('[@'))
+        signatures = map(lambda s: s[:-1].strip(' \t\r\n'), filter(None, signatures))
+        for s in filter(None, signatures):
+            _set.add(s)
+    return list(_set)

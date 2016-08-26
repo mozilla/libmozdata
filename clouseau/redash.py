@@ -4,6 +4,7 @@
 
 import six
 import functools
+import re
 from datetime import timedelta
 from .connection import (Connection, Query)
 from . import utils
@@ -41,6 +42,39 @@ class Redash(Connection):
             data (dict): data
         """
         data[query_id] = json
+
+    @staticmethod
+    def __get_rows(channel, versions, rows):
+        if channel == 'beta':
+            pat = re.compile('([0-9]+\.0)b[0-9]+')
+            _versions = set()
+            for v in versions:
+                m = pat.match(v)
+                if m:
+                    _versions.add(m.group(1))
+        else:
+            _versions = set(versions)
+
+        majors = set()
+        pat_major = re.compile('([0-9]+)')
+        for v in versions:
+            m = pat_major.match(v)
+            if m:
+                majors.add(m.group(1))
+
+        _rows = []
+        for row in rows:
+            if row['channel'] == channel:
+                v = row['build_version']
+                if v:
+                    if v in _versions:
+                        _rows.append(row)
+                    elif majors:
+                        m = pat_major.match(v)
+                        if m and m.group(1) in majors:
+                            _rows.append(row)
+
+        return _rows
 
     @staticmethod
     def get(query_ids):
@@ -85,17 +119,15 @@ class Redash(Connection):
         rows = khours[qid]['query_result']['data']['rows']
         res = {}
 
+        start_date = utils.get_date_ymd(start_date)
+        end_date = utils.get_date_ymd(end_date)
+
         # init the data
         duration = (end_date - start_date).days
         for i in range(duration + 1):
             res[start_date + timedelta(i)] = 0.
 
-        if channel == 'beta':
-            versions = set([v[:-2] for v in versions])
-        else:
-            versions = set(versions)
-
-        rows = [row for row in rows if row['channel'] == channel and row['build_version'] in versions]
+        rows = Redash.__get_rows(channel, versions, rows)
 
         for row in rows:
             d = utils.get_date_ymd(row['activity_date'])
@@ -129,26 +161,24 @@ class Redash(Connection):
                  'plugin': 0.,
                  'all': 0.}
 
+        start_date = utils.get_date_ymd(start_date)
+        end_date = utils.get_date_ymd(end_date)
+
         # init the data
         duration = (end_date - start_date).days
         for i in range(duration + 1):
             res[start_date + timedelta(i)] = stats.copy()
 
-        if channel == 'beta':
-            versions = set([v[:-2] for v in versions])
-        else:
-            versions = set(versions)
-
-        rows = [row for row in rows if row['channel'] == channel and row['build_version'] in versions]
+        rows = Redash.__get_rows(channel, versions, rows)
 
         for row in rows:
             d = utils.get_date_ymd(row['date'])
             if d >= start_date and d <= end_date:
                 stats = res[d]
-                stats['m+c'] = row['main'] + row['content']
-                stats['main'] = row['main']
-                stats['content'] = row['content']
-                stats['plugin'] = row['plugin'] + row['gmplugin']
-                stats['all'] = row['total']
+                stats['m+c'] += row['main'] + row['content']
+                stats['main'] += row['main']
+                stats['content'] += row['content']
+                stats['plugin'] += row['plugin'] + row['gmplugin']
+                stats['all'] += row['total']
 
         return res
