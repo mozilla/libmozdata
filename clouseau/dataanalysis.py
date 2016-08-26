@@ -12,8 +12,9 @@ from . import utils
 from .connection import Query
 from . import patchanalysis
 import matplotlib
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+
+matplotlib.use('Agg')
 
 
 def mean(x):
