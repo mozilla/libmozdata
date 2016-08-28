@@ -507,7 +507,7 @@ def __get_crash_positions(limit, product, versions, channel, search_date, verbos
             return c
 
         types = ['browser', 'content', 'plugin']
-        rank = [sorted(signatures.items(), cmp=comp, key=lambda t: (t[1][ty], t[0]), reverse=True) for ty in types]
+        rank = [sorted(signatures.items(), cmp=comp, key=lambda t: (t[1][typ], t[0]), reverse=True) for typ in types]
         rank = [{r[i][0]: i + 1 for i in range(len(r))} for r in rank]
 
         for s, v in signatures.items():
