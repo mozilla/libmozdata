@@ -1,7 +1,9 @@
+# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import sys
 import argparse
 import json
 import six
@@ -57,9 +59,13 @@ def get(channel, date, product='Firefox', duration=11, tc_limit=50, crash_type='
     """
     channel = channel.lower()
     version = v[channel]
+    sys.stdout.write('Getting version information from Socorro...')
+    sys.stdout.flush()
     versions_info = socorro.ProductVersions.get_version_info(version, channel=channel, product=product)
     versions = versions_info.keys()
     platforms = socorro.Platforms.get_cached_all()
+    sys.stdout.write(' ✔\n')
+    sys.stdout.flush()
 
     if crash_type and isinstance(crash_type, six.string_types):
         crash_type = [crash_type]
@@ -75,12 +81,20 @@ def get(channel, date, product='Firefox', duration=11, tc_limit=50, crash_type='
     end_date = utils.get_date_str(_date)
 
     # First, we get the ADI
+    sys.stdout.write('Getting ADI from Socorro...')
+    sys.stdout.flush()
     adi = socorro.ADI.get(version=versions, product=product, end_date=end_date, duration=duration, platforms=platforms)
     adi = [adi[key] for key in sorted(adi.keys(), reverse=True)]
+    sys.stdout.write(' ✔\n')
+    sys.stdout.flush()
 
     # get the khours
+    sys.stdout.write('Getting khours from Re:dash...')
+    sys.stdout.flush()
     khours = Redash.get_khours(utils.get_date_ymd(start_date), utils.get_date_ymd(end_date), channel, versions, product)
     khours = [khours[key] for key in sorted(khours.keys(), reverse=True)]
+    sys.stdout.write(' ✔\n')
+    sys.stdout.flush()
 
     overall_crashes_by_day = []
     signatures = {}
@@ -119,7 +133,11 @@ def get(channel, date, product='Firefox', duration=11, tc_limit=50, crash_type='
     if startup:
         params['uptime'] = '<=60'
 
+    sys.stdout.write('Getting top signatures from Socorro...')
+    sys.stdout.flush()
     socorro.SuperSearch(params=params, handler=signature_handler).wait()
+    sys.stdout.write(' ✔\n')
+    sys.stdout.flush()
 
     bug_flags = ['resolution', 'id', 'last_change_time', 'cf_tracking_firefox' + str(version)]
     for i in range(int(version), int(v['nightly']) + 1):
@@ -190,7 +208,11 @@ def get(channel, date, product='Firefox', duration=11, tc_limit=50, crash_type='
             cparams['signature'] = sgn_group
             queries.append(Query(socorro.SuperSearch.URL, cparams, functools.partial(__trend_handler, default_trend), trends))
 
+    sys.stdout.write('Getting trends for top signatures from Socorro...')
+    sys.stdout.flush()
     socorro.SuperSearch(queries=queries).wait()
+    sys.stdout.write(' ✔\n')
+    sys.stdout.flush()
 
     for sgn, trend in trends.items():
         signatures[sgn] = (signatures[sgn], [trend[key] for key in sorted(trend.keys(), reverse=True)])
@@ -203,7 +225,11 @@ def get(channel, date, product='Firefox', duration=11, tc_limit=50, crash_type='
         _signatures[s[0]] = i  # top crash rank
         i += 1
 
+    sys.stdout.write('Getting bugs linked to the top signatures from Bugzilla...')
+    sys.stdout.flush()
     res_bugs.wait()
+    sys.stdout.write(' ✔\n')
+    sys.stdout.flush()
 
     # TODO: In the first query to get the bugs, also get dupe_of and avoid the first query
     #       in follow_dup (so modify follow_dup to accept both a bug ID or a bug object).
@@ -226,7 +252,11 @@ def get(channel, date, product='Firefox', duration=11, tc_limit=50, crash_type='
             'include_fields': bug_flags,
         }
         queries.append(Query(Bugzilla.API_URL, params, __bug_handler, bugs[sgn]))
+    sys.stdout.write('Resolving duplicate bugs to the bugs they\'ve been duplicated to...')
+    sys.stdout.flush()
     Bugzilla(queries=queries).wait()
+    sys.stdout.write(' ✔\n')
+    sys.stdout.flush()
 
     for sgn, stats in signatures.items():
         # stats is 2-uple: ([count, win_count, mac_count, linux_count, startup_count], trend)
@@ -261,7 +291,11 @@ if __name__ == "__main__":
 
     for channel in args.channels:
         for startup in [False, True]:
+            print('Getting top-' + args.tclimit + (' startup ' if startup else ' ') + 'crashes for the \'' + channel + '\' channel')
+
             stats = get(channel, args.date, duration=int(args.duration), tc_limit=int(args.tclimit), startup=startup)
+
+            print('\n\n')
 
             with open(os.path.join(args.output_directory, channel + ('-startup' if startup else '') + '.json'), 'w') as f:
                 json.dump(stats, f, allow_nan=False)
