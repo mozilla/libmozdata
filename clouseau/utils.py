@@ -6,6 +6,7 @@ import six
 import operator
 import calendar
 from datetime import (datetime, date, timedelta)
+from dateutil.relativedelta import relativedelta
 import math
 import random
 import dateutil.parser
@@ -66,6 +67,9 @@ def get_date_ymd(dt):
         return datetime(yesterday.year, yesterday.month, yesterday.day)
     elif dt == 'tomorrow':
         tomorrow = date.today() + timedelta(1)
+        return datetime(tomorrow.year, tomorrow.month, tomorrow.day)
+    elif dt == 'tomorrow_utc':
+        tomorrow = datetime.utcnow() + timedelta(1)
         return datetime(tomorrow.year, tomorrow.month, tomorrow.day)
     elif dt == 'today_utc':
         today = datetime.utcnow()
@@ -233,3 +237,23 @@ def signatures_parser(signatures):
         for s in filter(None, signatures):
             _set.add(s)
     return list(_set)
+
+
+def get_monday_sunday(date):
+    iso = date.isocalendar()
+    delta_monday = iso[2] - 1
+    delta_sunday = 7 - iso[2]
+    return date - relativedelta(days=delta_monday), date + relativedelta(days=delta_sunday)
+
+
+def mean_stddev(x):
+    N = len(x)
+    m = sum(x) / N
+    v = sum([xi ** 2 for xi in x]) / N - m ** 2
+    e = math.sqrt(v)
+
+    return m, e
+
+
+def get_channels():
+    return ['nightly', 'aurora', 'beta', 'release', 'esr']
