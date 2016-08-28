@@ -12,9 +12,31 @@ token =
 URL = https://bugzilla.mozilla.org
 token =
 
+[Allizgub]
+URL = https://bugzilla-dev.allizom.org
+token =
+
 [Re:dash]
 URL = https://sql.telemetry.mozilla.org
 token =
 
 [Phonebook]
 URL = https://phonebook.mozilla.org
+
+[Gmail]
+credentials =
+
+[Thresholds]
+nightly = 5
+aurora = 5
+beta = 10
+release = 50
+
+[Minimal-Releases]
+beta = 2
+release = 1
+
+[Minimal-Days]
+release = 7
+nightly = 3
+aurora = 3
