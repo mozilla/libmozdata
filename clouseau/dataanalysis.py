@@ -5,16 +5,17 @@
 import numpy as np
 import pytz
 import os
+from bisect import bisect
 from dateutil.relativedelta import relativedelta
 from datetime import datetime
 from . import socorro
 from . import utils
 from .connection import Query
 from . import patchanalysis
+from . import config
 import matplotlib
-import matplotlib.pyplot as plt
-
 matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 
 def mean(x):
@@ -28,7 +29,7 @@ def mean(x):
     """
     l = len(x)
     m = np.sum(x) / l
-    e = np.sqrt(np.sum((x - m) ** 2 / l))
+    e = np.sqrt(np.sum((x - m) ** 2) / l)
     return m, e
 
 
@@ -253,19 +254,42 @@ def has_crash_stopped(data, date, threshold=51, f=mean, coeff=2., multi=True):
     Returns:
         (Bool): True if the crash has stopped
     """
-    tr = trends(data, f=f, coeff=coeff, multi=multi)
-    for dec in tr['decreases']:
-        if dec[0] <= date <= dec[1] and dec[2] >= threshold:
-            return True
-    return False
+    if len(data) <= 3:
+        dates = sorted(data.keys())
+        i = bisect(dates, date)
+        if i == len(dates):
+            return 'untimely'
+        if i == 0:
+            return 'no'
+
+        n1 = data[dates[i - 1]]
+        n2 = data[dates[i]]
+        percentage = round((n2 - n1) / n1 * 100.)
+        if percentage <= -threshold:
+            return 'yes'
+    else:
+        tr = trends(data, f=f, coeff=coeff, multi=multi)
+        one_day = relativedelta(days=1)
+        for dec in tr['decreases']:
+            if dec[0] - one_day <= date <= dec[1] + one_day and dec[2] >= threshold:
+                return 'yes'
+    return 'no'
 
 
-def have_crashes_stopped(crashes_info, product='Firefox', thresholds={}, path=None):
+def have_crashes_stopped(crashes_info, all_versions, product='Firefox', thresholds={}, path=None):
+    def get_date(build_id, version, channel):
+        date = utils.get_date_from_buildid(build_id)
+        if channel in ['nightly', 'aurora']:
+            return pytz.utc.localize(datetime(date.year, date.month, date.day))
+        else:
+            major = socorro.ProductVersions.get_major_version(version)
+            return all_versions[channel][major]['versions'][version] + relativedelta(days=1)
+
     def handler(json, data):
         trend = data['trend']
+        channel = data['channel']
         for info in json['facets']['build_id']:
-            date = utils.get_date_from_buildid(info['term'])
-            date = pytz.utc.localize(datetime(date.year, date.month, date.day))
+            date = get_date(info['term'], info['facets']['version'][0]['term'], channel)
             trend[date] += info['facets']['cardinality_install_time']['value']
 
         if thresholds:
@@ -274,17 +298,23 @@ def have_crashes_stopped(crashes_info, product='Firefox', thresholds={}, path=No
                 if v <= ts:
                     trend[k] = 0
 
-        data['stop'] = has_crash_stopped(trend, data['push_date'])
-        if True or path and not data['stop']:
-            signature = json['facets']['signature'][0]['term']
-            count = json['facets']['signature'][0]['count']
-            filename = os.path.join(path, '%s_%d.png' % (signature, count))
+        if len(trend) > 1:
+            data['stop'] = has_crash_stopped(trend, data['push_date'])
+        else:
+            data['stop'] = 'untimely'
+
+        if path and data['stop'] == 'no':
+            signature = data['signature']
+            bugid = data['bugid']
+            channel = data['channel']
+            filename = os.path.join(path, '%s_%s_%s.png' % (signature, bugid, channel))
             plot(trend, filename=filename)
 
     def trends_handler(json, data):
+        channel = data[1]
+        data = data[0]
         for info in json['facets']['build_id']:
-            date = utils.get_date_from_buildid(info['term'])
-            date = pytz.utc.localize(datetime(date.year, date.month, date.day))
+            date = get_date(info['term'], info['facets']['version'][0]['term'], channel)
             data[date] = 0
 
     queries = []
@@ -298,10 +328,10 @@ def have_crashes_stopped(crashes_info, product='Firefox', thresholds={}, path=No
                               'release_channel': info.get('channel', None),
                               'build_id': info.get('build_id'),
                               'date': search_date,
-                              '_aggs.build_id': '_cardinality.install_time',
-                              '_facets_size': 1000,
+                              '_aggs.build_id': ['_cardinality.install_time', 'version'],
+                              '_facets_size': 100,
                               '_results_number': 0},
-                             handler=trends_handler, handlerdata=d))
+                             handler=trends_handler, handlerdata=(d, info['channel'])))
 
     socorro.SuperSearch(queries=queries).wait()
 
@@ -315,7 +345,7 @@ def have_crashes_stopped(crashes_info, product='Firefox', thresholds={}, path=No
                               'release_channel': info.get('channel', None),
                               'build_id': info.get('build_id'),
                               'date': search_date,
-                              '_aggs.build_id': '_cardinality.install_time',
+                              '_aggs.build_id': ['_cardinality.install_time', 'version'],
                               '_facets_size': 1000,
                               '_results_number': 0},
                              handler=handler, handlerdata=info))
@@ -323,34 +353,82 @@ def have_crashes_stopped(crashes_info, product='Firefox', thresholds={}, path=No
     socorro.SuperSearch(queries=queries).wait()
 
 
-def analyze_bugs(bugs, thresholds={'nightly': 5, 'aurora': 5, 'beta': 10, 'release': 50}):
+def analyze_bugs(bugs, min_date=None, thresholds=None, minimal_releases=None, minimal_days=None):
+    if thresholds is None:
+        chans = utils.get_channels()
+        thresholds = {chan: int(config.get('Thresholds', chan, -1)) for chan in chans}
+    if minimal_releases is None:
+        chans = utils.get_channels()
+        minimal_releases = {chan: int(config.get('Minimal-Releases', chan, -1)) for chan in chans}
+    if minimal_days is None:
+        chans = utils.get_channels()
+        minimal_days = {chan: int(config.get('Minimal-Days', chan, -1)) for chan in chans}
+
     patch_info = patchanalysis.get_patch_info(bugs)
     all_versions = socorro.ProductVersions.get_all_versions()
+    tomorrow = pytz.utc.localize(utils.get_date_ymd('tomorrow_utc'))
+    today = pytz.utc.localize(utils.get_date_ymd('today_utc'))
 
     # prepare the data
     data = []
+    untimely = []
     for bugid, info in patch_info.items():
         for sgn in info['signatures']:
-            for chan, date in info['land'].items():
-                d = {'signature': sgn, 'push_date': date, 'channel': chan, 'versions': None, 'bugid': bugid}
-                chan_versions = all_versions[chan]
-                for v in chan_versions.values():
-                    dates = v['dates']
-                    if dates[0] <= date <= dates[1]:
+            for chan, push_date in info['land'].items():
+                if not min_date or push_date >= min_date:
+                    d = {'signature': sgn, 'push_date': push_date, 'channel': chan, 'versions': None, 'bugid': bugid}
+                    add_data = False
+                    is_untimely = False
+                    chan_versions = all_versions[chan]
+                    for v in chan_versions.values():
+                        dates = v['dates']
+                        end_date = dates[1] if dates[1] else tomorrow
+                        last_release = None
+                        if dates[0] <= push_date <= end_date:
+                            # we check that we've the correct number of new versions after push_date
+                            minimal_releases_for_chan = minimal_releases[chan]
+                            if minimal_releases_for_chan != -1:
+                                version_dates = sorted(v['versions'].values())
+                                # i is such that v_d[i - 1] <= push_date < v_d[i]
+                                i = bisect(version_dates, push_date)
+                                remainder = len(version_dates) - i
+                                if remainder < minimal_releases_for_chan:
+                                    is_untimely = True
+                                    break
+                                last_release = version_dates[i + minimal_releases_for_chan - 1]
+                            minimal_days_for_chan = minimal_days[chan]
+                            if minimal_days_for_chan != -1:
+                                if last_release:
+                                    if (today - last_release).days >= minimal_days_for_chan:
+                                        add_data = True
+                                    else:
+                                        is_untimely = True
+                                        break
+                                elif (today - push_date).days >= minimal_days_for_chan:
+                                    add_data = True
+                                else:
+                                    is_untimely = True
+                            else:
+                                add_data = True
+                            break
+                    if add_data:
                         d['start_date'] = dates[0]
-                        d['end_date'] = dates[1]
+                        d['end_date'] = end_date
                         if dates[1]:
                             d['build_id'] = ['>=' + utils.get_buildid_from_date(dates[0]),
-                                             '<' + utils.get_buildid_from_date(dates[1] + relativedelta(days=1))]
+                                             '<' + utils.get_buildid_from_date(end_date + relativedelta(days=1))]
                         else:
                             d['build_id'] = '>=' + utils.get_buildid_from_date(dates[0])
-                        d['versions'] = v['all']
-                        break
-                data.append(d)
+                            d['versions'] = v['all']
+                        data.append(d)
+                    elif is_untimely:
+                        d['stop'] = 'untimely'
+                        untimely.append(d)
 
-    have_crashes_stopped(data, thresholds=thresholds, path='/tmp')
+    if data:
+        have_crashes_stopped(data, all_versions, thresholds=thresholds, path='/tmp')
 
-    for d in data:
+    for d in data + untimely:
         pi = patch_info[d['bugid']]
         sgn = d['signature']
         if 'stops' in pi:
