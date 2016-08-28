@@ -621,7 +621,7 @@ def get_patch_info(bugs, base_versions=None):
     bug_pattern = re.compile('[\t ]*[Bb][Uu][Gg][\t ]*([0-9]+)')
 
     def handler_revision(json, data):
-        data['date'] = pytz.utc.localize(datetime.utcfromtimestamp(json['date'][0]))
+        data['date'] = pytz.utc.localize(datetime.utcfromtimestamp(json['pushdate'][0]))
         data['backedout'] = json.get('backedoutby', '') != ''
         m = bug_pattern.search(json['desc'])
         if not m or m.group(1) != data['bugid']:
