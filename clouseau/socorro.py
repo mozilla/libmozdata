@@ -281,7 +281,7 @@ class ProductVersions(Socorro):
             return None
 
     @staticmethod
-    def __get_version(v):
+    def get_major_version(v):
         """Get major version number
 
         Args:
@@ -314,7 +314,7 @@ class ProductVersions(Socorro):
                 start_date = ff['start_date']
                 throttle = ff['throttle']
                 version = ff['version']  # 45.x
-                version_n = ProductVersions.__get_version(version)
+                version_n = ProductVersions.get_major_version(version)
                 # take only the latest versions, e.g. if 45.x and 44.x are "release"
                 # then 45.x is only considered
                 if number:
@@ -456,7 +456,7 @@ class ProductVersions(Socorro):
                     build_type = ff['build_type'].lower()
                     if build_type in majors:
                         version = ff['version']  # 45.x
-                        version_n = ProductVersions.__get_version(version)
+                        version_n = ProductVersions.get_major_version(version)
                         if version_n == majors[build_type]:
                             info = {'version': version,
                                     'throttle': ff['throttle'],
@@ -489,13 +489,14 @@ class ProductVersions(Socorro):
                     channel = ff['build_type'].lower()
                     start_date = pytz.utc.localize(utils.get_date_ymd(ff['start_date']))
                     version = ff['version']  # 45.x
-                    version_n = ProductVersions.__get_version(version)  # 45
+                    version_n = ProductVersions.get_major_version(version)  # 45
                     info = data[channel]
                     if version_n in info:
+                        info[version_n]['versions'][version] = start_date
                         if start_date < info[version_n]['dates'][0]:
                             info[version_n]['dates'][0] = start_date
                     else:
-                        info[version_n] = {'dates': [start_date], 'all': []}
+                        info[version_n] = {'dates': [start_date], 'all': [], 'versions': {version: start_date}}
                     if not version.endswith('b'):
                         info[version_n]['all'].append(version)
 
