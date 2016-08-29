@@ -11,7 +11,6 @@ from os.path import commonprefix
 import json
 import re
 from datetime import timedelta
-import pytz
 from icalendar import Calendar
 from . import utils
 

@@ -4,7 +4,6 @@
 
 import six
 import functools
-import pytz
 from operator import itemgetter
 try:
     from urllib.parse import urlparse

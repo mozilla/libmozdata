@@ -3,7 +3,6 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import numpy as np
-import pytz
 import os
 from bisect import bisect
 from dateutil.relativedelta import relativedelta
