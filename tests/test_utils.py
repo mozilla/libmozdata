@@ -24,19 +24,16 @@ class UtilsTest(unittest.TestCase):
 
     def test_get_date_ymd(self):
         self.assertIsNotNone(utils.get_date_ymd('today'))
-        self.assertIsNotNone(utils.get_date_ymd('today_utc'))
         self.assertIsNotNone(utils.get_date_ymd('yesterday'))
-        self.assertIsNotNone(utils.get_date_ymd('yesterday_utc'))
         self.assertIsNotNone(utils.get_date_ymd('tomorrow'))
         self.assertTrue(utils.get_date_ymd('yesterday') < utils.get_date_ymd('today') < utils.get_date_ymd('tomorrow'))
-        self.assertTrue(utils.get_date_ymd('yesterday_utc') < utils.get_date_ymd('today_utc'))
-        date = datetime.datetime.strptime('1991-04-16', '%Y-%m-%d')
+        date = utils.as_utc(datetime.datetime.strptime('1991-04-16', '%Y-%m-%d'))
         self.assertEqual(utils.get_date_ymd('1991/04/16'), date)
         self.assertEqual(utils.get_date_ymd('1991-04-16'), date)
         self.assertEqual(utils.get_date_ymd('1991 04 16'), date)
         self.assertEqual(utils.get_date_ymd('04/16/1991'), date)
         self.assertEqual(utils.get_date_ymd('16/04/1991'), date)
-        self.assertEqual(utils.get_date_ymd('1991-04-16 12:00:00'), datetime.datetime(1991, 4, 16, 12, 0))
+        self.assertEqual(utils.get_date_ymd('1991-04-16 12:00:00'), utils.as_utc(datetime.datetime(1991, 4, 16, 12, 0)))
 
         with self.assertRaises(Exception):
             utils.get_date_ymd('')

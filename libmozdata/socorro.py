@@ -92,7 +92,7 @@ class SuperSearch(Socorro):
         _start = utils.get_date(start)
 
         if end:
-            _end = (utils.get_date_ymd(end) + timedelta(1)).replace(tzinfo=None)
+            _end = utils.get_date_ymd(end) + timedelta(1)
             today = utils.get_date_ymd('today')
             if _end > today:
                 search_date = ['>=' + _start]
@@ -487,7 +487,7 @@ class ProductVersions(Socorro):
                 ffs = json['hits']
                 for ff in ffs:
                     channel = ff['build_type'].lower()
-                    start_date = pytz.utc.localize(utils.get_date_ymd(ff['start_date']))
+                    start_date = utils.get_date_ymd(ff['start_date'])
                     version = ff['version']  # 45.x
                     version_n = ProductVersions.get_major_version(version)  # 45
                     info = data[channel]

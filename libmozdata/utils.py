@@ -57,28 +57,19 @@ def get_date_ymd(dt):
     assert dt
 
     if isinstance(dt, datetime):
-        return dt
+        return as_utc(dt)
 
     if dt == 'today':
-        today = date.today()
-        return datetime(today.year, today.month, today.day)
-    elif dt == 'yesterday':
-        yesterday = date.today() - timedelta(1)
-        return datetime(yesterday.year, yesterday.month, yesterday.day)
-    elif dt == 'tomorrow':
-        tomorrow = date.today() + timedelta(1)
-        return datetime(tomorrow.year, tomorrow.month, tomorrow.day)
-    elif dt == 'tomorrow_utc':
-        tomorrow = datetime.utcnow() + timedelta(1)
-        return datetime(tomorrow.year, tomorrow.month, tomorrow.day)
-    elif dt == 'today_utc':
         today = datetime.utcnow()
-        return datetime(today.year, today.month, today.day)
-    elif dt == 'yesterday_utc':
+        return pytz.utc.localize(datetime(today.year, today.month, today.day))
+    elif dt == 'tomorrow':
+        tomorrow = datetime.utcnow() + timedelta(1)
+        return pytz.utc.localize(datetime(tomorrow.year, tomorrow.month, tomorrow.day))
+    elif dt == 'yesterday':
         yesterday = datetime.utcnow() - timedelta(1)
-        return datetime(yesterday.year, yesterday.month, yesterday.day)
+        return pytz.utc.localize(datetime(yesterday.year, yesterday.month, yesterday.day))
 
-    return dateutil.parser.parse(dt)
+    return as_utc(dateutil.parser.parse(dt))
 
 
 def get_today():
@@ -106,6 +97,7 @@ def get_date(_date, delta=None):
 
     Args:
         ymd (str): a date
+        delta (int): the number of days to remove
     Returns:
         str: the date as a string 'Year-month-day'
     """
@@ -210,6 +202,35 @@ def get_buildid_from_date(d):
         str: the build_id
     """
     return d.astimezone(__pacific).strftime('%Y%m%d%H%M%S')
+
+
+def as_utc(d):
+    """Convert a date in UTC
+
+    Args:
+        d (datetime.datetime): the date
+
+    Returns:
+        datetime.datetime: the localized date
+    """
+    if isinstance(d, datetime):
+        if d.tzinfo is None or d.tzinfo.utcoffset(d) is None:
+            return pytz.utc.localize(d)
+        return d.astimezone(pytz.utc)
+    elif isinstance(d, date):
+        return pytz.utc.localize(datetime(d.year, d.month, d.day))
+
+
+def get_moz_date(d):
+    """Convert a Mozilla date in UTC
+
+    Args:
+        d (str): the date
+
+    Returns:
+        datetime.datetime: the localized date
+    """
+    return pytz.timezone('US/Pacific').localize(dateutil.parser.parse(d)).astimezone(pytz.utc)
 
 
 def rate(x, y):
