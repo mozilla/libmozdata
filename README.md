@@ -29,3 +29,11 @@ coverage run --source=libmozdata -m unittest discover tests/
 ## Credentials
 
 Copy the file config.ini-TEMPLATE into config.ini and fill the token entries.
+
+## Bugs
+
+https://github.com/mozilla/libmozdata/issues/new
+
+## Contact
+
+Email: release-mgmt@mozilla.com
