@@ -1,8 +1,8 @@
-# clouseau
-> Tool to find out some clues after crashes in using data from Socorro, Bugzilla and mercurial 
+# libmozdata
+> Library to access several Mozilla data sources
 
-[![Build Status](https://api.travis-ci.org/mozilla/clouseau.svg?branch=master)](https://travis-ci.org/mozilla/clouseau)
-[![codecov.io](https://img.shields.io/codecov/c/github/mozilla/clouseau/master.svg)](https://codecov.io/github/mozilla/clouseau?branch=master)
+[![Build Status](https://api.travis-ci.org/mozilla/libmozdata.svg?branch=master)](https://travis-ci.org/mozilla/libmozdata)
+[![codecov.io](https://img.shields.io/codecov/c/github/mozilla/libmozdata/master.svg)](https://codecov.io/github/mozilla/libmozdata?branch=master)
 
 ## Setup
 
