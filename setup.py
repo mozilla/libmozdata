@@ -21,7 +21,7 @@ with open(os.path.join(here, 'requirements.txt')) as f:
 setup(
     name='libmozdata',
     version=version,
-    description='Tool to find out some clues after crashes in using data from Socorro, Bugzilla and mercurial',
+    description='Library to access several Mozilla data sources.',
     author='Mozilla Release Management',
     author_email='release-mgmt@mozilla.com',
     url='https://github.com/mozilla/libmozdata',
