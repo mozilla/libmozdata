@@ -3,7 +3,6 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import numpy as np
-import pytz
 import os
 from bisect import bisect
 from dateutil.relativedelta import relativedelta
@@ -280,7 +279,7 @@ def have_crashes_stopped(crashes_info, all_versions, product='Firefox', threshol
     def get_date(build_id, version, channel):
         date = utils.get_date_from_buildid(build_id)
         if channel in ['nightly', 'aurora']:
-            return pytz.utc.localize(datetime(date.year, date.month, date.day))
+            return utils.as_utc(datetime(date.year, date.month, date.day))
         else:
             major = socorro.ProductVersions.get_major_version(version)
             return all_versions[channel][major]['versions'][version] + relativedelta(days=1)
@@ -366,8 +365,8 @@ def analyze_bugs(bugs, min_date=None, thresholds=None, minimal_releases=None, mi
 
     patch_info = patchanalysis.get_patch_info(bugs)
     all_versions = socorro.ProductVersions.get_all_versions()
-    tomorrow = pytz.utc.localize(utils.get_date_ymd('tomorrow_utc'))
-    today = pytz.utc.localize(utils.get_date_ymd('today_utc'))
+    tomorrow = utils.get_date_ymd('tomorrow')
+    today = utils.get_date_ymd('today')
 
     # prepare the data
     data = []

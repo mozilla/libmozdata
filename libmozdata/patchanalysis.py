@@ -1,6 +1,5 @@
 import base64
 import re
-import pytz
 from datetime import (datetime, timedelta)
 try:
     from urllib.request import urlopen
@@ -393,7 +392,7 @@ def bug_analysis(bug, uplift_channel='release'):
 
             obj['reviewers'] = reviewers
 
-            patch_info = patch_analysis(hgmozilla.RawRevision.get_revision(obj['channel'], rev), obj['author_names'], reviewers, datetime.utcfromtimestamp(obj['creation_date']))
+            patch_info = patch_analysis(hgmozilla.RawRevision.get_revision(obj['channel'], rev), obj['author_names'], reviewers, utils.as_utc(datetime.utcfromtimestamp(obj['creation_date'])))
             for k, v in patch_info.items():
                 if k not in info:
                     info[k] = v
@@ -621,7 +620,7 @@ def get_patch_info(bugs, base_versions=None):
     bug_pattern = re.compile('[\t ]*[Bb][Uu][Gg][\t ]*([0-9]+)')
 
     def handler_revision(json, data):
-        data['date'] = pytz.utc.localize(datetime.utcfromtimestamp(json['pushdate'][0]))
+        data['date'] = utils.as_utc(datetime.utcfromtimestamp(json['pushdate'][0]))
         data['backedout'] = json.get('backedoutby', '') != ''
         m = bug_pattern.search(json['desc'])
         if not m or m.group(1) != data['bugid']:

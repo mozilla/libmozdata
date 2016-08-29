@@ -11,7 +11,6 @@ from os.path import commonprefix
 import json
 import re
 from datetime import timedelta
-import pytz
 from icalendar import Calendar
 from . import utils
 
@@ -63,10 +62,7 @@ def __getVersionDates():
         data = json.loads(resp.read().decode('utf-8'))
         resp.close()
 
-    def __as_utc(date_str):
-        return pytz.timezone('US/Pacific').localize(utils.get_date_ymd(date_str)).astimezone(pytz.utc)
-
-    data = dict([(v, __as_utc(d)) for v, d in data.items()])
+    data = dict([(v, utils.get_moz_date(d)) for v, d in data.items()])
 
     resp = urlopen('https://www.google.com/calendar/ical/mozilla.com_2d37383433353432352d3939%40resource.calendar.google.com/public/basic.ics')
     calendar = Calendar.from_ical(resp.read().decode('utf-8'))
@@ -78,7 +74,7 @@ def __getVersionDates():
             if match:
                 version = match.group(1) + '.0'
                 if version not in data:
-                    data[version] = __as_utc(utils.get_date_str(component.decoded('dtstart')))
+                    data[version] = utils.get_moz_date(utils.get_date_str(component.decoded('dtstart')))
 
     return data
 
