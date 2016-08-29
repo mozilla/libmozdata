@@ -14,9 +14,8 @@ from .connection import Query
 from . import patchanalysis
 from . import config
 import matplotlib
+matplotlib.use('Agg')  # NOQA
 import matplotlib.pyplot as plt
-
-matplotlib.use('Agg')
 
 
 def mean(x):
