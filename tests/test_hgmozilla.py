@@ -3,8 +3,8 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import unittest
-from clouseau import hgmozilla
-from clouseau.connection import Query
+from libmozdata import hgmozilla
+from libmozdata.connection import Query
 
 
 class RevisionTest(unittest.TestCase):

@@ -5,8 +5,8 @@
 import unittest
 import datetime
 from dateutil.tz import tzutc
-import clouseau.utils as utils
-import clouseau.versions as versions
+import libmozdata.utils as utils
+import libmozdata.versions as versions
 
 
 class VersionsTest(unittest.TestCase):

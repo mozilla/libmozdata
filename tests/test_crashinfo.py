@@ -4,8 +4,8 @@
 
 import os
 import responses
-from clouseau.CrashInfo import CrashInfo
-from clouseau.socorro import SuperSearch
+from libmozdata.CrashInfo import CrashInfo
+from libmozdata.socorro import SuperSearch
 from tests.auto_mock import MockTestCase
 
 

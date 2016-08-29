@@ -4,8 +4,8 @@
 
 import unittest
 import six
-from clouseau.FileStats import FileStats
-from clouseau import utils
+from libmozdata.FileStats import FileStats
+from libmozdata import utils
 
 
 class FileStatsTest(unittest.TestCase):

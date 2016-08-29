@@ -4,7 +4,7 @@
 
 import unittest
 import os
-from clouseau import bugzilla
+from libmozdata import bugzilla
 import responses
 from tests.auto_mock import MockTestCase
 

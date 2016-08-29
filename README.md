@@ -20,7 +20,7 @@ sudo pip install -r test-requirements.txt
 
 Run tests:
 ```sh
-coverage run --source=clouseau -m unittest discover tests/
+coverage run --source=libmozdata -m unittest discover tests/
 ```
 
 ## Credentials

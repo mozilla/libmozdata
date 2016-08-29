@@ -5,10 +5,10 @@
 import unittest
 import warnings
 from datetime import timedelta
-from clouseau.bugzilla import Bugzilla
-from clouseau.socorro import Socorro
-from clouseau.hgmozilla import Mercurial
-from clouseau import patchanalysis
+from libmozdata.bugzilla import Bugzilla
+from libmozdata.socorro import Socorro
+from libmozdata.hgmozilla import Mercurial
+from libmozdata import patchanalysis
 from tests.auto_mock import MockTestCase
 import responses
 

@@ -3,7 +3,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import unittest
-from clouseau import memory
+from libmozdata import memory
 
 
 class MemoryTest(unittest.TestCase):

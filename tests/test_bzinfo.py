@@ -3,7 +3,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import unittest
-from clouseau.BZInfo import BZInfo
+from libmozdata.BZInfo import BZInfo
 
 
 class BZInfoTest(unittest.TestCase):

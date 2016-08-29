@@ -3,8 +3,8 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import unittest
-from clouseau import socorro
-from clouseau import versions
+from libmozdata import socorro
+from libmozdata import versions
 
 
 class SuperSearchTest(unittest.TestCase):

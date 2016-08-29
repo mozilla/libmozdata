@@ -3,9 +3,9 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import unittest
-from clouseau.HGFileInfo import HGFileInfo
-from clouseau.hgmozilla import Mercurial
-from clouseau import utils
+from libmozdata.HGFileInfo import HGFileInfo
+from libmozdata.hgmozilla import Mercurial
+from libmozdata import utils
 from tests.auto_mock import MockTestCase
 import responses
 

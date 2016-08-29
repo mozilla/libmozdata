@@ -15,8 +15,8 @@ class ConfigTest(unittest.TestCase):
 
     def tearDown(self):
         try:
-            del sys.modules['clouseau']
-            del sys.modules['clouseau.config']
+            del sys.modules['libmozdata']
+            del sys.modules['libmozdata.config']
         except KeyError:
             pass
 
@@ -37,7 +37,7 @@ class ConfigTest(unittest.TestCase):
             pass
 
     def test_config_doesnt_exist(self):
-        from clouseau import config
+        from libmozdata import config
         self.assertIsNone(config.get('Section', 'Option'))
         self.assertEqual(config.get('Section', 'Option', 'Default'), 'Default')
 
@@ -51,7 +51,7 @@ class ConfigTest(unittest.TestCase):
             custom_conf.set('Section2', 'Option', 'Value3')
             custom_conf.write(f)
 
-        from clouseau import config
+        from libmozdata import config
 
         self.assertEqual(config.get('Section', 'Option'), 'Value')
         self.assertEqual(config.get('Section', 'Option', 'Default'), 'Value')

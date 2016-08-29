@@ -125,7 +125,7 @@ class Connection(object):
         Returns:
             dict: the header
         """
-        return {'User-Agent': 'clouseau', 'Connection': 'close'}
+        return {'User-Agent': 'libmozdata', 'Connection': 'close'}
 
     def get_auth(self):
         """Get the auth to use each query

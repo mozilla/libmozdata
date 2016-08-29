@@ -8,7 +8,7 @@ import functools
 from .connection import (Connection, Query)
 from . import config
 from . import utils
-import clouseau.versions
+import libmozdata.versions
 
 
 class Bugzilla(Connection):
@@ -272,7 +272,7 @@ class Bugzilla(Connection):
     @staticmethod
     def get_status_flags(base_versions=None):
         if not base_versions:
-            base_versions = clouseau.versions.get(base=True)
+            base_versions = libmozdata.versions.get(base=True)
 
         status_flags = {}
         for c, v in base_versions.iteritems():

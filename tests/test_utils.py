@@ -6,7 +6,7 @@ import unittest
 import datetime
 from dateutil.tz import tzutc
 import math
-from clouseau import utils
+from libmozdata import utils
 
 
 class UtilsTest(unittest.TestCase):

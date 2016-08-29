@@ -3,7 +3,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import unittest
-from clouseau import modules
+from libmozdata import modules
 
 
 class ModulesTest(unittest.TestCase):
