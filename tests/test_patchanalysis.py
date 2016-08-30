@@ -9,9 +9,11 @@ from libmozdata.bugzilla import Bugzilla
 from libmozdata.socorro import Socorro
 from libmozdata.hgmozilla import Mercurial
 from libmozdata import patchanalysis
+from libmozdata import utils
 from tests.auto_mock import MockTestCase
 import responses
 
+from pprint import pprint
 
 class PatchAnalysisTest(MockTestCase):
     mock_urls = [
@@ -32,8 +34,8 @@ class PatchAnalysisTest(MockTestCase):
             print('Unexpected warning ("' + unexpected_warning + '") found')
 
         self.assertEqual(len(missed_warnings), 0)
-        self.assertEqual(len(unexpected_warnings), 0)
-
+        self.assertEqual(len(unexpected_warnings), 0) 
+        
     @responses.activate
     def test_bug_analysis(self):
         info = patchanalysis.bug_analysis(547914)
@@ -563,6 +565,19 @@ class PatchAnalysisTest(MockTestCase):
         except Exception as e:
             self.assertEqual(str(e), 'Uplift either accepted or rejected.')
 
+    @responses.activate
+    def test_patch_info(self):
+        info = patchanalysis.get_patch_info(['668639'])
+        self.assertEqual(info.keys(), ['668639'])
+        info = info['668639']
+        self.assertEqual(info['affected'], set())
+        self.assertEqual(info['approval'], {'aurora', 'beta', 'release'})
+        self.assertEqual(info['land']['aurora'], utils.get_date_ymd('2011-07-07 19:58:31'))
+        self.assertEqual(info['land']['beta'], utils.get_date_ymd('2011-07-07 19:59:52'))
+        self.assertEqual(info['land']['release'], utils.get_date_ymd('2011-07-07 23:25:27'))
+        self.assertEqual(info['land']['nightly'], utils.get_date_ymd('2011-07-07 19:25:02'))
 
+
+            
 if __name__ == '__main__':
     unittest.main()
