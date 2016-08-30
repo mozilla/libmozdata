@@ -22,12 +22,16 @@ class ConfigIni(Config):
             path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config.ini')
         self.config = ConfigParser()
         self.config.read(path)
+        self.path = path
 
     def get(self, section, option, default=None):
         if not self.config.has_option(section, option):
             return default
 
         return self.config.get(section, option)
+
+    def __repr__(self):
+        return self.path
 
 
 __config = ConfigIni()
