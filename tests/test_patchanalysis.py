@@ -13,7 +13,6 @@ from libmozdata import utils
 from tests.auto_mock import MockTestCase
 import responses
 
-from pprint import pprint
 
 class PatchAnalysisTest(MockTestCase):
     mock_urls = [
@@ -34,8 +33,8 @@ class PatchAnalysisTest(MockTestCase):
             print('Unexpected warning ("' + unexpected_warning + '") found')
 
         self.assertEqual(len(missed_warnings), 0)
-        self.assertEqual(len(unexpected_warnings), 0) 
-        
+        self.assertEqual(len(unexpected_warnings), 0)
+
     @responses.activate
     def test_bug_analysis(self):
         info = patchanalysis.bug_analysis(547914)
@@ -578,6 +577,5 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['land']['nightly'], utils.get_date_ymd('2011-07-07 19:25:02'))
 
 
-            
 if __name__ == '__main__':
     unittest.main()
