@@ -6,8 +6,8 @@ install:
   - pip install -r requirements.txt
   - pip install -r test-requirements.txt
 script:
-  - coverage run --source=libmozdata -m unittest discover tests/
   - flake8 .
+  - coverage run --source=libmozdata -m unittest discover tests/
 after_success:
   - bash <(curl -s https://codecov.io/bash)
 cache: pip
