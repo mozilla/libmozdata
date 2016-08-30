@@ -1,0 +1,6 @@
+include VERSION
+include requirements.txt
+include libmozdata/*.json
+
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]

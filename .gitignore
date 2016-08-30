@@ -5,3 +5,5 @@
 htmlcov/
 config.ini
 .ipynb_checkpoints/
+dist
+libmozdata.egg-info
