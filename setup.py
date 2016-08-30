@@ -21,7 +21,7 @@ with open(os.path.join(here, 'requirements.txt')) as f:
 setup(
     name='libmozdata',
     version=version,
-    description='Library to access several Mozilla data sources.',
+    description='Library to access and aggregate several Mozilla data sources.',
     author='Mozilla Release Management',
     author_email='release-mgmt@mozilla.com',
     url='https://github.com/mozilla/libmozdata',
