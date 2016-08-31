@@ -567,7 +567,7 @@ class PatchAnalysisTest(MockTestCase):
     @responses.activate
     def test_patch_info(self):
         info = patchanalysis.get_patch_info(['668639'])
-        self.assertEqual(info.keys(), ['668639'])
+        self.assertEqual(list(info.keys()), ['668639'])
         info = info['668639']
         self.assertEqual(info['affected'], set())
         self.assertEqual(info['approval'], {'aurora', 'beta', 'release'})

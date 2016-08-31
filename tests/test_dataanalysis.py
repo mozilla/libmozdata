@@ -24,7 +24,7 @@ class DataAnalysisTest(MockTestCase):
         info = dataanalysis.analyze_bugs(['1270686'],
                                          minimal_releases={'nightly': -1, 'aurora': -1, 'beta': 1, 'release': 1},
                                          minimal_days={'nightly': 3, 'aurora': 3, 'beta': -1, 'release': 7})
-        self.assertEqual(info.keys(), ['1270686'])
+        self.assertEqual(list(info.keys()), ['1270686'])
         info = info['1270686']
         self.assertEqual(info['affected'], set())
         self.assertEqual(info['approval'], {'aurora', 'beta'})
