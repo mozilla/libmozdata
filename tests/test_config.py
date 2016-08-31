@@ -63,5 +63,13 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual(config.get('Section', 'Option3', 'Default'), 'Default')
 
 
+class ConfigEnvTest(unittest.TestCase):
+    def test_config_env(self):
+        from libmozdata import config
+        os.environ['LIBMOZDATA_CFG_BUGZILLA_TOKEN'] = 'my_bugzilla_api_key'
+        cfg = config.ConfigEnv()
+        self.assertEqual(cfg.get('Bugzilla', 'token', 'default'), 'my_bugzilla_api_key')
+        self.assertEqual(cfg.get('Section', 'Option', 'default'), 'default')
+
 if __name__ == '__main__':
     unittest.main()
