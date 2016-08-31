@@ -19,7 +19,7 @@ class ConfigIni(Config):
 
     def __init__(self, path=None):
         self.config = ConfigParser()
-        if path:
+        if path is not None:
             self.config.read(path)
         else:
             paths = [
