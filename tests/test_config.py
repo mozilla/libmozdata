@@ -21,6 +21,11 @@ class ConfigTest(unittest.TestCase):
             pass
 
         try:
+            os.remove('config.ini')
+        except:
+            pass
+
+        try:
             os.remove('mozdata.ini')
         except:
             pass
@@ -77,7 +82,6 @@ class ConfigTest(unittest.TestCase):
         self.assertIsNone(config.get('Section', 'Option3'))
         self.assertEqual(config.get('Section', 'Option3', 'Default'), 'Default')
 
-
     def test_config_exists_in_home(self):
         with open(os.path.expanduser('~/.mozdata.ini'), 'w') as f:
             custom_conf = ConfigParser()
@@ -99,6 +103,27 @@ class ConfigTest(unittest.TestCase):
         self.assertIsNone(config.get('Section3', 'Option7'))
         self.assertEqual(config.get('Section3', 'Option7', 'Default'), 'Default')
 
+    def test_config_exists_in_custom_path(self):
+        with open('config.ini', 'w') as f:
+            custom_conf = ConfigParser()
+            custom_conf.add_section('Section5')
+            custom_conf.set('Section5', 'Option7', 'Value11')
+            custom_conf.set('Section5', 'Option8', 'Value12')
+            custom_conf.add_section('Section6')
+            custom_conf.set('Section6', 'Option9', 'Value13')
+            custom_conf.write(f)
+
+        from libmozdata import config
+        config.set_config(config.ConfigIni('config.ini'))
+
+        self.assertEqual(config.get('Section5', 'Option7'), 'Value11')
+        self.assertEqual(config.get('Section5', 'Option7', 'Default'), 'Value11')
+        self.assertEqual(config.get('Section5', 'Option8'), 'Value12')
+        self.assertEqual(config.get('Section5', 'Option8', 'Default'), 'Value12')
+        self.assertEqual(config.get('Section6', 'Option9'), 'Value13')
+        self.assertEqual(config.get('Section6', 'Option9', 'Default'), 'Value13')
+        self.assertIsNone(config.get('Section5', 'Option9'))
+        self.assertEqual(config.get('Section5', 'Option9', 'Default'), 'Default')
 
 class ConfigEnvTest(unittest.TestCase):
     def test_config_env(self):
