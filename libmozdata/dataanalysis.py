@@ -282,14 +282,18 @@ def have_crashes_stopped(crashes_info, all_versions, product='Firefox', threshol
             return utils.as_utc(datetime(date.year, date.month, date.day))
         else:
             major = socorro.ProductVersions.get_major_version(version)
-            return all_versions[channel][major]['versions'][version] + relativedelta(days=1)
+            if version in all_versions[channel][major]['versions']:
+                return all_versions[channel][major]['versions'][version] + relativedelta(days=1)
+            else:
+                return None
 
     def handler(json, data):
         trend = data['trend']
         channel = data['channel']
         for info in json['facets']['build_id']:
             date = get_date(info['term'], info['facets']['version'][0]['term'], channel)
-            trend[date] += info['facets']['cardinality_install_time']['value']
+            if date:
+                trend[date] += info['facets']['cardinality_install_time']['value']
 
         if thresholds:
             ts = thresholds.get(data['channel'], -1)
@@ -314,7 +318,8 @@ def have_crashes_stopped(crashes_info, all_versions, product='Firefox', threshol
         data = data[0]
         for info in json['facets']['build_id']:
             date = get_date(info['term'], info['facets']['version'][0]['term'], channel)
-            data[date] = 0
+            if date:
+                data[date] = 0
 
     queries = []
     for info in crashes_info:
