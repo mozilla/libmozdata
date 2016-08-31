@@ -125,6 +125,7 @@ class ConfigTest(unittest.TestCase):
         self.assertIsNone(config.get('Section5', 'Option9'))
         self.assertEqual(config.get('Section5', 'Option9', 'Default'), 'Default')
 
+
 class ConfigEnvTest(unittest.TestCase):
     def test_config_env(self):
         from libmozdata import config
