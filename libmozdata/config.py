@@ -34,6 +34,16 @@ class ConfigIni(Config):
         return self.path
 
 
+class ConfigEnv(Config):
+
+    def get(self, section, option, default=None):
+        env = os.environ.get('LIBMOZDATA_CFG_' + section.upper() + '_' + option.upper())
+        if not env:
+            return default
+
+        return env
+
+
 __config = ConfigIni()
 
 
