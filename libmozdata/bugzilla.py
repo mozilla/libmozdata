@@ -275,7 +275,7 @@ class Bugzilla(Connection):
             base_versions = libmozdata.versions.get(base=True)
 
         status_flags = {}
-        for c, v in base_versions.iteritems():
+        for c, v in base_versions.items():
             v = str(v)
             if c == 'esr':
                 f = 'cf_status_firefox_esr' + v

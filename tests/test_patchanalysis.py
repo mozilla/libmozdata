@@ -9,6 +9,7 @@ from libmozdata.bugzilla import Bugzilla
 from libmozdata.socorro import Socorro
 from libmozdata.hgmozilla import Mercurial
 from libmozdata import patchanalysis
+from libmozdata import utils
 from tests.auto_mock import MockTestCase
 import responses
 
@@ -562,6 +563,18 @@ class PatchAnalysisTest(MockTestCase):
             info = patchanalysis.uplift_info(1229760, 'release')
         except Exception as e:
             self.assertEqual(str(e), 'Uplift either accepted or rejected.')
+
+    @responses.activate
+    def test_patch_info(self):
+        info = patchanalysis.get_patch_info(['668639'])
+        self.assertEqual(list(info.keys()), ['668639'])
+        info = info['668639']
+        self.assertEqual(info['affected'], set())
+        self.assertEqual(info['approval'], {'aurora', 'beta', 'release'})
+        self.assertEqual(info['land']['aurora'], utils.get_date_ymd('2011-07-07 19:58:31'))
+        self.assertEqual(info['land']['beta'], utils.get_date_ymd('2011-07-07 19:59:52'))
+        self.assertEqual(info['land']['release'], utils.get_date_ymd('2011-07-07 23:25:27'))
+        self.assertEqual(info['land']['nightly'], utils.get_date_ymd('2011-07-07 19:25:02'))
 
 
 if __name__ == '__main__':
