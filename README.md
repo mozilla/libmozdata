@@ -28,7 +28,7 @@ coverage run --source=libmozdata -m unittest discover tests/
 
 ## Credentials
 
-Copy the file config.ini-TEMPLATE into config.ini and fill the token entries.
+Copy the file mozdata.ini-TEMPLATE into mozdata.ini and fill the token entries.
 
 ## Bugs
 

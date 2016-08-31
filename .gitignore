@@ -3,6 +3,6 @@
 *.pyo
 .coverage
 htmlcov/
-config.ini
+mozdata.ini
 dist
 libmozdata.egg-info
