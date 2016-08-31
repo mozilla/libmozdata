@@ -17,11 +17,16 @@ class Config(object):
 
 class ConfigIni(Config):
 
-    def __init__(self, path=''):
-        if not path:
-            path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config.ini')
+    def __init__(self, path=None):
         self.config = ConfigParser()
-        self.config.read(path)
+        if path:
+            self.config.read(path)
+        else:
+            paths = [
+                os.path.join(os.getcwd(), 'mozdata.ini'),
+                os.path.expanduser('~/.mozdata.ini')
+            ]
+            self.config.read(paths)
         self.path = path
 
     def get(self, section, option, default=None):
