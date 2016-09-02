@@ -221,50 +221,7 @@ def patch_analysis(patch, authors, reviewers, creation_date=utils.get_date_ymd('
 MOZREVIEW_URL_PATTERN = 'https://reviewboard.mozilla.org/r/([0-9]+)/'
 
 
-# TODO: Consider feedback+ and feedback- as review+ and review-
-def bug_analysis(bug, uplift_channel='release'):
-    if isinstance(bug, numbers.Number):
-        bug_id = bug
-        bug = {}
-
-        def bughandler(found_bug, data):
-            bug.update(found_bug)
-
-        def commenthandler(found_bug, bugid, data):
-            bug['comments'] = found_bug['comments']
-
-        def attachmenthandler(attachments, bugid, data):
-            bug['attachments'] = attachments
-
-        def historyhandler(found_bug, data):
-            bug['history'] = found_bug['history']
-
-        INCLUDE_FIELDS = [
-            'id', 'flags', 'depends_on', 'keywords', 'blocks', 'whiteboard', 'resolution', 'status',
-            'url', 'version', 'summary', 'priority', 'product', 'component', 'severity',
-            'platform', 'op_sys', 'cc',
-            'assigned_to', 'creator',
-        ]
-
-        ATTACHMENT_INCLUDE_FIELDS = [
-            'flags', 'is_patch', 'creator', 'content_type',
-        ]
-
-        Bugzilla(bug_id, INCLUDE_FIELDS, bughandler=bughandler, commenthandler=commenthandler, attachmenthandler=attachmenthandler, historyhandler=historyhandler, attachment_include_fields=ATTACHMENT_INCLUDE_FIELDS).get_data().wait()
-
-    info = {
-        'backout_num': 0,
-        'blocks': len(bug['blocks']),
-        'depends_on': len(bug['depends_on']),
-        'comments': len(bug['comments']),
-        'r-ed_patches': sum((a['is_patch'] == 1 or a['content_type'] == 'text/x-review-board-request') and sum(flag['name'] == 'review' and flag['status'] == '-' for flag in a['flags']) > 0 for a in bug['attachments']),
-    }
-
-    # Store bug creator & assignee
-    assignee = bug.get('assigned_to_detail')
-    creator = bug.get('creator_detail')
-
-    # Get all reviewers and authors, we will match them with the changeset description (r=XXX).
+def get_bugzilla_authors_reviewers(bug):
     bugzilla_reviewers = set()
     bugzilla_authors = set()
     for attachment in bug['attachments']:
@@ -281,6 +238,10 @@ def bug_analysis(bug, uplift_channel='release'):
 
             bugzilla_reviewers.add(flag['setter'])
 
+    return bugzilla_authors, bugzilla_reviewers
+
+
+def get_commits_for_bug(bug):
     reviewer_pattern = re.compile('r=([a-zA-Z0-9]+)')
     author_pattern = re.compile('<([^>]+)>')
     email_pattern = re.compile('<?([\w\-\._\+%]+@[\w\-\._\+%]+)>?')
@@ -356,15 +317,13 @@ def bug_analysis(bug, uplift_channel='release'):
             author_mercurial_match = email_pattern.search(meta['user'])
         author_mercurial = author_mercurial_match.group(1)
         author_real_name = meta['user'][:author_mercurial_match.start() - 1]
-        # Multiple names because sometimes authors use different emails on Bugzilla and Mercurial and sometimes
-        # they change it.
-        author_names = author_match(author_mercurial, author_real_name, bugzilla_authors, bug['cc_detail'])
 
         # Overwrite revisions from integration channels (inbound, fx-team).
         if rev not in revs or channel == 'central':
             revs[rev] = {
                 'channel': channel,
-                'author_names': author_names,
+                'author_mercurial': author_mercurial,
+                'author_real_name': author_real_name,
                 'creation_date': meta['date'][0],
                 'reviewers': reviewers,
             }
@@ -376,8 +335,63 @@ def bug_analysis(bug, uplift_channel='release'):
         else:
             del revs[rev]
 
+    return revs, backout_comments
+
+
+# TODO: Consider feedback+ and feedback- as review+ and review-
+def bug_analysis(bug, uplift_channel='release'):
+    if isinstance(bug, numbers.Number):
+        bug_id = bug
+        bug = {}
+
+        def bughandler(found_bug, data):
+            bug.update(found_bug)
+
+        def commenthandler(found_bug, bugid, data):
+            bug['comments'] = found_bug['comments']
+
+        def attachmenthandler(attachments, bugid, data):
+            bug['attachments'] = attachments
+
+        def historyhandler(found_bug, data):
+            bug['history'] = found_bug['history']
+
+        INCLUDE_FIELDS = [
+            'id', 'flags', 'depends_on', 'keywords', 'blocks', 'whiteboard', 'resolution', 'status',
+            'url', 'version', 'summary', 'priority', 'product', 'component', 'severity',
+            'platform', 'op_sys', 'cc',
+            'assigned_to', 'creator',
+        ]
+
+        ATTACHMENT_INCLUDE_FIELDS = [
+            'flags', 'is_patch', 'creator', 'content_type',
+        ]
+
+        Bugzilla(bug_id, INCLUDE_FIELDS, bughandler=bughandler, commenthandler=commenthandler, attachmenthandler=attachmenthandler, historyhandler=historyhandler, attachment_include_fields=ATTACHMENT_INCLUDE_FIELDS).get_data().wait()
+
+    info = {
+        'backout_num': 0,
+        'blocks': len(bug['blocks']),
+        'depends_on': len(bug['depends_on']),
+        'comments': len(bug['comments']),
+        'r-ed_patches': sum((a['is_patch'] == 1 or a['content_type'] == 'text/x-review-board-request') and sum(flag['name'] == 'review' and flag['status'] == '-' for flag in a['flags']) > 0 for a in bug['attachments']),
+    }
+
+    # Store bug creator & assignee
+    assignee = bug.get('assigned_to_detail')
+    creator = bug.get('creator_detail')
+
+    # Get all reviewers and authors, we will match them with the changeset description (r=XXX).
+    bugzilla_authors, bugzilla_reviewers = get_bugzilla_authors_reviewers(bug)
+
+    revs, backout_comments = get_commits_for_bug(bug)
+
     if len(revs) > 0:
         for rev, obj in revs.items():
+            # Multiple names because sometimes authors use different emails on Bugzilla and Mercurial and sometimes
+            # they change it.
+            author_names = author_match(obj['author_mercurial'], obj['author_real_name'], bugzilla_authors, bug['cc_detail'])
+
             reviewers = set()
 
             short_reviewers = obj['reviewers']
@@ -386,13 +400,13 @@ def bug_analysis(bug, uplift_channel='release'):
                 # TODO: Figure out if this is the best thing to do (probably we should just skip these and not add the author
                 # to the set of reviewers).
                 if short_reviewer in ['me', 'oops', 'none', 'bustage', 'backout']:
-                    reviewers |= obj['author_names']
+                    reviewers |= author_names
                 else:
                     reviewers.add(reviewer_match(short_reviewer, bugzilla_reviewers | bugzilla_authors, bug['cc_detail']))
 
             obj['reviewers'] = reviewers
 
-            patch_info = patch_analysis(hgmozilla.RawRevision.get_revision(obj['channel'], rev), obj['author_names'], reviewers, utils.as_utc(datetime.utcfromtimestamp(obj['creation_date'])))
+            patch_info = patch_analysis(hgmozilla.RawRevision.get_revision(obj['channel'], rev), author_names, reviewers, utils.as_utc(datetime.utcfromtimestamp(obj['creation_date'])))
             for k, v in patch_info.items():
                 if k not in info:
                     info[k] = v
