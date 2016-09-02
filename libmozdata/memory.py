@@ -30,21 +30,14 @@ def isweird(addr, cpu_name):
     if utils.is64(cpu_name):
         if len(addr) <= 8:
             val = int(addr, 16)
-            if val <= (1 << 16):  # val <= 0xffff (ie: first 64k)
-                return True
+            return val <= 0x10000  # first 64k
         elif addr.startswith('ffffffff'):
             addr = addr[8:]  # 8 == len('ffffffff')
             val = int(addr, 16)
-            if val >= ((1 << 32) - (1 << 16)):  # val >= 0xffffffffffff0000 (ie: last 64k)
-                return True
+            return val >= 0xffff0000  # last 64k
     else:
         val = int(addr, 16)
-        if val <= 1 << 16:  # val <= 0xffff (ie: first 64k)
-            return True
-        if val >= ((1 << 32) - (1 << 16)):  # val >= 0xffff0000 (ie: last 64k)
-            return True
-
-    return False
+        return val <= 0x10000 or val >= 0xffff0000
 
 
 def analyze(addrs, cpu_name=None):
