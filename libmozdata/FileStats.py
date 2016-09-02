@@ -70,7 +70,7 @@ class FileStats(object):
             stats = {}
             last_author = None
             for patch in last:
-                author = patch['author']
+                author = patch['user']
                 if not last_author:
                     last_author = author
                 stats[author] = stats[author] + 1 if author in stats else 1
