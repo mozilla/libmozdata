@@ -315,8 +315,11 @@ def get_commits_for_bug(bug):
         author_mercurial_match = author_pattern.search(meta['user'])
         if author_mercurial_match is None:
             author_mercurial_match = email_pattern.search(meta['user'])
-        author_mercurial = author_mercurial_match.group(1)
-        author_real_name = meta['user'][:author_mercurial_match.start() - 1]
+        if author_mercurial_match is not None:
+            author_mercurial = author_mercurial_match.group(1)
+            author_real_name = meta['user'][:author_mercurial_match.start() - 1]
+        else:
+            author_mercurial = author_real_name = meta['user']
 
         # Overwrite revisions from integration channels (inbound, fx-team).
         if rev not in revs or channel == 'central':

@@ -82,7 +82,7 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['blocks'], 3)
         self.assertEqual(info['depends_on'], 0)
         self.assertEqual(info['comments'], 40)
-        self.assertEqual(info['changes_size'], 488)
+        self.assertEqual(info['changes_size'], 486)
         self.assertEqual(info['test_changes_size'], 0)
         self.assertEqual(info['modules_num'], 3)
         self.assertEqual(info['r-ed_patches'], 3)
@@ -147,8 +147,8 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['test_changes_size'], 462)
         self.assertEqual(info['modules_num'], 11)
         self.assertEqual(info['r-ed_patches'], 0)
-        self.assertEqual(info['code_churn_overall'], 8191)
-        self.assertEqual(info['code_churn_last_3_releases'], 801)
+        self.assertEqual(info['code_churn_overall'], 8203)
+        self.assertEqual(info['code_churn_last_3_releases'], 813)
         self.assertEqual(info['developer_familiarity_overall'], 162)
         self.assertEqual(info['developer_familiarity_last_3_releases'], 51)
         self.assertEqual(info['reviewer_familiarity_overall'], 2)
@@ -296,7 +296,7 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['blocks'], 0)
         self.assertEqual(info['depends_on'], 0)
         self.assertEqual(info['comments'], 41)
-        self.assertEqual(info['changes_size'], 179)
+        self.assertEqual(info['changes_size'], 177)
         self.assertEqual(info['test_changes_size'], 35)
         self.assertEqual(info['modules_num'], 1)
         self.assertEqual(info['r-ed_patches'], 0)
@@ -515,6 +515,9 @@ class PatchAnalysisTest(MockTestCase):
 
         # Author in mercurial doesn't use the same format as usual ("Full Name email" instead of "Full Name <email>").
         info = patchanalysis.bug_analysis(1277522)
+
+        # Author in mercurial doesn't have email
+        info = patchanalysis.bug_analysis(1254980)
 
         # Check uplift request
         info = patchanalysis.bug_analysis(1230065)
