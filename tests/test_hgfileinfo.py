@@ -40,8 +40,8 @@ class HGFileInfoTest(MockTestCase):
         self.assertEqual(fi['authors']['hg@mozilla.com']['reviewers'], {})
         self.assertEqual(fi['bugs'], set(['547914']))
         self.assertEqual(len(fi['patches']), 2)
-        self.assertEqual(fi['patches'][0]['author'], 'philringnalda@gmail.com')
-        self.assertEqual(fi['patches'][1]['author'], 'hg@mozilla.com')
+        self.assertEqual(fi['patches'][0]['user'], 'philringnalda@gmail.com')
+        self.assertEqual(fi['patches'][1]['user'], 'hg@mozilla.com')
 
         fi = hi.get(path, utils.get_timestamp('2009-01-01'))
         self.assertEqual(len(fi['authors']), 1)
@@ -50,14 +50,14 @@ class HGFileInfoTest(MockTestCase):
         self.assertEqual(fi['authors']['philringnalda@gmail.com']['reviewers']['gerv'], 1)
         self.assertEqual(fi['bugs'], set(['547914']))
         self.assertEqual(len(fi['patches']), 1)
-        self.assertEqual(fi['patches'][0]['author'], 'philringnalda@gmail.com')
+        self.assertEqual(fi['patches'][0]['user'], 'philringnalda@gmail.com')
 
         fi = hi.get(path, utils.get_timestamp('2008-01-01'), utils.get_timestamp('2009-01-01'))
         self.assertEqual(fi['authors']['hg@mozilla.com']['count'], 1)
         self.assertEqual(fi['authors']['hg@mozilla.com']['reviewers'], {})
         self.assertEqual(fi['bugs'], set())
         self.assertEqual(len(fi['patches']), 1)
-        self.assertEqual(fi['patches'][0]['author'], 'hg@mozilla.com')
+        self.assertEqual(fi['patches'][0]['user'], 'hg@mozilla.com')
 
         fi = hi.get(path, utc_ts_to=utils.get_timestamp('2009-01-01'))
         self.assertEqual(len(fi['authors']), 1)
@@ -65,7 +65,7 @@ class HGFileInfoTest(MockTestCase):
         self.assertEqual(fi['authors']['hg@mozilla.com']['reviewers'], {})
         self.assertEqual(fi['bugs'], set())
         self.assertEqual(len(fi['patches']), 1)
-        self.assertEqual(fi['patches'][0]['author'], 'hg@mozilla.com')
+        self.assertEqual(fi['patches'][0]['user'], 'hg@mozilla.com')
 
         fi = hi.get(path, utils.get_timestamp('2006-01-01'), utils.get_timestamp('2007-01-01'))
         self.assertEqual(fi['authors'], {})
@@ -81,8 +81,8 @@ class HGFileInfoTest(MockTestCase):
         self.assertEqual(fi['authors']['hg@mozilla.com']['reviewers'], {})
         self.assertEqual(fi['bugs'], set(['547914']))
         self.assertEqual(len(fi['patches']), 2)
-        self.assertEqual(fi['patches'][0]['author'], 'philringnalda@gmail.com')
-        self.assertEqual(fi['patches'][1]['author'], 'hg@mozilla.com')
+        self.assertEqual(fi['patches'][0]['user'], 'philringnalda@gmail.com')
+        self.assertEqual(fi['patches'][1]['user'], 'hg@mozilla.com')
 
     @responses.activate
     def test_hgfileinfo_creation_vs_push_date(self):
@@ -95,7 +95,7 @@ class HGFileInfoTest(MockTestCase):
         self.assertEqual(fi['authors']['hg@mozilla.com']['reviewers'], {})
         self.assertEqual(fi['bugs'], set())
         self.assertEqual(len(fi['patches']), 1)
-        self.assertEqual(fi['patches'][0]['author'], 'hg@mozilla.com')
+        self.assertEqual(fi['patches'][0]['user'], 'hg@mozilla.com')
 
         fi = hi.get(path, utc_ts_to=utils.get_timestamp('2010-02-24'))
         self.assertEqual(len(fi['authors']), 2)
@@ -106,8 +106,8 @@ class HGFileInfoTest(MockTestCase):
         self.assertEqual(fi['authors']['hg@mozilla.com']['reviewers'], {})
         self.assertEqual(fi['bugs'], set(['547914']))
         self.assertEqual(len(fi['patches']), 2)
-        self.assertEqual(fi['patches'][0]['author'], 'philringnalda@gmail.com')
-        self.assertEqual(fi['patches'][1]['author'], 'hg@mozilla.com')
+        self.assertEqual(fi['patches'][0]['user'], 'philringnalda@gmail.com')
+        self.assertEqual(fi['patches'][1]['user'], 'hg@mozilla.com')
 
         hi = HGFileInfo(path, date_type='push')
 
@@ -117,7 +117,7 @@ class HGFileInfoTest(MockTestCase):
         self.assertEqual(fi['authors']['hg@mozilla.com']['reviewers'], {})
         self.assertEqual(fi['bugs'], set())
         self.assertEqual(len(fi['patches']), 1)
-        self.assertEqual(fi['patches'][0]['author'], 'hg@mozilla.com')
+        self.assertEqual(fi['patches'][0]['user'], 'hg@mozilla.com')
 
         fi = hi.get(path, utc_ts_to=utils.get_timestamp('2010-04-07'))
         self.assertEqual(len(fi['authors']), 2)
@@ -128,8 +128,8 @@ class HGFileInfoTest(MockTestCase):
         self.assertEqual(fi['authors']['hg@mozilla.com']['reviewers'], {})
         self.assertEqual(fi['bugs'], set(['547914']))
         self.assertEqual(len(fi['patches']), 2)
-        self.assertEqual(fi['patches'][0]['author'], 'philringnalda@gmail.com')
-        self.assertEqual(fi['patches'][1]['author'], 'hg@mozilla.com')
+        self.assertEqual(fi['patches'][0]['user'], 'philringnalda@gmail.com')
+        self.assertEqual(fi['patches'][1]['user'], 'hg@mozilla.com')
 
     @responses.activate
     def test_hgfileinfo_author(self):
@@ -141,7 +141,7 @@ class HGFileInfoTest(MockTestCase):
         self.assertEqual(fi['authors']['hg@mozilla.com']['reviewers'], {})
         self.assertEqual(fi['bugs'], set())
         self.assertEqual(len(fi['patches']), 1)
-        self.assertEqual(fi['patches'][0]['author'], 'hg@mozilla.com')
+        self.assertEqual(fi['patches'][0]['user'], 'hg@mozilla.com')
 
         self.assertEqual(fi, hi.get(path, utils.get_timestamp('2008-01-01'), utils.get_timestamp('2012-01-01'), authors=['hg@mozilla.com']))
 
@@ -154,8 +154,8 @@ class HGFileInfoTest(MockTestCase):
         self.assertEqual(fi['authors']['hg@mozilla.com']['reviewers'], {})
         self.assertEqual(fi['bugs'], set(['547914']))
         self.assertEqual(len(fi['patches']), 2)
-        self.assertEqual(fi['patches'][0]['author'], 'philringnalda@gmail.com')
-        self.assertEqual(fi['patches'][1]['author'], 'hg@mozilla.com')
+        self.assertEqual(fi['patches'][0]['user'], 'philringnalda@gmail.com')
+        self.assertEqual(fi['patches'][1]['user'], 'hg@mozilla.com')
 
     @responses.activate
     def test_hgfileinfo_multiple(self):
