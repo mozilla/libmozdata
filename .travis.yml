@@ -8,6 +8,10 @@ addons:
     - libatlas-dev
     - libatlas-base-dev
     - liblapack-dev
+    - gfortran
+    - libfreetype6-dev
+    - libpng-dev
+    - zlib1g-dev
 install:
   - pip install -r requirements.txt
   - pip install -r test-requirements.txt
