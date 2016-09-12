@@ -3,13 +3,17 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import numpy as np
-import urllib
 import unittest
 import json
 from libmozdata import spikeanalysis
 from libmozdata import utils
 from tests.auto_mock import MockTestCase
 import responses
+
+try:
+    from urllib.request import urlopen
+except ImportError:
+    from urllib2 import urlopen
 
 
 class SpikeAnalysisTest(MockTestCase):
@@ -34,8 +38,8 @@ class SpikeAnalysisTest(MockTestCase):
     @responses.activate
     def test_get_spikes_2(self):
         url = 'https://crash-analysis.mozilla.com/rkaiser/Firefox-beta-crashes-categories.json'
-        response = urllib.urlopen(url)
-        data = json.loads(response.read())
+        response = urlopen(url)
+        data = json.loads(response.read().decode('utf-8'))
 
         x = {}
         max_date = utils.get_date_ymd('2016-09-09')
@@ -57,8 +61,8 @@ class SpikeAnalysisTest(MockTestCase):
     @responses.activate
     def test_is_spiking(self):
         url = 'https://crash-analysis.mozilla.com/rkaiser/Firefox-beta-crashes-categories.json'
-        response = urllib.urlopen(url)
-        data = json.loads(response.read())
+        response = urlopen(url)
+        data = json.loads(response.read().decode('utf-8'))
 
         x1 = {}
         x2 = {}
