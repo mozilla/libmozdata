@@ -4,20 +4,15 @@
 
 import numpy as np
 import unittest
-import json
 from libmozdata import spikeanalysis
 from libmozdata import utils
 from tests.auto_mock import MockTestCase
 import responses
-
-try:
-    from urllib.request import urlopen
-except ImportError:
-    from urllib2 import urlopen
+import requests
 
 
 class SpikeAnalysisTest(MockTestCase):
-    mock_urls = ['https://crash-analysis.mozilla.com/rkaiser']
+    mock_urls = ['https://crash-analysis.mozilla.com/rkaiser/']
 
     def test_get_spikes_1(self):
         x = np.zeros(1000, dtype=np.float64)
@@ -38,8 +33,8 @@ class SpikeAnalysisTest(MockTestCase):
     @responses.activate
     def test_get_spikes_2(self):
         url = 'https://crash-analysis.mozilla.com/rkaiser/Firefox-beta-crashes-categories.json'
-        response = urlopen(url)
-        data = json.loads(response.read().decode('utf-8'))
+        response = requests.get(url)
+        data = response.json()
 
         x = {}
         max_date = utils.get_date_ymd('2016-09-09')
@@ -61,8 +56,8 @@ class SpikeAnalysisTest(MockTestCase):
     @responses.activate
     def test_is_spiking(self):
         url = 'https://crash-analysis.mozilla.com/rkaiser/Firefox-beta-crashes-categories.json'
-        response = urlopen(url)
-        data = json.loads(response.read().decode('utf-8'))
+        response = requests.get(url)
+        data = response.json()
 
         x1 = {}
         x2 = {}
