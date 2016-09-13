@@ -64,12 +64,12 @@ class HGFileInfo(object):
             if (utc_ts_from is not None and utc_ts_from > utc_date) or utc_ts_to < utc_date:
                 continue
 
-            m = author_pattern.search(entry['author'])
+            m = author_pattern.search(entry['user'])
             if m is None:
-                m = email_pattern.search(entry['author'])
+                m = email_pattern.search(entry['user'])
             if m:
-                entry['author'] = m.group(1)
-            patch_author = entry['author']
+                entry['user'] = m.group(1)
+            patch_author = entry['user']
             if authors and patch_author not in authors:
                 continue
 
