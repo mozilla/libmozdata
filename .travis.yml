@@ -5,13 +5,10 @@ python:
 addons:
   apt:
     packages:
-    - libatlas-dev
-    - libatlas-base-dev
-    - liblapack-dev
-    - gfortran
-    - libfreetype6-dev
-    - libpng-dev
-    - zlib1g-dev
+    - python-numpy
+    - python-scipy
+    - python3-numpy
+    - python3-scipy
 install:
   - pip install -r requirements.txt
   - pip install -r test-requirements.txt
