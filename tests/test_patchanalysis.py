@@ -3,6 +3,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import unittest
+import sys
 import warnings
 from datetime import timedelta
 from libmozdata.bugzilla import Bugzilla
@@ -82,7 +83,7 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['blocks'], 3)
         self.assertEqual(info['depends_on'], 0)
         self.assertEqual(info['comments'], 40)
-        self.assertEqual(info['changes_size'], 488)
+        self.assertEqual(info['changes_size'], 486)
         self.assertEqual(info['test_changes_size'], 0)
         self.assertEqual(info['modules_num'], 3)
         self.assertEqual(info['r-ed_patches'], 3)
@@ -147,8 +148,8 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['test_changes_size'], 462)
         self.assertEqual(info['modules_num'], 11)
         self.assertEqual(info['r-ed_patches'], 0)
-        self.assertEqual(info['code_churn_overall'], 8191)
-        self.assertEqual(info['code_churn_last_3_releases'], 801)
+        self.assertEqual(info['code_churn_overall'], 8203)
+        self.assertEqual(info['code_churn_last_3_releases'], 813)
         self.assertEqual(info['developer_familiarity_overall'], 162)
         self.assertEqual(info['developer_familiarity_last_3_releases'], 51)
         self.assertEqual(info['reviewer_familiarity_overall'], 2)
@@ -159,7 +160,8 @@ class PatchAnalysisTest(MockTestCase):
         # Author has a different name on Bugzilla and Mercurial and they don't use the email on Mercurial.
         with warnings.catch_warnings(record=True) as w:
             info = patchanalysis.bug_analysis(1220307)
-            self.assertWarnings(w, ['da10eecd0e76 looks like a backout, but we couldn\'t find which revision was backed out.', 'Revision da10eecd0e76 is related to another bug (1276850).', 'Bug 1220307 doesn\'t have a uplift request date.'])
+            if sys.version_info >= (3, 0):
+                self.assertWarnings(w, ['da10eecd0e76 looks like a backout, but we couldn\'t find which revision was backed out.', 'Revision da10eecd0e76 is related to another bug (1276850).', 'Bug 1220307 doesn\'t have a uplift request date.'])
             self.assertEqual(info['backout_num'], 2)
             self.assertEqual(info['blocks'], 4)
             self.assertEqual(info['depends_on'], 1)
@@ -178,7 +180,8 @@ class PatchAnalysisTest(MockTestCase):
 
         with warnings.catch_warnings(record=True) as w:
             info = patchanalysis.bug_analysis(1276850)
-            self.assertWarnings(w, ['da10eecd0e76 looks like a backout, but we couldn\'t find which revision was backed out.', 'Author bugmail@mozilla.staktrace.com is not in the list of authors on Bugzilla.', 'Bug 1276850 doesn\'t have a uplift request date.'])
+            if sys.version_info >= (3, 0):
+                self.assertWarnings(w, ['da10eecd0e76 looks like a backout, but we couldn\'t find which revision was backed out.', 'Author bugmail@mozilla.staktrace.com is not in the list of authors on Bugzilla.', 'Bug 1276850 doesn\'t have a uplift request date.'])
             self.assertEqual(info['backout_num'], 0)
             self.assertEqual(info['blocks'], 1)
             self.assertEqual(info['depends_on'], 0)
@@ -296,7 +299,7 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['blocks'], 0)
         self.assertEqual(info['depends_on'], 0)
         self.assertEqual(info['comments'], 41)
-        self.assertEqual(info['changes_size'], 179)
+        self.assertEqual(info['changes_size'], 177)
         self.assertEqual(info['test_changes_size'], 35)
         self.assertEqual(info['modules_num'], 1)
         self.assertEqual(info['r-ed_patches'], 0)
@@ -515,6 +518,9 @@ class PatchAnalysisTest(MockTestCase):
 
         # Author in mercurial doesn't use the same format as usual ("Full Name email" instead of "Full Name <email>").
         info = patchanalysis.bug_analysis(1277522)
+
+        # Author in mercurial doesn't have email
+        info = patchanalysis.bug_analysis(1254980)
 
         # Check uplift request
         info = patchanalysis.bug_analysis(1230065)
