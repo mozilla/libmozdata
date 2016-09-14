@@ -54,7 +54,7 @@ class SpikeAnalysisTest(MockTestCase):
         self.assertEqual(down, expected_down)
 
     @responses.activate
-    def test_is_spiking(self):
+    def test_is_spiking_1(self):
         url = 'https://crash-analysis.mozilla.com/rkaiser/Firefox-beta-crashes-categories.json'
         response = requests.get(url)
         data = response.json()
@@ -75,6 +75,13 @@ class SpikeAnalysisTest(MockTestCase):
         isp = spikeanalysis.is_spiking(x1, alpha=0.005, win=120, method='median', plot=False)
         self.assertFalse(isp)
         isp = spikeanalysis.is_spiking(x2, alpha=0.005, win=120, method='median', plot=False)
+        self.assertTrue(isp)
+
+    @responses.activate
+    def test_is_spiking_2(self):
+        # values for signature nsFileStreamBase::Write from 2016-09-05 to 2016-09-13
+        x = [2, 6, 6, 9, 8, 3, 2, 160, 81742]
+        isp = spikeanalysis.is_spiking(x, alpha=0.01, win=-1, method='mean', plot=False)
         self.assertTrue(isp)
 
 

@@ -7,6 +7,7 @@ from requests.adapters import HTTPAdapter
 from requests_futures.sessions import FuturesSession
 from requests.packages.urllib3.util.retry import Retry
 from requests.utils import quote
+from . import config
 
 
 class Query(object):
@@ -50,6 +51,7 @@ class Connection(object):
     MAX_WORKERS = multiprocessing.cpu_count()
     CHUNK_SIZE = 32
     TOKEN = ''
+    USER_AGENT = config.get('User-Agent', 'name', 'libmozdata')
 
     # Error 429 is for 'Too many requests' => we retry
     STATUS_FORCELIST = [429]
@@ -75,6 +77,8 @@ class Connection(object):
                 self.MAX_RETRIES = kwargs['max_retries']
             if 'max_workers' in kwargs:
                 self.MAX_WORKERS = kwargs['max_workers']
+            if 'user_agent' in kwargs:
+                self.USER_AGENT = kwargs['user_agent']
 
         self.exec_queries()
 
@@ -125,7 +129,7 @@ class Connection(object):
         Returns:
             dict: the header
         """
-        return {'User-Agent': 'libmozdata', 'Connection': 'close'}
+        return {'User-Agent': self.USER_AGENT, 'Connection': 'close'}
 
     def get_auth(self):
         """Get the auth to use each query
