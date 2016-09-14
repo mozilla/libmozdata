@@ -129,7 +129,6 @@ class Connection(object):
         Returns:
             dict: the header
         """
-        print(self.USER_AGENT)
         return {'User-Agent': self.USER_AGENT, 'Connection': 'close'}
 
     def get_auth(self):
