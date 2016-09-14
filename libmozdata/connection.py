@@ -56,7 +56,7 @@ class Connection(object):
     # Error 429 is for 'Too many requests' => we retry
     STATUS_FORCELIST = [429]
 
-    def __init__(self, base_url, queries=None, user_agent='libmozdata', **kwargs):
+    def __init__(self, base_url, queries=None, **kwargs):
         """Constructor
 
         Args:
