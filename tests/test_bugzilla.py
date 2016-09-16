@@ -550,6 +550,11 @@ class User(MockTestCase):
         self.assertTrue(foundNobody1)
         self.assertTrue(foundNobody2)
 
+    @responses.activate
+    def test_get_nightly_version(self):
+        nv = bugzilla.Bugzilla.get_nightly_version()
+        self.assertEqual(nv, 51)
+
 
 if __name__ == '__main__':
     unittest.main()
