@@ -146,6 +146,24 @@ class Bugzilla(Connection):
             r.result()
 
     @staticmethod
+    def get_nightly_version():
+        def handler(json, data):
+            max_version = -1
+            pat = re.compile('cf_status_firefox([0-9]+)')
+            for key in json.keys():
+                m = pat.match(key)
+                if m:
+                    version = int(m.group(1))
+                    if max_version < version:
+                        max_version = version
+            data[0] = max_version
+
+        nightly_version = [-1]
+        Bugzilla(bugids=['1234567'], bughandler=handler, bugdata=nightly_version).wait()
+
+        return nightly_version[0]
+
+    @staticmethod
     def get_links(bugids):
         if isinstance(bugids, six.string_types):
             return 'https://bugzil.la/' + bugids
