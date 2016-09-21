@@ -8,6 +8,7 @@ from requests_futures.sessions import FuturesSession
 from requests.packages.urllib3.util.retry import Retry
 from requests.utils import quote
 from . import config
+from . import utils
 
 
 class Query(object):
@@ -52,6 +53,7 @@ class Connection(object):
     CHUNK_SIZE = 32
     TOKEN = ''
     USER_AGENT = config.get('User-Agent', 'name', 'libmozdata')
+    X_FORWARDED_FOR = utils.get_x_fwed_for_str(config.get('X-Forwarded-For', 'data', ''))
 
     # Error 429 is for 'Too many requests' => we retry
     STATUS_FORCELIST = [429]
@@ -79,6 +81,8 @@ class Connection(object):
                 self.MAX_WORKERS = kwargs['max_workers']
             if 'user_agent' in kwargs:
                 self.USER_AGENT = kwargs['user_agent']
+            if 'x_forwarded_for' in kwargs:
+                self.X_FORWARDED_FOR = utils.get_x_fwded_for_str(kwargs['x_forwarded_for'])
 
         self.exec_queries()
 
@@ -129,7 +133,10 @@ class Connection(object):
         Returns:
             dict: the header
         """
-        return {'User-Agent': self.USER_AGENT, 'Connection': 'close'}
+        if self.X_FORWARDED_FOR:
+            return {'User-Agent': self.USER_AGENT, 'X-Forwarded-For': self.X_FORWARDED_FOR, 'Connection': 'close'}
+        else:
+            return {'User-Agent': self.USER_AGENT, 'Connection': 'close'}
 
     def get_auth(self):
         """Get the auth to use each query
