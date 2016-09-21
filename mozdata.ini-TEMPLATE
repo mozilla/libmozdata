@@ -1,6 +1,9 @@
 [User-Agent]
 name = libmozdata
 
+[X-Forwarded-For]
+data =
+
 [FileStats]
 MaxDays = 3
 

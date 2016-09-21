@@ -278,3 +278,19 @@ def mean_stddev(x):
 
 def get_channels():
     return ['nightly', 'aurora', 'beta', 'release', 'esr']
+
+
+def get_str_list(x):
+    if isinstance(x, six.string_types):
+        return [x]
+    if isinstance(x, six.integer_types):
+        return [str[x]]
+    if isinstance(x, list) or isinstance(x, set):
+        return [str(y) if isinstance(y, six.integer_types) else y for y in x]
+
+
+def get_x_fwed_for_str(s):
+    if isinstance(s, six.string_types):
+        return ', '.join(map(lambda x: x.strip(' \t'), s.split(',')))
+    else:
+        return ', '.join(map(lambda x: x.strip(' \t'), s))
