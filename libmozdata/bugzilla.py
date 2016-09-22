@@ -127,7 +127,7 @@ class Bugzilla(Connection):
         return self
 
     def wait(self):
-        if self.queries:
+        if self.queries is not None:
             super(Bugzilla, self).wait()
         else:
             self.get_data()
