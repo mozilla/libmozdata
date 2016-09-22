@@ -413,8 +413,8 @@ def bug_analysis(bug, uplift_channel='release'):
 
             # Human readable patch url
             patch_urls.append({
-                'source' : 'mercurial',
-                'url' : hgmozilla.Mercurial.get_repo_url(obj['channel']) + '/rev/{}'.format(rev),
+                'source': 'mercurial',
+                'url': hgmozilla.Mercurial.get_repo_url(obj['channel']) + '/rev/{}'.format(rev),
             })
 
             patch_info = patch_analysis(hgmozilla.RawRevision.get_revision(obj['channel'], rev), author_names, reviewers, utils.as_utc(datetime.utcfromtimestamp(obj['creation_date'])))
@@ -438,15 +438,15 @@ def bug_analysis(bug, uplift_channel='release'):
 
             if attachment['is_patch'] == 1 and attachment['is_obsolete'] == 0:
                 patch_urls.append({
-                    'source' : 'attachment',
-                    'url' : '{}/attachment.cgi?id={}'.format(Bugzilla.URL, attachment['id']),
+                    'source': 'attachment',
+                    'url': '{}/attachment.cgi?id={}'.format(Bugzilla.URL, attachment['id']),
                 })
                 data = base64.b64decode(attachment['data']).decode('ascii', 'ignore')
             elif attachment['content_type'] == 'text/x-review-board-request' and attachment['is_obsolete'] == 0:
                 mozreview_url = base64.b64decode(attachment['data']).decode('utf-8')
                 patch_urls.append({
-                    'source' : 'mozreview',
-                    'url' : mozreview_url,
+                    'source': 'mozreview',
+                    'url': mozreview_url,
                 })
                 review_num = re.search(MOZREVIEW_URL_PATTERN, mozreview_url).group(1)
                 mozreview_raw_diff_url = 'https://reviewboard.mozilla.org/r/' + review_num + '/diff/raw/'

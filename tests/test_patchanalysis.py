@@ -422,7 +422,6 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['patches'][0]['source'], 'mercurial')
         self.assertEqual(info['patches'][0]['url'], 'https://hg.mozilla.org/mozilla-central/rev/d76cd808a5fc')
 
-
         # Backout without the 'changeset' word.
         info = patchanalysis.bug_analysis(829421)
         self.assertEqual(info['backout_num'], 1)
