@@ -389,6 +389,8 @@ def bug_analysis(bug, uplift_channel='release'):
 
     revs, backout_comments = get_commits_for_bug(bug)
 
+    patch_urls = []
+
     if len(revs) > 0:
         for rev, obj in revs.items():
             # Multiple names because sometimes authors use different emails on Bugzilla and Mercurial and sometimes
@@ -409,6 +411,12 @@ def bug_analysis(bug, uplift_channel='release'):
 
             obj['reviewers'] = reviewers
 
+            # Human readable patch url
+            patch_urls.append({
+                'source': 'mercurial',
+                'url': hgmozilla.Mercurial.get_repo_url(obj['channel']) + '/rev/{}'.format(rev),
+            })
+
             patch_info = patch_analysis(hgmozilla.RawRevision.get_revision(obj['channel'], rev), author_names, reviewers, utils.as_utc(datetime.utcfromtimestamp(obj['creation_date'])))
             for k, v in patch_info.items():
                 if k not in info:
@@ -420,7 +428,7 @@ def bug_analysis(bug, uplift_channel='release'):
             for i in range(0, len(bug['attachments'])):
                 bug['attachments'][i].update(attachments[i])
 
-        Bugzilla(bug['id'], attachmenthandler=attachmenthandler, attachment_include_fields=['data', 'is_obsolete', 'creation_time']).get_data().wait()
+        Bugzilla(bug['id'], attachmenthandler=attachmenthandler, attachment_include_fields=['id', 'data', 'is_obsolete', 'creation_time']).get_data().wait()
 
         for attachment in bug['attachments']:
             if sum(flag['name'] == 'review' and flag['status'] == '+' for flag in attachment['flags']) == 0:
@@ -429,9 +437,17 @@ def bug_analysis(bug, uplift_channel='release'):
             data = None
 
             if attachment['is_patch'] == 1 and attachment['is_obsolete'] == 0:
+                patch_urls.append({
+                    'source': 'attachment',
+                    'url': '{}/attachment.cgi?id={}'.format(Bugzilla.URL, attachment['id']),
+                })
                 data = base64.b64decode(attachment['data']).decode('ascii', 'ignore')
             elif attachment['content_type'] == 'text/x-review-board-request' and attachment['is_obsolete'] == 0:
                 mozreview_url = base64.b64decode(attachment['data']).decode('utf-8')
+                patch_urls.append({
+                    'source': 'mozreview',
+                    'url': mozreview_url,
+                })
                 review_num = re.search(MOZREVIEW_URL_PATTERN, mozreview_url).group(1)
                 mozreview_raw_diff_url = 'https://reviewboard.mozilla.org/r/' + review_num + '/diff/raw/'
 
@@ -463,6 +479,9 @@ def bug_analysis(bug, uplift_channel='release'):
         'authors': bugzilla_authors,
         'reviewers': bugzilla_reviewers,
     }
+
+    # Add patches links
+    info['patches'] = patch_urls
 
     # Add uplift request
     info.update(uplift_info(bug, uplift_channel))

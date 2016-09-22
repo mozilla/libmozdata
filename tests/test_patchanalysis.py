@@ -56,6 +56,9 @@ class PatchAnalysisTest(MockTestCase):
         self.assertIn('shaver@mozilla.org', info['users']['reviewers'])
         self.assertIn('gerv@mozilla.org', info['users']['reviewers'])
         self.assertEqual(info['users']['assignee']['email'], 'philringnalda@gmail.com')
+        self.assertEqual(len(info['patches']), 1)
+        self.assertEqual(info['patches'][0]['source'], 'mercurial')
+        self.assertEqual(info['patches'][0]['url'], 'https://hg.mozilla.org/mozilla-central/rev/1584ba8c1b86')
 
         self.assertGreater(info['crashes'], 0)
 
@@ -94,6 +97,9 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['reviewer_familiarity_overall'], 16)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 0)
         self.assertGreater(info['crashes'], 0)
+        self.assertEqual(len(info['patches']), 1)
+        self.assertEqual(info['patches'][0]['source'], 'mercurial')
+        self.assertEqual(info['patches'][0]['url'], 'https://hg.mozilla.org/mozilla-central/rev/8641afbd20e6')
 
         # Backed out once (when it was on inbound) with changesets from anther bug.
         # Author of the patch uses a different email in Bugzilla and Mercurial.
@@ -116,6 +122,9 @@ class PatchAnalysisTest(MockTestCase):
             self.assertEqual(info['reviewer_familiarity_overall'], 158)
             self.assertEqual(info['reviewer_familiarity_last_3_releases'], 157)
             self.assertGreaterEqual(info['crashes'], 0)
+            self.assertEqual(len(info['patches']), 1)
+            self.assertEqual(info['patches'][0]['source'], 'mercurial')
+            self.assertEqual(info['patches'][0]['url'], 'https://hg.mozilla.org/mozilla-central/rev/154b951082e3')
 
         # Backed out from central and relanded on central.
         # One of the reviewers email doesn't start with his nick and he isn't in CC list.
@@ -136,6 +145,15 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['reviewer_familiarity_overall'], 57)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 3)
         self.assertGreater(info['crashes'], 0)
+        self.assertEqual(len(info['patches']), 2)
+        urls = (
+            'https://hg.mozilla.org/mozilla-central/rev/f5578fdc50ef',
+            'https://hg.mozilla.org/mozilla-central/rev/b9d0984bdd95',
+        )
+        self.assertEqual(info['patches'][0]['source'], 'mercurial')
+        self.assertIn(info['patches'][0]['url'], urls)
+        self.assertEqual(info['patches'][1]['source'], 'mercurial')
+        self.assertIn(info['patches'][1]['url'], urls)
 
         # Changeset with multiple unrelated backouts (on fx-team).
         # Landing comment with long revision (Entire hash instead of first 12 characters).
@@ -155,6 +173,17 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['reviewer_familiarity_overall'], 2)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 0)
         self.assertGreater(info['crashes'], 0)
+        self.assertEqual(len(info['patches']), 5)
+        urls = (
+            'https://hg.mozilla.org/mozilla-central/rev/1c86ba5d7a5b',
+            'https://hg.mozilla.org/mozilla-central/rev/73176395400e',
+            'https://hg.mozilla.org/mozilla-central/rev/de5d300e4687',
+            'https://hg.mozilla.org/mozilla-central/rev/0d05e6a1bdc2',
+            'https://hg.mozilla.org/mozilla-central/rev/b94fedbf48b1',
+        )
+        for i in range(5):
+            self.assertEqual(info['patches'][i]['source'], 'mercurial')
+            self.assertIn(info['patches'][i]['url'], urls)
 
         # Custom backout (no reference to revision).
         # Author has a different name on Bugzilla and Mercurial and they don't use the email on Mercurial.
@@ -177,6 +206,15 @@ class PatchAnalysisTest(MockTestCase):
             self.assertEqual(info['reviewer_familiarity_overall'], 2)
             self.assertEqual(info['reviewer_familiarity_last_3_releases'], 1)
             self.assertGreater(info['crashes'], 0)
+            self.assertEqual(len(info['patches']), 3)
+            urls = (
+                'https://hg.mozilla.org/mozilla-central/rev/933b5260480f',
+                'https://hg.mozilla.org/mozilla-central/rev/6126c53203f8',
+                'https://hg.mozilla.org/mozilla-central/rev/c17c6b68112c',
+            )
+            for i in range(3):
+                self.assertEqual(info['patches'][i]['source'], 'mercurial')
+                self.assertIn(info['patches'][i]['url'], urls)
 
         with warnings.catch_warnings(record=True) as w:
             info = patchanalysis.bug_analysis(1276850)
@@ -197,6 +235,9 @@ class PatchAnalysisTest(MockTestCase):
             self.assertEqual(info['reviewer_familiarity_overall'], 26)
             self.assertEqual(info['reviewer_familiarity_last_3_releases'], 21)
             self.assertGreater(info['crashes'], 0)
+            self.assertEqual(len(info['patches']), 1)
+            self.assertEqual(info['patches'][0]['source'], 'mercurial')
+            self.assertEqual(info['patches'][0]['url'], 'https://hg.mozilla.org/mozilla-central/rev/da10eecd0e76')
 
         # No landed patches.
         # The author of the patch changed his email on Bugzilla, so past contributions
@@ -217,6 +258,14 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['reviewer_familiarity_overall'], 266)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 15)
         self.assertGreaterEqual(info['crashes'], 0)
+        self.assertEqual(len(info['patches']), 2)
+        urls = (
+            'https://bugzilla.mozilla.org/attachment.cgi?id=8447556',
+            'https://bugzilla.mozilla.org/attachment.cgi?id=8447557',
+        )
+        for i in range(2):
+            self.assertEqual(info['patches'][i]['source'], 'attachment')
+            self.assertIn(info['patches'][i]['url'], urls)
 
         # No link between Bugzilla account and Mercurial author.
         # Reviewer uses different email on Bugzilla and Mercurial.
@@ -236,6 +285,9 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['reviewer_familiarity_overall'], 0)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 0)
         self.assertGreaterEqual(info['crashes'], 0)
+        self.assertEqual(len(info['patches']), 1)
+        self.assertEqual(info['patches'][0]['source'], 'mercurial')
+        self.assertEqual(info['patches'][0]['url'], 'https://hg.mozilla.org/mozilla-central/rev/b43afcd4e347')
 
         # Reviewer has different emails on Bugzilla and Mercurial, and his short name is hard to find.
         info = patchanalysis.bug_analysis(859425)
@@ -254,6 +306,9 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['reviewer_familiarity_overall'], 0)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 0)
         self.assertGreaterEqual(info['crashes'], 0)
+        self.assertEqual(len(info['patches']), 1)
+        self.assertEqual(info['patches'][0]['source'], 'mercurial')
+        self.assertEqual(info['patches'][0]['url'], 'https://hg.mozilla.org/mozilla-central/rev/5549afae23a7')
 
         # r=bustage
         info = patchanalysis.bug_analysis(701875)
@@ -272,6 +327,14 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['reviewer_familiarity_overall'], 25)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 5)
         self.assertGreaterEqual(info['crashes'], 0)
+        self.assertEqual(len(info['patches']), 2)
+        urls = (
+            'https://hg.mozilla.org/mozilla-central/rev/7ae3089be8a5',
+            'https://hg.mozilla.org/mozilla-central/rev/3f0b94325b80',
+        )
+        for i in range(2):
+            self.assertEqual(info['patches'][i]['source'], 'mercurial')
+            self.assertIn(info['patches'][i]['url'], urls)
 
         # Reviewer doesn't have his short name in his Bugzilla name.
         with warnings.catch_warnings(record=True) as w:
@@ -292,6 +355,9 @@ class PatchAnalysisTest(MockTestCase):
             self.assertEqual(info['reviewer_familiarity_overall'], 0)
             self.assertEqual(info['reviewer_familiarity_last_3_releases'], 0)
             self.assertGreaterEqual(info['crashes'], 0)
+            self.assertEqual(len(info['patches']), 1)
+            self.assertEqual(info['patches'][0]['source'], 'mercurial')
+            self.assertEqual(info['patches'][0]['url'], 'https://hg.mozilla.org/mozilla-central/rev/bb210464e583')
 
         # There are users in the CC list with empty real names.
         info = patchanalysis.bug_analysis(699633)
@@ -310,6 +376,9 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['reviewer_familiarity_overall'], 0)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 0)
         self.assertGreaterEqual(info['crashes'], 0)
+        self.assertEqual(len(info['patches']), 1)
+        self.assertEqual(info['patches'][0]['source'], 'mercurial')
+        self.assertEqual(info['patches'][0]['url'], 'https://hg.mozilla.org/mozilla-central/rev/936643625d71')
 
         # Reviewer with several IRC names.
         info = patchanalysis.bug_analysis(914034)
@@ -328,6 +397,9 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['reviewer_familiarity_overall'], 3)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 2)
         self.assertGreaterEqual(info['crashes'], 0)
+        self.assertEqual(len(info['patches']), 1)
+        self.assertEqual(info['patches'][0]['source'], 'mercurial')
+        self.assertEqual(info['patches'][0]['url'], 'https://hg.mozilla.org/mozilla-central/rev/a13edd3c49e7')
 
         # IRC handle in the domain of the email (mozilla@IRCHANDLE.org).
         info = patchanalysis.bug_analysis(903475)
@@ -346,6 +418,9 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['reviewer_familiarity_overall'], 0)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 0)
         self.assertGreaterEqual(info['crashes'], 0)
+        self.assertEqual(len(info['patches']), 1)
+        self.assertEqual(info['patches'][0]['source'], 'mercurial')
+        self.assertEqual(info['patches'][0]['url'], 'https://hg.mozilla.org/mozilla-central/rev/d76cd808a5fc')
 
         # Backout without the 'changeset' word.
         info = patchanalysis.bug_analysis(829421)
@@ -364,6 +439,9 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['reviewer_familiarity_overall'], 11)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 4)
         self.assertGreaterEqual(info['crashes'], 0)
+        self.assertEqual(len(info['patches']), 1)
+        self.assertEqual(info['patches'][0]['source'], 'mercurial')
+        self.assertEqual(info['patches'][0]['url'], 'https://hg.mozilla.org/mozilla-central/rev/9f56d7e548f1')
 
         # IRC handle first character is lower case in Mercurial, upper case in Bugzilla.
         info = patchanalysis.bug_analysis(799266)
@@ -382,6 +460,9 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['reviewer_familiarity_overall'], 1)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 0)
         self.assertGreaterEqual(info['crashes'], 0)
+        self.assertEqual(len(info['patches']), 1)
+        self.assertEqual(info['patches'][0]['source'], 'mercurial')
+        self.assertEqual(info['patches'][0]['url'], 'https://hg.mozilla.org/mozilla-central/rev/53ae9eb476e9')
 
         # r=IRC_HANDLE_OF_THE_AUTHOR
         info = patchanalysis.bug_analysis(721760)
@@ -400,6 +481,14 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['reviewer_familiarity_overall'], 13)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 6)
         self.assertGreaterEqual(info['crashes'], 0)
+        self.assertEqual(len(info['patches']), 2)
+        urls = (
+            'https://hg.mozilla.org/mozilla-central/rev/2ef72ec44da3',
+            'https://hg.mozilla.org/mozilla-central/rev/66b36a145f89',
+        )
+        for i in range(2):
+            self.assertEqual(info['patches'][i]['source'], 'mercurial')
+            self.assertIn(info['patches'][i]['url'], urls)
 
         # IRC handle is ':IRC_HANDLE.SURNAME' and reviewer is not a reviewer of the patch on Bugzilla.
         info = patchanalysis.bug_analysis(1021265)
@@ -418,6 +507,16 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['reviewer_familiarity_overall'], 325)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 36)
         self.assertGreaterEqual(info['crashes'], 0)
+        self.assertEqual(len(info['patches']), 4)
+        urls = (
+            'https://hg.mozilla.org/mozilla-central/rev/0b298d91fbdd',
+            'https://hg.mozilla.org/mozilla-central/rev/96f0df721845',
+            'https://hg.mozilla.org/mozilla-central/rev/1b07e2892e9d',
+            'https://hg.mozilla.org/mozilla-central/rev/3d0169c5795f',
+        )
+        for i in range(2):
+            self.assertEqual(info['patches'][i]['source'], 'mercurial')
+            self.assertIn(info['patches'][i]['url'], urls)
 
         # IRC handle is the beginning of the real name with a space after.
         info = patchanalysis.bug_analysis(1029098)
@@ -436,6 +535,9 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['reviewer_familiarity_overall'], 9)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 0)
         self.assertGreaterEqual(info['crashes'], 0)
+        self.assertEqual(len(info['patches']), 1)
+        self.assertEqual(info['patches'][0]['source'], 'mercurial')
+        self.assertEqual(info['patches'][0]['url'], 'https://hg.mozilla.org/mozilla-central/rev/d41a6d09ccd6')
 
         # Typo in the reviewer name.
         with warnings.catch_warnings(record=True) as w:
@@ -459,6 +561,14 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['reviewer_familiarity_overall'], 7)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 7)
         self.assertGreaterEqual(info['crashes'], 0)
+        self.assertEqual(len(info['patches']), 2)
+        urls = (
+            'https://hg.mozilla.org/mozilla-central/rev/b2c38a3b59dc',
+            'https://hg.mozilla.org/mozilla-central/rev/3c11909c216a',
+        )
+        for i in range(2):
+            self.assertEqual(info['patches'][i]['source'], 'mercurial')
+            self.assertIn(info['patches'][i]['url'], urls)
 
         # r=backout
         info = patchanalysis.bug_analysis(679509)
@@ -477,6 +587,16 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['reviewer_familiarity_overall'], 53)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 44)
         self.assertGreaterEqual(info['crashes'], 0)
+        self.assertEqual(len(info['patches']), 4)
+        urls = (
+            'https://hg.mozilla.org/mozilla-central/rev/8c59e49aea63',
+            'https://hg.mozilla.org/mozilla-central/rev/38f53f45bbf4',
+            'https://hg.mozilla.org/mozilla-central/rev/40f077f9c4a2',
+            'https://hg.mozilla.org/mozilla-central/rev/97f2fc986824',
+        )
+        for i in range(2):
+            self.assertEqual(info['patches'][i]['source'], 'mercurial')
+            self.assertIn(info['patches'][i]['url'], urls)
 
         # Bugzilla user is impossible to find from IRC handle.
         with warnings.catch_warnings(record=True) as w:
