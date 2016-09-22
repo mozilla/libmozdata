@@ -38,7 +38,7 @@ class Bugzilla(Connection):
             attachment_include_fields (Optional[List[str]]): list of attachment include fields
             queries (List[Query]): queries rather than single query
         """
-        if queries:
+        if queries is not None:
             super(Bugzilla, self).__init__(Bugzilla.URL, queries=queries, **kwargs)
         else:
             super(Bugzilla, self).__init__(Bugzilla.URL, **kwargs)
