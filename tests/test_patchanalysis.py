@@ -660,6 +660,9 @@ class PatchAnalysisTest(MockTestCase):
         # in-testsuite+
         info = patchanalysis.bug_analysis(105)
         self.assertEqual(info['in-testsuite'], '+')
+        # in-testsuite not set
+        info = patchanalysis.bug_analysis(1234567)
+        self.assertEqual(info['in-testsuite'], '')
 
     @responses.activate
     def test_uplift_info(self):
