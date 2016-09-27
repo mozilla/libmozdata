@@ -380,6 +380,10 @@ def bug_analysis(bug, uplift_channel='release'):
         'r-ed_patches': sum((a['is_patch'] == 1 or a['content_type'] == 'text/x-review-board-request') and sum(flag['name'] == 'review' and flag['status'] == '-' for flag in a['flags']) > 0 for a in bug['attachments']),
     }
 
+    # Store in-testsuite flag.
+    in_testsuite = [flag['status'] for flag in bug['flags'] if flag['name'] == 'in-testsuite']
+    info['in-testsuite'] = in_testsuite[0] if len(in_testsuite) > 0 else ''
+
     # Store bug creator & assignee
     assignee = bug.get('assigned_to_detail')
     creator = bug.get('creator_detail')
