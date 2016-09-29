@@ -11,7 +11,6 @@ import warnings
 import whatthepatch
 from .HGFileInfo import HGFileInfo
 from .bugzilla import Bugzilla, BugzillaUser
-from .CrashInfo import CrashInfo
 from . import hgmozilla
 from . import modules
 from . import utils
