@@ -406,16 +406,11 @@ def bug_analysis(bug, uplift_channel='release'):
             short_reviewers = obj['reviewers']
 
             for short_reviewer in short_reviewers:
-                # TODO: Figure out if this is the best thing to do (probably we should just skip these and not add the author
-                # to the set of reviewers).
-                if short_reviewer in ['me', 'oops', 'none', 'bustage', 'backout']:
-                    reviewers |= author_names
-                else:
+                # This changeset was not reviewed (probably a simple fix).
+                if short_reviewer not in ['me', 'oops', 'none', 'bustage', 'backout']:
                     reviewers.add(reviewer_match(short_reviewer, bugzilla_reviewers | bugzilla_authors, bug['cc_detail']))
 
-            obj['reviewers'] = reviewers
-
-            # Human readable patch url
+            # Human readable patch URL
             patch_urls.append({
                 'source': 'mercurial',
                 'url': hgmozilla.Mercurial.get_repo_url(obj['channel']) + '/rev/{}'.format(rev),
@@ -471,8 +466,6 @@ def bug_analysis(bug, uplift_channel='release'):
     # TODO: Add number of crashes with signatures from the bug (also before/after the patch?).
 
     # TODO: Add perfherder results?
-
-    # TODO: Add number of days since the landing (to check if the patch baked a little on nightly or not).
 
     info['backout_num'] = len(backout_comments)
 
