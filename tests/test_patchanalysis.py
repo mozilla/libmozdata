@@ -60,8 +60,6 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['patches'][0]['source'], 'mercurial')
         self.assertEqual(info['patches'][0]['url'], 'https://hg.mozilla.org/mozilla-central/rev/1584ba8c1b86')
 
-        self.assertGreater(info['crashes'], 0)
-
         bug = {}
 
         def bughandler(found_bug, data):
@@ -96,7 +94,6 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['developer_familiarity_last_3_releases'], 4)
         self.assertEqual(info['reviewer_familiarity_overall'], 16)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 0)
-        self.assertGreater(info['crashes'], 0)
         self.assertEqual(len(info['patches']), 1)
         self.assertEqual(info['patches'][0]['source'], 'mercurial')
         self.assertEqual(info['patches'][0]['url'], 'https://hg.mozilla.org/mozilla-central/rev/8641afbd20e6')
@@ -121,7 +118,6 @@ class PatchAnalysisTest(MockTestCase):
             self.assertEqual(info['developer_familiarity_last_3_releases'], 2)
             self.assertEqual(info['reviewer_familiarity_overall'], 158)
             self.assertEqual(info['reviewer_familiarity_last_3_releases'], 157)
-            self.assertGreaterEqual(info['crashes'], 0)
             self.assertEqual(len(info['patches']), 1)
             self.assertEqual(info['patches'][0]['source'], 'mercurial')
             self.assertEqual(info['patches'][0]['url'], 'https://hg.mozilla.org/mozilla-central/rev/154b951082e3')
@@ -144,7 +140,6 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['developer_familiarity_last_3_releases'], 10)
         self.assertEqual(info['reviewer_familiarity_overall'], 57)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 3)
-        self.assertGreater(info['crashes'], 0)
         self.assertEqual(len(info['patches']), 2)
         urls = (
             'https://hg.mozilla.org/mozilla-central/rev/f5578fdc50ef',
@@ -172,7 +167,6 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['developer_familiarity_last_3_releases'], 51)
         self.assertEqual(info['reviewer_familiarity_overall'], 2)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 0)
-        self.assertGreater(info['crashes'], 0)
         self.assertEqual(len(info['patches']), 5)
         urls = (
             'https://hg.mozilla.org/mozilla-central/rev/1c86ba5d7a5b',
@@ -205,7 +199,6 @@ class PatchAnalysisTest(MockTestCase):
             self.assertEqual(info['developer_familiarity_last_3_releases'], 5)
             self.assertEqual(info['reviewer_familiarity_overall'], 2)
             self.assertEqual(info['reviewer_familiarity_last_3_releases'], 1)
-            self.assertGreater(info['crashes'], 0)
             self.assertEqual(len(info['patches']), 3)
             urls = (
                 'https://hg.mozilla.org/mozilla-central/rev/933b5260480f',
@@ -234,7 +227,6 @@ class PatchAnalysisTest(MockTestCase):
             self.assertEqual(info['developer_familiarity_last_3_releases'], 0)
             self.assertEqual(info['reviewer_familiarity_overall'], 26)
             self.assertEqual(info['reviewer_familiarity_last_3_releases'], 21)
-            self.assertGreater(info['crashes'], 0)
             self.assertEqual(len(info['patches']), 1)
             self.assertEqual(info['patches'][0]['source'], 'mercurial')
             self.assertEqual(info['patches'][0]['url'], 'https://hg.mozilla.org/mozilla-central/rev/da10eecd0e76')
@@ -257,7 +249,6 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['developer_familiarity_last_3_releases'], 4)
         self.assertEqual(info['reviewer_familiarity_overall'], 266)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 15)
-        self.assertGreaterEqual(info['crashes'], 0)
         self.assertEqual(len(info['patches']), 2)
         urls = (
             'https://bugzilla.mozilla.org/attachment.cgi?id=8447556',
@@ -284,7 +275,6 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['developer_familiarity_last_3_releases'], 23)
         self.assertEqual(info['reviewer_familiarity_overall'], 0)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 0)
-        self.assertGreaterEqual(info['crashes'], 0)
         self.assertEqual(len(info['patches']), 1)
         self.assertEqual(info['patches'][0]['source'], 'mercurial')
         self.assertEqual(info['patches'][0]['url'], 'https://hg.mozilla.org/mozilla-central/rev/b43afcd4e347')
@@ -305,7 +295,6 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['developer_familiarity_last_3_releases'], 1)
         self.assertEqual(info['reviewer_familiarity_overall'], 0)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 0)
-        self.assertGreaterEqual(info['crashes'], 0)
         self.assertEqual(len(info['patches']), 1)
         self.assertEqual(info['patches'][0]['source'], 'mercurial')
         self.assertEqual(info['patches'][0]['url'], 'https://hg.mozilla.org/mozilla-central/rev/5549afae23a7')
@@ -326,7 +315,6 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['developer_familiarity_last_3_releases'], 12)
         self.assertEqual(info['reviewer_familiarity_overall'], 1458)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 196)
-        self.assertGreaterEqual(info['crashes'], 0)
         self.assertEqual(len(info['patches']), 2)
         urls = (
             'https://hg.mozilla.org/mozilla-central/rev/7ae3089be8a5',
@@ -354,7 +342,6 @@ class PatchAnalysisTest(MockTestCase):
             self.assertEqual(info['developer_familiarity_last_3_releases'], 1)
             self.assertEqual(info['reviewer_familiarity_overall'], 0)
             self.assertEqual(info['reviewer_familiarity_last_3_releases'], 0)
-            self.assertGreaterEqual(info['crashes'], 0)
             self.assertEqual(len(info['patches']), 1)
             self.assertEqual(info['patches'][0]['source'], 'mercurial')
             self.assertEqual(info['patches'][0]['url'], 'https://hg.mozilla.org/mozilla-central/rev/bb210464e583')
@@ -375,7 +362,6 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['developer_familiarity_last_3_releases'], 28)
         self.assertEqual(info['reviewer_familiarity_overall'], 0)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 0)
-        self.assertGreaterEqual(info['crashes'], 0)
         self.assertEqual(len(info['patches']), 1)
         self.assertEqual(info['patches'][0]['source'], 'mercurial')
         self.assertEqual(info['patches'][0]['url'], 'https://hg.mozilla.org/mozilla-central/rev/936643625d71')
@@ -396,7 +382,6 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['developer_familiarity_last_3_releases'], 7)
         self.assertEqual(info['reviewer_familiarity_overall'], 3)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 2)
-        self.assertGreaterEqual(info['crashes'], 0)
         self.assertEqual(len(info['patches']), 1)
         self.assertEqual(info['patches'][0]['source'], 'mercurial')
         self.assertEqual(info['patches'][0]['url'], 'https://hg.mozilla.org/mozilla-central/rev/a13edd3c49e7')
@@ -417,7 +402,6 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['developer_familiarity_last_3_releases'], 0)
         self.assertEqual(info['reviewer_familiarity_overall'], 0)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 0)
-        self.assertGreaterEqual(info['crashes'], 0)
         self.assertEqual(len(info['patches']), 1)
         self.assertEqual(info['patches'][0]['source'], 'mercurial')
         self.assertEqual(info['patches'][0]['url'], 'https://hg.mozilla.org/mozilla-central/rev/d76cd808a5fc')
@@ -438,7 +422,6 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['developer_familiarity_last_3_releases'], 0)
         self.assertEqual(info['reviewer_familiarity_overall'], 11)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 4)
-        self.assertGreaterEqual(info['crashes'], 0)
         self.assertEqual(len(info['patches']), 1)
         self.assertEqual(info['patches'][0]['source'], 'mercurial')
         self.assertEqual(info['patches'][0]['url'], 'https://hg.mozilla.org/mozilla-central/rev/9f56d7e548f1')
@@ -459,7 +442,6 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['developer_familiarity_last_3_releases'], 5)
         self.assertEqual(info['reviewer_familiarity_overall'], 1)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 0)
-        self.assertGreaterEqual(info['crashes'], 0)
         self.assertEqual(len(info['patches']), 1)
         self.assertEqual(info['patches'][0]['source'], 'mercurial')
         self.assertEqual(info['patches'][0]['url'], 'https://hg.mozilla.org/mozilla-central/rev/53ae9eb476e9')
@@ -480,7 +462,6 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['developer_familiarity_last_3_releases'], 17)
         self.assertEqual(info['reviewer_familiarity_overall'], 13)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 6)
-        self.assertGreaterEqual(info['crashes'], 0)
         self.assertEqual(len(info['patches']), 2)
         urls = (
             'https://hg.mozilla.org/mozilla-central/rev/2ef72ec44da3',
@@ -506,7 +487,6 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['developer_familiarity_last_3_releases'], 17)
         self.assertEqual(info['reviewer_familiarity_overall'], 325)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 36)
-        self.assertGreaterEqual(info['crashes'], 0)
         self.assertEqual(len(info['patches']), 4)
         urls = (
             'https://hg.mozilla.org/mozilla-central/rev/0b298d91fbdd',
@@ -534,7 +514,6 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['developer_familiarity_last_3_releases'], 8)
         self.assertEqual(info['reviewer_familiarity_overall'], 9)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 0)
-        self.assertGreaterEqual(info['crashes'], 0)
         self.assertEqual(len(info['patches']), 1)
         self.assertEqual(info['patches'][0]['source'], 'mercurial')
         self.assertEqual(info['patches'][0]['url'], 'https://hg.mozilla.org/mozilla-central/rev/d41a6d09ccd6')
@@ -560,7 +539,6 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['developer_familiarity_last_3_releases'], 19)
         self.assertEqual(info['reviewer_familiarity_overall'], 8)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 8)
-        self.assertGreaterEqual(info['crashes'], 0)
         self.assertEqual(len(info['patches']), 2)
         urls = (
             'https://hg.mozilla.org/mozilla-central/rev/b2c38a3b59dc',
@@ -586,7 +564,6 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['developer_familiarity_last_3_releases'], 43)
         self.assertEqual(info['reviewer_familiarity_overall'], 84)
         self.assertEqual(info['reviewer_familiarity_last_3_releases'], 63)
-        self.assertGreaterEqual(info['crashes'], 0)
         self.assertEqual(len(info['patches']), 4)
         urls = (
             'https://hg.mozilla.org/mozilla-central/rev/8c59e49aea63',

@@ -168,7 +168,6 @@ def patch_analysis(patch, authors, reviewers, creation_date=utils.get_date_ymd('
         'developer_familiarity_last_3_releases': 0,
         'reviewer_familiarity_overall': 0,
         'reviewer_familiarity_last_3_releases': 0,
-        'crashes': 0,
     }
 
     paths = []
@@ -189,10 +188,7 @@ def patch_analysis(patch, authors, reviewers, creation_date=utils.get_date_ymd('
             paths.append(new_path)
 
     used_modules = {}
-    ci = CrashInfo(paths).get()  # TODO: Only check files that can actually be here (.c or .cpp).
     for path in paths:
-        info['crashes'] += ci[path]
-
         module = modules.module_from_path(path)
         if module and module['name'] not in used_modules:
             used_modules[module['name']] = 1
