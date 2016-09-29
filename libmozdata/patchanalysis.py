@@ -11,7 +11,6 @@ import warnings
 import whatthepatch
 from .HGFileInfo import HGFileInfo
 from .bugzilla import Bugzilla, BugzillaUser
-from .CrashInfo import CrashInfo
 from . import hgmozilla
 from . import modules
 from . import utils
@@ -168,7 +167,6 @@ def patch_analysis(patch, authors, reviewers, creation_date=utils.get_date_ymd('
         'developer_familiarity_last_3_releases': 0,
         'reviewer_familiarity_overall': 0,
         'reviewer_familiarity_last_3_releases': 0,
-        'crashes': 0,
     }
 
     paths = []
@@ -189,10 +187,7 @@ def patch_analysis(patch, authors, reviewers, creation_date=utils.get_date_ymd('
             paths.append(new_path)
 
     used_modules = {}
-    ci = CrashInfo(paths).get()  # TODO: Only check files that can actually be here (.c or .cpp).
     for path in paths:
-        info['crashes'] += ci[path]
-
         module = modules.module_from_path(path)
         if module and module['name'] not in used_modules:
             used_modules[module['name']] = 1
@@ -378,6 +373,7 @@ def bug_analysis(bug, uplift_channel='release'):
         'depends_on': len(bug['depends_on']),
         'comments': len(bug['comments']),
         'r-ed_patches': sum((a['is_patch'] == 1 or a['content_type'] == 'text/x-review-board-request') and sum(flag['name'] == 'review' and flag['status'] == '-' for flag in a['flags']) > 0 for a in bug['attachments']),
+        'patches': {},
     }
 
     # Store in-testsuite flag.
@@ -393,8 +389,6 @@ def bug_analysis(bug, uplift_channel='release'):
 
     revs, backout_comments = get_commits_for_bug(bug)
 
-    patch_urls = []
-
     if len(revs) > 0:
         for rev, obj in revs.items():
             # Multiple names because sometimes authors use different emails on Bugzilla and Mercurial and sometimes
@@ -406,27 +400,17 @@ def bug_analysis(bug, uplift_channel='release'):
             short_reviewers = obj['reviewers']
 
             for short_reviewer in short_reviewers:
-                # TODO: Figure out if this is the best thing to do (probably we should just skip these and not add the author
-                # to the set of reviewers).
-                if short_reviewer in ['me', 'oops', 'none', 'bustage', 'backout']:
-                    reviewers |= author_names
-                else:
+                # This changeset was not reviewed (probably a simple fix).
+                if short_reviewer not in ['me', 'oops', 'none', 'bustage', 'backout']:
                     reviewers.add(reviewer_match(short_reviewer, bugzilla_reviewers | bugzilla_authors, bug['cc_detail']))
 
-            obj['reviewers'] = reviewers
-
-            # Human readable patch url
-            patch_urls.append({
+            # Human readable patch URL
+            info['patches'][rev] = {
                 'source': 'mercurial',
                 'url': hgmozilla.Mercurial.get_repo_url(obj['channel']) + '/rev/{}'.format(rev),
-            })
+            }
 
-            patch_info = patch_analysis(hgmozilla.RawRevision.get_revision(obj['channel'], rev), author_names, reviewers, utils.as_utc(datetime.utcfromtimestamp(obj['creation_date'])))
-            for k, v in patch_info.items():
-                if k not in info:
-                    info[k] = v
-                else:
-                    info[k] += v
+            info['patches'][rev].update(patch_analysis(hgmozilla.RawRevision.get_revision(obj['channel'], rev), author_names, reviewers, utils.as_utc(datetime.utcfromtimestamp(obj['creation_date']))))
     else:
         def attachmenthandler(attachments, bugid, data):
             for i in range(0, len(bug['attachments'])):
@@ -441,17 +425,17 @@ def bug_analysis(bug, uplift_channel='release'):
             data = None
 
             if attachment['is_patch'] == 1 and attachment['is_obsolete'] == 0:
-                patch_urls.append({
+                info['patches'][attachment['id']] = {
                     'source': 'attachment',
                     'url': '{}/attachment.cgi?id={}'.format(Bugzilla.URL, attachment['id']),
-                })
+                }
                 data = base64.b64decode(attachment['data']).decode('ascii', 'ignore')
             elif attachment['content_type'] == 'text/x-review-board-request' and attachment['is_obsolete'] == 0:
                 mozreview_url = base64.b64decode(attachment['data']).decode('utf-8')
-                patch_urls.append({
+                info['patches'][attachment['id']] = {
                     'source': 'mozreview',
                     'url': mozreview_url,
-                })
+                }
                 review_num = re.search(MOZREVIEW_URL_PATTERN, mozreview_url).group(1)
                 mozreview_raw_diff_url = 'https://reviewboard.mozilla.org/r/' + review_num + '/diff/raw/'
 
@@ -461,18 +445,11 @@ def bug_analysis(bug, uplift_channel='release'):
             reviewers = [flag['setter'] for flag in attachment['flags'] if flag['name'] == 'review' and flag['status'] == '+']
 
             if data is not None:
-                patch_info = patch_analysis(data, [attachment['creator']], reviewers, utils.get_date_ymd(attachment['creation_time']))
-                for k, v in patch_info.items():
-                    if k not in info:
-                        info[k] = v
-                    else:
-                        info[k] += v
+                info['patches'][attachment['id']].update(patch_analysis(data, [attachment['creator']], reviewers, utils.get_date_ymd(attachment['creation_time'])))
 
     # TODO: Add number of crashes with signatures from the bug (also before/after the patch?).
 
     # TODO: Add perfherder results?
-
-    # TODO: Add number of days since the landing (to check if the patch baked a little on nightly or not).
 
     info['backout_num'] = len(backout_comments)
 
@@ -483,9 +460,6 @@ def bug_analysis(bug, uplift_channel='release'):
         'authors': bugzilla_authors,
         'reviewers': bugzilla_reviewers,
     }
-
-    # Add patches links
-    info['patches'] = patch_urls
 
     # Add uplift request
     info.update(uplift_info(bug, uplift_channel))
