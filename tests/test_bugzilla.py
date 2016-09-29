@@ -309,7 +309,7 @@ class BugAttachmentTest(MockTestCase):
         self.assertEqual(data['attachment'][0]['is_obsolete'], 1)
 
     @responses.activate
-    def test_include_fields(self):
+    def test_attachment_include_fields(self):
         def attachmenthandler(bug, bugid, data):
             data['attachment'] = bug
 
@@ -320,6 +320,17 @@ class BugAttachmentTest(MockTestCase):
         self.assertNotIn('is_patch', data['attachment'][0])
         self.assertNotIn('is_obsolete', data['attachment'][0])
 
+    @responses.activate
+    def test_comment_include_fields(self):
+        def commenthandler(bug, bugid, data):
+            data['comments'] = bug['comments']
+
+        data = {}
+        bugzilla.Bugzilla(12345, commenthandler=commenthandler, commentdata=data, comment_include_fields=['author']).get_data().wait()
+
+        self.assertEqual(data['comments'][0]['author'], 'marina@formerly-netscape.com.tld')
+        for field in ['bug_id', 'creator', 'raw_text', 'id', 'tags', 'text', 'is_private', 'time', 'creation_time', 'attachment_id']:
+            self.assertNotIn(field, data['comments'][0])
 
 class BugDuplicateTest(MockTestCase):
 
