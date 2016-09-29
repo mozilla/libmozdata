@@ -10,6 +10,7 @@ install:
 script:
   - flake8 .
   - coverage run --source=libmozdata -m unittest discover tests/
+  - python setup.py sdist
 after_success:
   - bash <(curl -s https://codecov.io/bash)
 cache: pip
