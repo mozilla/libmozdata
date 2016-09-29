@@ -17,6 +17,8 @@ with open(os.path.join(here, 'VERSION')) as f:
 with open(os.path.join(here, 'requirements.txt')) as f:
     install_requires = f.read().strip().split('\n')
 
+with open(os.path.join(here, 'test-requirements.txt')) as f:
+    tests_require = f.read().strip().split('\n')
 
 setup(
     name='libmozdata',
@@ -26,7 +28,8 @@ setup(
     author_email='release-mgmt@mozilla.com',
     url='https://github.com/mozilla/libmozdata',
     install_requires=install_requires,
-    packages=find_packages(),
+    tests_require=tests_require,
+    packages=find_packages(exclude=['*.tests', '*.tests.*', 'tests.*', 'tests']),
     include_package_data=True,
     zip_safe=False,
     license='MPL2',
