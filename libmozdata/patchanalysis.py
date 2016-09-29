@@ -365,7 +365,11 @@ def bug_analysis(bug, uplift_channel='release'):
             'flags', 'is_patch', 'creator', 'content_type',
         ]
 
-        Bugzilla(bug_id, INCLUDE_FIELDS, bughandler=bughandler, commenthandler=commenthandler, attachmenthandler=attachmenthandler, historyhandler=historyhandler, attachment_include_fields=ATTACHMENT_INCLUDE_FIELDS).get_data().wait()
+        COMMENT_INCLUDE_FIELDS = [
+            'id', 'text', 'author', 'time',
+        ]
+
+        Bugzilla(bug_id, INCLUDE_FIELDS, bughandler=bughandler, commenthandler=commenthandler, comment_include_fields=COMMENT_INCLUDE_FIELDS, attachmenthandler=attachmenthandler, historyhandler=historyhandler, attachment_include_fields=ATTACHMENT_INCLUDE_FIELDS).get_data().wait()
 
     info = {
         'backout_num': 0,
@@ -492,7 +496,11 @@ def uplift_info(bug, channel):
             'flags',
         ]
 
-        Bugzilla(bug_id, INCLUDE_FIELDS, bughandler=bughandler, commenthandler=commenthandler, historyhandler=historyhandler, attachmenthandler=attachmenthandler, attachment_include_fields=ATTACHMENT_INCLUDE_FIELDS).get_data().wait()
+        COMMENT_INCLUDE_FIELDS = [
+            'id', 'text', 'author', 'time',
+        ]
+
+        Bugzilla(bug_id, INCLUDE_FIELDS, bughandler=bughandler, commenthandler=commenthandler, comment_include_fields=COMMENT_INCLUDE_FIELDS, historyhandler=historyhandler, attachmenthandler=attachmenthandler, attachment_include_fields=ATTACHMENT_INCLUDE_FIELDS).get_data().wait()
 
     # Default structure
     info = {
