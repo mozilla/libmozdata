@@ -332,6 +332,7 @@ class BugAttachmentTest(MockTestCase):
         for field in ['bug_id', 'creator', 'raw_text', 'id', 'tags', 'text', 'is_private', 'time', 'creation_time', 'attachment_id']:
             self.assertNotIn(field, data['comments'][0])
 
+
 class BugDuplicateTest(MockTestCase):
 
     mock_urls = [
