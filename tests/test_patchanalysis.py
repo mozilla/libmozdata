@@ -324,8 +324,8 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['code_churn_last_3_releases'], 526)
         self.assertEqual(info['developer_familiarity_overall'], 86)
         self.assertEqual(info['developer_familiarity_last_3_releases'], 12)
-        self.assertEqual(info['reviewer_familiarity_overall'], 25)
-        self.assertEqual(info['reviewer_familiarity_last_3_releases'], 5)
+        self.assertEqual(info['reviewer_familiarity_overall'], 1458)
+        self.assertEqual(info['reviewer_familiarity_last_3_releases'], 196)
         self.assertGreaterEqual(info['crashes'], 0)
         self.assertEqual(len(info['patches']), 2)
         urls = (
@@ -558,8 +558,8 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['code_churn_last_3_releases'], 149)
         self.assertEqual(info['developer_familiarity_overall'], 131)
         self.assertEqual(info['developer_familiarity_last_3_releases'], 19)
-        self.assertEqual(info['reviewer_familiarity_overall'], 7)
-        self.assertEqual(info['reviewer_familiarity_last_3_releases'], 7)
+        self.assertEqual(info['reviewer_familiarity_overall'], 8)
+        self.assertEqual(info['reviewer_familiarity_last_3_releases'], 8)
         self.assertGreaterEqual(info['crashes'], 0)
         self.assertEqual(len(info['patches']), 2)
         urls = (
@@ -584,8 +584,8 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['code_churn_last_3_releases'], 334)
         self.assertEqual(info['developer_familiarity_overall'], 116)
         self.assertEqual(info['developer_familiarity_last_3_releases'], 43)
-        self.assertEqual(info['reviewer_familiarity_overall'], 53)
-        self.assertEqual(info['reviewer_familiarity_last_3_releases'], 44)
+        self.assertEqual(info['reviewer_familiarity_overall'], 84)
+        self.assertEqual(info['reviewer_familiarity_last_3_releases'], 63)
         self.assertGreaterEqual(info['crashes'], 0)
         self.assertEqual(len(info['patches']), 4)
         urls = (
