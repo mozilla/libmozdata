@@ -21,7 +21,7 @@ class Bugzilla(Connection):
     TOKEN = config.get('Bugzilla', 'token', '')
     # TOKEN = config.get('Allizgub', 'token', '')
 
-    def __init__(self, bugids=None, include_fields='_default', bughandler=None, bugdata=None, historyhandler=None, historydata=None, commenthandler=None, commentdata=None, attachmenthandler=None, attachmentdata=None, attachment_include_fields=None, queries=None, **kwargs):
+    def __init__(self, bugids=None, include_fields='_default', bughandler=None, bugdata=None, historyhandler=None, historydata=None, commenthandler=None, commentdata=None, comment_include_fields=None, attachmenthandler=None, attachmentdata=None, attachment_include_fields=None, queries=None, **kwargs):
         """Constructor
 
         Args:
@@ -33,6 +33,7 @@ class Bugzilla(Connection):
             historydata (Optional): the data to use with the history handler
             commenthandler (Optional[function]): the handler to use with each retrieved bug comment
             commentdata (Optional): the data to use with the comment handler
+            comment_include_fields (Optional[List[str]]): list of comment include fields
             attachmenthandler (Optional[function]): the handler to use with each retrieved bug attachment
             attachmentdata (Optional): the data to use with the attachment handler
             attachment_include_fields (Optional[List[str]]): list of attachment include fields
@@ -55,6 +56,7 @@ class Bugzilla(Connection):
             self.historydata = historydata
             self.commenthandler = commenthandler
             self.commentdata = commentdata
+            self.comment_include_fields = comment_include_fields
             self.attachmenthandler = attachmenthandler
             self.attachmentdata = attachmentdata
             self.attachment_include_fields = attachment_include_fields
@@ -518,7 +520,10 @@ class Bugzilla(Connection):
             remainder = _bugids[1:] if len(_bugids) >= 2 else []
             self.comment_results.append(self.session.get(url % first,
                                                          headers=header,
-                                                         params={'ids': remainder},
+                                                         params={
+                                                             'ids': remainder,
+                                                             'include_fields': self.comment_include_fields
+                                                         },
                                                          verify=True,
                                                          timeout=self.TIMEOUT,
                                                          background_callback=self.__comment_cb))
