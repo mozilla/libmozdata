@@ -374,6 +374,7 @@ def bug_analysis(bug, uplift_channel='release'):
         'depends_on': len(bug['depends_on']),
         'comments': len(bug['comments']),
         'r-ed_patches': sum((a['is_patch'] == 1 or a['content_type'] == 'text/x-review-board-request') and sum(flag['name'] == 'review' and flag['status'] == '-' for flag in a['flags']) > 0 for a in bug['attachments']),
+        'patches': {},
     }
 
     # Store in-testsuite flag.
@@ -407,17 +408,12 @@ def bug_analysis(bug, uplift_channel='release'):
                     reviewers.add(reviewer_match(short_reviewer, bugzilla_reviewers | bugzilla_authors, bug['cc_detail']))
 
             # Human readable patch URL
-            patch_urls.append({
+            info['patches'][rev] = {
                 'source': 'mercurial',
                 'url': hgmozilla.Mercurial.get_repo_url(obj['channel']) + '/rev/{}'.format(rev),
-            })
+            }
 
-            patch_info = patch_analysis(hgmozilla.RawRevision.get_revision(obj['channel'], rev), author_names, reviewers, utils.as_utc(datetime.utcfromtimestamp(obj['creation_date'])))
-            for k, v in patch_info.items():
-                if k not in info:
-                    info[k] = v
-                else:
-                    info[k] += v
+            info['patches'][rev].update(patch_analysis(hgmozilla.RawRevision.get_revision(obj['channel'], rev), author_names, reviewers, utils.as_utc(datetime.utcfromtimestamp(obj['creation_date']))))
     else:
         def attachmenthandler(attachments, bugid, data):
             for i in range(0, len(bug['attachments'])):
@@ -432,17 +428,17 @@ def bug_analysis(bug, uplift_channel='release'):
             data = None
 
             if attachment['is_patch'] == 1 and attachment['is_obsolete'] == 0:
-                patch_urls.append({
+                info['patches'][attachment['id']] = {
                     'source': 'attachment',
                     'url': '{}/attachment.cgi?id={}'.format(Bugzilla.URL, attachment['id']),
-                })
+                }
                 data = base64.b64decode(attachment['data']).decode('ascii', 'ignore')
             elif attachment['content_type'] == 'text/x-review-board-request' and attachment['is_obsolete'] == 0:
                 mozreview_url = base64.b64decode(attachment['data']).decode('utf-8')
-                patch_urls.append({
+                info['patches'][attachment['id']] = {
                     'source': 'mozreview',
                     'url': mozreview_url,
-                })
+                }
                 review_num = re.search(MOZREVIEW_URL_PATTERN, mozreview_url).group(1)
                 mozreview_raw_diff_url = 'https://reviewboard.mozilla.org/r/' + review_num + '/diff/raw/'
 
@@ -452,12 +448,7 @@ def bug_analysis(bug, uplift_channel='release'):
             reviewers = [flag['setter'] for flag in attachment['flags'] if flag['name'] == 'review' and flag['status'] == '+']
 
             if data is not None:
-                patch_info = patch_analysis(data, [attachment['creator']], reviewers, utils.get_date_ymd(attachment['creation_time']))
-                for k, v in patch_info.items():
-                    if k not in info:
-                        info[k] = v
-                    else:
-                        info[k] += v
+                info['patches'][attachment['id']].update(patch_analysis(data, [attachment['creator']], reviewers, utils.get_date_ymd(attachment['creation_time'])))
 
     # TODO: Add number of crashes with signatures from the bug (also before/after the patch?).
 
@@ -472,9 +463,6 @@ def bug_analysis(bug, uplift_channel='release'):
         'authors': bugzilla_authors,
         'reviewers': bugzilla_reviewers,
     }
-
-    # Add patches links
-    info['patches'] = patch_urls
 
     # Add uplift request
     info.update(uplift_info(bug, uplift_channel))
