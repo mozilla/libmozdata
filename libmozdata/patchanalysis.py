@@ -389,8 +389,6 @@ def bug_analysis(bug, uplift_channel='release'):
 
     revs, backout_comments = get_commits_for_bug(bug)
 
-    patch_urls = []
-
     if len(revs) > 0:
         for rev, obj in revs.items():
             # Multiple names because sometimes authors use different emails on Bugzilla and Mercurial and sometimes
