@@ -29,7 +29,7 @@ setup(
     url='https://github.com/mozilla/libmozdata',
     install_requires=install_requires,
     tests_require=tests_require,
-    packages=find_packages(),
+    packages=find_packages(exclude=['*.tests', '*.tests.*', 'tests.*', 'tests']),
     include_package_data=True,
     zip_safe=False,
     license='MPL2',
