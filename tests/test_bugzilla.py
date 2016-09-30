@@ -75,6 +75,18 @@ class BugIDTest(MockTestCase):
         self.assertEqual(bugs[12346]['summary'], u'nsOutputFileStream should buffer the output')
 
     @responses.activate
+    def test_empty_queries(self):
+        bugs = {}
+
+        def bughandler(data):
+            bug = data['bugs'][0]
+            bugs[bug['id']] = bug
+
+        bugzilla.Bugzilla(queries=[], bughandler=bughandler).wait()
+
+        self.assertEqual(bugs, {})
+
+    @responses.activate
     def test_search(self):
 
         def bughandler(bug, data):
