@@ -58,8 +58,8 @@ class BugIDTest(MockTestCase):
             bugs[bug['id']] = bug
 
         queries = [
-            Query(bugzilla.Bugzilla.API_URL, { 'id': '12345' }, bughandler),
-            Query(bugzilla.Bugzilla.API_URL, { 'id': '12346' }, bughandler)
+            Query(bugzilla.Bugzilla.API_URL, {'id': '12345'}, bughandler),
+            Query(bugzilla.Bugzilla.API_URL, {'id': '12346'}, bughandler)
         ]
 
         bugzilla.Bugzilla(queries=queries, bughandler=bughandler).wait()
