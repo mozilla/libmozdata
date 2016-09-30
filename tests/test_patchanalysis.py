@@ -36,6 +36,13 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(len(missed_warnings), 0)
         self.assertEqual(len(unexpected_warnings), 0)
 
+    def assertDictEqual(self, d1, d2, msg=None):
+        for k, v1 in d1.items():
+            self.assertIn(k, d2, msg)
+            self.assertEqual(v1, d2[k], msg)
+
+        return True
+
     @responses.activate
     def test_bug_analysis(self):
         info = patchanalysis.bug_analysis(547914)
@@ -160,10 +167,10 @@ class PatchAnalysisTest(MockTestCase):
         info = patchanalysis.bug_analysis(384458)
         self.assertEqual(info['backout_num'], 1)
         self.assertEqual(info['blocks'], 6)
-        self.assertEqual(info['depends_on'], 47)
+        self.assertEqual(info['depends_on'], 60)
         self.assertEqual(info['comments'], 109)
         self.assertEqual(info['r-ed_patches'], 0)
-        self.assertEqual(info['patches'], {'1c86ba5d7a5b': {'modules_num': 3, 'code_churn_overall': 406, 'changes_size': 35, 'source': 'mercurial', 'developer_familiarity_last_3_releases': 8, 'developer_familiarity_overall': 13, 'url': 'https://hg.mozilla.org/mozilla-central/rev/1c86ba5d7a5b', 'reviewer_familiarity_last_3_releases': 0, 'test_changes_size': 462, 'code_churn_last_3_releases': 57, 'reviewer_familiarity_overall': 0}, 'b94fedbf48b1': {'modules_num': 1, 'code_churn_overall': 353, 'changes_size': 1060, 'source': 'mercurial', 'developer_familiarity_last_3_releases': 10, 'developer_familiarity_overall': 41, 'url': 'https://hg.mozilla.org/mozilla-central/rev/b94fedbf48b1', 'reviewer_familiarity_last_3_releases': 0, 'test_changes_size': 0, 'code_churn_last_3_releases': 34, 'reviewer_familiarity_overall': 0}, '0d05e6a1bdc2': {'modules_num': 1, 'code_churn_overall': 25, 'changes_size': 72, 'source': 'mercurial', 'developer_familiarity_last_3_releases': 2, 'developer_familiarity_overall': 2, 'url': 'https://hg.mozilla.org/mozilla-central/rev/0d05e6a1bdc2', 'reviewer_familiarity_last_3_releases': 0, 'test_changes_size': 0, 'code_churn_last_3_releases': 5, 'reviewer_familiarity_overall': 0}, 'de5d300e4687': {'modules_num': 3, 'code_churn_overall': 3803, 'changes_size': 358, 'source': 'mercurial', 'developer_familiarity_last_3_releases': 11, 'developer_familiarity_overall': 43, 'url': 'https://hg.mozilla.org/mozilla-central/rev/de5d300e4687', 'reviewer_familiarity_last_3_releases': 0, 'test_changes_size': 0, 'code_churn_last_3_releases': 363, 'reviewer_familiarity_overall': 1}, '73176395400e': {'modules_num': 3, 'code_churn_overall': 3616, 'changes_size': 1227, 'source': 'mercurial', 'developer_familiarity_last_3_releases': 20, 'developer_familiarity_overall': 63, 'url': 'https://hg.mozilla.org/mozilla-central/rev/73176395400e', 'reviewer_familiarity_last_3_releases': 0, 'test_changes_size': 0, 'code_churn_last_3_releases': 354, 'reviewer_familiarity_overall': 1}})
+        self.assertEqual(info['patches'], {'1c86ba5d7a5b': {'modules_num': 3, 'code_churn_overall': 406, 'changes_size': 35, 'source': 'mercurial', 'developer_familiarity_last_3_releases': 8, 'developer_familiarity_overall': 13, 'url': 'https://hg.mozilla.org/mozilla-central/rev/1c86ba5d7a5b', 'reviewer_familiarity_last_3_releases': 0, 'test_changes_size': 462, 'code_churn_last_3_releases': 57, 'reviewer_familiarity_overall': 0}, 'b94fedbf48b1': {'modules_num': 1, 'code_churn_overall': 353, 'changes_size': 1060, 'source': 'mercurial', 'developer_familiarity_last_3_releases': 10, 'developer_familiarity_overall': 41, 'url': 'https://hg.mozilla.org/mozilla-central/rev/b94fedbf48b1', 'reviewer_familiarity_last_3_releases': 0, 'test_changes_size': 0, 'code_churn_last_3_releases': 34, 'reviewer_familiarity_overall': 0}, '0d05e6a1bdc2': {'modules_num': 1, 'code_churn_overall': 25, 'changes_size': 72, 'source': 'mercurial', 'developer_familiarity_last_3_releases': 2, 'developer_familiarity_overall': 2, 'url': 'https://hg.mozilla.org/mozilla-central/rev/0d05e6a1bdc2', 'reviewer_familiarity_last_3_releases': 0, 'test_changes_size': 0, 'code_churn_last_3_releases': 5, 'reviewer_familiarity_overall': 0}, 'de5d300e4687': {'modules_num': 3, 'code_churn_overall': 3805, 'changes_size': 358, 'source': 'mercurial', 'developer_familiarity_last_3_releases': 11, 'developer_familiarity_overall': 43, 'url': 'https://hg.mozilla.org/mozilla-central/rev/de5d300e4687', 'reviewer_familiarity_last_3_releases': 0, 'test_changes_size': 0, 'code_churn_last_3_releases': 363, 'reviewer_familiarity_overall': 1}, '73176395400e': {'modules_num': 3, 'code_churn_overall': 3616, 'changes_size': 1227, 'source': 'mercurial', 'developer_familiarity_last_3_releases': 20, 'developer_familiarity_overall': 63, 'url': 'https://hg.mozilla.org/mozilla-central/rev/73176395400e', 'reviewer_familiarity_last_3_releases': 0, 'test_changes_size': 0, 'code_churn_last_3_releases': 354, 'reviewer_familiarity_overall': 1}})
 
         # Custom backout (no reference to revision).
         # Author has a different name on Bugzilla and Mercurial and they don't use the email on Mercurial.

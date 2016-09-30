@@ -45,7 +45,7 @@ class BugIDTest(MockTestCase):
 
         self.assertEqual(bugs[12346]['id'], 12346)
         self.assertEqual(bugs[12346]['resolution'], u'FIXED')
-        self.assertEqual(bugs[12346]['assigned_to'], u'dougt@mozilla.com')
+        self.assertEqual(bugs[12346]['assigned_to'], u'doug.turner@gmail.com')
         self.assertEqual(bugs[12346]['summary'], u'nsOutputFileStream should buffer the output')
 
     @responses.activate
@@ -213,18 +213,18 @@ class BugCommentHistoryTest(MockTestCase):
         inbound = bugzilla.Bugzilla.get_landing_comments(data['comments'], 'inbound')
         self.assertEqual(len(inbound), 1)
         self.assertEqual(inbound[0]['revision'], '42c54c7cb4a3')
-        self.assertEqual(inbound[0]['comment'], {'attachment_id': None, 'raw_text': 'http://hg.mozilla.org/integration/mozilla-inbound/rev/42c54c7cb4a3', 'tags': [], 'is_private': False, 'creator': 'cam@mcc.id.au', 'bug_id': 538189, 'author': 'cam@mcc.id.au', 'text': 'http://hg.mozilla.org/integration/mozilla-inbound/rev/42c54c7cb4a3', 'id': 5655196, 'creation_time': '2011-08-15T21:21:13Z', 'time': '2011-08-15T21:21:13Z'})
+        self.assertEqual(inbound[0]['comment'], {'count': 39, 'attachment_id': None, 'raw_text': 'http://hg.mozilla.org/integration/mozilla-inbound/rev/42c54c7cb4a3', 'tags': [], 'is_private': False, 'creator': 'cam@mcc.id.au', 'bug_id': 538189, 'author': 'cam@mcc.id.au', 'text': 'http://hg.mozilla.org/integration/mozilla-inbound/rev/42c54c7cb4a3', 'id': 5655196, 'creation_time': '2011-08-15T21:21:13Z', 'time': '2011-08-15T21:21:13Z'})
         central = bugzilla.Bugzilla.get_landing_comments(data['comments'], 'central')
         self.assertEqual(len(central), 1)
         self.assertEqual(central[0]['revision'], '42c54c7cb4a3')
-        self.assertEqual(central[0]['comment'], {'attachment_id': None, 'raw_text': 'http://hg.mozilla.org/mozilla-central/rev/42c54c7cb4a3\n\nAsa, did you mean to set approval-beta+ instead of approval-beta?', 'tags': [], 'is_private': False, 'creator': 'khuey@kylehuey.com', 'bug_id': 538189, 'author': 'khuey@kylehuey.com', 'text': 'http://hg.mozilla.org/mozilla-central/rev/42c54c7cb4a3\n\nAsa, did you mean to set approval-beta+ instead of approval-beta?', 'id': 5656549, 'creation_time': '2011-08-16T11:02:36Z', 'time': '2011-08-16T11:02:36Z'})
+        self.assertEqual(central[0]['comment'], {'count': 43, 'attachment_id': None, 'raw_text': 'http://hg.mozilla.org/mozilla-central/rev/42c54c7cb4a3\n\nAsa, did you mean to set approval-beta+ instead of approval-beta?', 'tags': [], 'is_private': False, 'creator': 'khuey@kylehuey.com', 'bug_id': 538189, 'author': 'khuey@kylehuey.com', 'text': 'http://hg.mozilla.org/mozilla-central/rev/42c54c7cb4a3\n\nAsa, did you mean to set approval-beta+ instead of approval-beta?', 'id': 5656549, 'creation_time': '2011-08-16T11:02:36Z', 'time': '2011-08-16T11:02:36Z'})
         beta = bugzilla.Bugzilla.get_landing_comments(data['comments'], 'beta')
         self.assertEqual(len(beta), 1)
         self.assertEqual(beta[0]['revision'], '1d02edaa92bc')
-        self.assertEqual(beta[0]['comment'], {'attachment_id': None, 'raw_text': 'http://hg.mozilla.org/releases/mozilla-beta/rev/1d02edaa92bc', 'tags': [], 'is_private': False, 'creator': 'cam@mcc.id.au', 'bug_id': 538189, 'author': 'cam@mcc.id.au', 'text': 'http://hg.mozilla.org/releases/mozilla-beta/rev/1d02edaa92bc', 'id': 5686198, 'creation_time': '2011-08-29T21:55:57Z', 'time': '2011-08-29T21:55:57Z'})
+        self.assertEqual(beta[0]['comment'], {'count': 51, 'attachment_id': None, 'raw_text': 'http://hg.mozilla.org/releases/mozilla-beta/rev/1d02edaa92bc', 'tags': [], 'is_private': False, 'creator': 'cam@mcc.id.au', 'bug_id': 538189, 'author': 'cam@mcc.id.au', 'text': 'http://hg.mozilla.org/releases/mozilla-beta/rev/1d02edaa92bc', 'id': 5686198, 'creation_time': '2011-08-29T21:55:57Z', 'time': '2011-08-29T21:55:57Z'})
 
         multiple = bugzilla.Bugzilla.get_landing_comments(data['comments'], ['beta', 'inbound', 'central'])
-        self.assertEqual(multiple, [{'revision': '42c54c7cb4a3', 'channel': 'inbound', 'comment': {'creation_time': '2011-08-15T21:21:13Z', 'is_private': False, 'attachment_id': None, 'text': 'http://hg.mozilla.org/integration/mozilla-inbound/rev/42c54c7cb4a3', 'creator': 'cam@mcc.id.au', 'tags': [], 'bug_id': 538189, 'author': 'cam@mcc.id.au', 'time': '2011-08-15T21:21:13Z', 'id': 5655196, 'raw_text': 'http://hg.mozilla.org/integration/mozilla-inbound/rev/42c54c7cb4a3'}}, {'revision': '42c54c7cb4a3', 'channel': 'central', 'comment': {'creation_time': '2011-08-16T11:02:36Z', 'is_private': False, 'attachment_id': None, 'text': 'http://hg.mozilla.org/mozilla-central/rev/42c54c7cb4a3\n\nAsa, did you mean to set approval-beta+ instead of approval-beta?', 'creator': 'khuey@kylehuey.com', 'tags': [], 'bug_id': 538189, 'author': 'khuey@kylehuey.com', 'time': '2011-08-16T11:02:36Z', 'id': 5656549, 'raw_text': 'http://hg.mozilla.org/mozilla-central/rev/42c54c7cb4a3\n\nAsa, did you mean to set approval-beta+ instead of approval-beta?'}}, {'revision': '1d02edaa92bc', 'channel': 'beta', 'comment': {'creation_time': '2011-08-29T21:55:57Z', 'is_private': False, 'attachment_id': None, 'text': 'http://hg.mozilla.org/releases/mozilla-beta/rev/1d02edaa92bc', 'creator': 'cam@mcc.id.au', 'tags': [], 'bug_id': 538189, 'author': 'cam@mcc.id.au', 'time': '2011-08-29T21:55:57Z', 'id': 5686198, 'raw_text': 'http://hg.mozilla.org/releases/mozilla-beta/rev/1d02edaa92bc'}}])
+        self.assertEqual(multiple, [{'revision': '42c54c7cb4a3', 'channel': 'inbound', 'comment': {'count': 39, 'creation_time': '2011-08-15T21:21:13Z', 'is_private': False, 'attachment_id': None, 'text': 'http://hg.mozilla.org/integration/mozilla-inbound/rev/42c54c7cb4a3', 'creator': 'cam@mcc.id.au', 'tags': [], 'bug_id': 538189, 'author': 'cam@mcc.id.au', 'time': '2011-08-15T21:21:13Z', 'id': 5655196, 'raw_text': 'http://hg.mozilla.org/integration/mozilla-inbound/rev/42c54c7cb4a3'}}, {'revision': '42c54c7cb4a3', 'channel': 'central', 'comment': {'count': 43, 'creation_time': '2011-08-16T11:02:36Z', 'is_private': False, 'attachment_id': None, 'text': 'http://hg.mozilla.org/mozilla-central/rev/42c54c7cb4a3\n\nAsa, did you mean to set approval-beta+ instead of approval-beta?', 'creator': 'khuey@kylehuey.com', 'tags': [], 'bug_id': 538189, 'author': 'khuey@kylehuey.com', 'time': '2011-08-16T11:02:36Z', 'id': 5656549, 'raw_text': 'http://hg.mozilla.org/mozilla-central/rev/42c54c7cb4a3\n\nAsa, did you mean to set approval-beta+ instead of approval-beta?'}}, {'revision': '1d02edaa92bc', 'channel': 'beta', 'comment': {'count': 51, 'creation_time': '2011-08-29T21:55:57Z', 'is_private': False, 'attachment_id': None, 'text': 'http://hg.mozilla.org/releases/mozilla-beta/rev/1d02edaa92bc', 'creator': 'cam@mcc.id.au', 'tags': [], 'bug_id': 538189, 'author': 'cam@mcc.id.au', 'time': '2011-08-29T21:55:57Z', 'id': 5686198, 'raw_text': 'http://hg.mozilla.org/releases/mozilla-beta/rev/1d02edaa92bc'}}])
 
         data = {}
         bugzilla.Bugzilla(679352, commenthandler=commenthandler, commentdata=data).get_data().wait()
@@ -565,7 +565,7 @@ class User(MockTestCase):
     @responses.activate
     def test_get_nightly_version(self):
         nv = bugzilla.Bugzilla.get_nightly_version()
-        self.assertEqual(nv, 51)
+        self.assertEqual(nv, 52)
 
 
 if __name__ == '__main__':
