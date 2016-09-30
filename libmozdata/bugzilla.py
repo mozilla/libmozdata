@@ -167,8 +167,8 @@ class Bugzilla(Connection):
 
     @staticmethod
     def get_links(bugids):
-        if isinstance(bugids, six.string_types):
-            return 'https://bugzil.la/' + bugids
+        if isinstance(bugids, six.string_types) or isinstance(bugids, int):
+            return 'https://bugzil.la/' + str(bugids)
         else:
             return ['https://bugzil.la/' + str(bugid) for bugid in bugids]
 
