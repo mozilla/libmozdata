@@ -5,6 +5,7 @@
 import unittest
 import os
 from libmozdata import bugzilla
+from libmozdata.connection import Query
 import responses
 from tests.auto_mock import MockTestCase
 
@@ -37,6 +38,31 @@ class BugIDTest(MockTestCase):
 
         bugs = {}
         bugzilla.Bugzilla([12345, 12346], bughandler=bughandler, bugdata=bugs).get_data().wait()
+
+        self.assertEqual(bugs[12345]['id'], 12345)
+        self.assertEqual(bugs[12345]['resolution'], u'FIXED')
+        self.assertEqual(bugs[12345]['assigned_to'], u'jefft@formerly-netscape.com.tld')
+        self.assertEqual(bugs[12345]['summary'], u'[DOGFOOD] Unable to Forward a message received as an Inline page or an attachment')
+
+        self.assertEqual(bugs[12346]['id'], 12346)
+        self.assertEqual(bugs[12346]['resolution'], u'FIXED')
+        self.assertEqual(bugs[12346]['assigned_to'], u'doug.turner@gmail.com')
+        self.assertEqual(bugs[12346]['summary'], u'nsOutputFileStream should buffer the output')
+
+    @responses.activate
+    def test_queries(self):
+        bugs = {}
+
+        def bughandler(data):
+            bug = data['bugs'][0]
+            bugs[bug['id']] = bug
+
+        queries = [
+            Query(bugzilla.Bugzilla.API_URL, { 'id': '12345' }, bughandler),
+            Query(bugzilla.Bugzilla.API_URL, { 'id': '12346' }, bughandler)
+        ]
+
+        bugzilla.Bugzilla(queries=queries, bughandler=bughandler).wait()
 
         self.assertEqual(bugs[12345]['id'], 12345)
         self.assertEqual(bugs[12345]['resolution'], u'FIXED')
