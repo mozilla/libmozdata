@@ -18,10 +18,10 @@ def send(To, Subject, Body, Cc=[], Bcc=[]):
     """Send an email
     """
     message = MIMEText(Body)
-    message['To'] = To
+    message['To'] = ', '.join(To)
     message['Subject'] = Subject
-    message['Cc'] = Cc
-    message['Bcc'] = Bcc
+    message['Cc'] = ', '.join(Cc)
+    message['Bcc'] = ', '.join(Bcc)
 
     message = {'raw': base64.urlsafe_b64encode(message.as_string())}
 
