@@ -96,7 +96,7 @@ class SuperSearch(Socorro):
         _start = utils.get_date(start)
 
         if end:
-            _end = utils.get_date_ymd(end) + timedelta(1)
+            _end = utils.get_date_ymd(end)
             today = utils.get_date_ymd('today')
             if _end > today:
                 search_date = ['>=' + _start]
