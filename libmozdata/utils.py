@@ -11,6 +11,7 @@ import math
 import random
 import dateutil.parser
 import pytz
+from requests.utils import quote
 
 
 __pacific = pytz.timezone('US/Pacific')
@@ -294,3 +295,11 @@ def get_x_fwed_for_str(s):
         return ', '.join(map(lambda x: x.strip(' \t'), s.split(',')))
     else:
         return ', '.join(map(lambda x: x.strip(' \t'), s))
+
+
+def get_params_for_url(params):
+    return '?' + '&'.join([quote(name) + '=' + quote(str(value)) if not isinstance(value, list) else '&'.join([quote(name) + '=' + quote(str(intValue)) for intValue in value]) for name, value in params.items() if value is not None]) if params else ''
+
+
+def get_url(url):
+    return url if url.endswith('/') else url + '/'

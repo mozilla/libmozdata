@@ -44,6 +44,7 @@ class SuperSearch(Socorro):
 
     URL = Socorro.API_URL + '/SuperSearch'
     URL_UNREDACTED = URL + 'Unredacted'
+    WEB_URL = Socorro.CRASH_STATS_URL + '/search'
 
     def __init__(self, params=None, handler=None, handlerdata=None, queries=None, **kwargs):
         """Constructor
@@ -76,6 +77,10 @@ class SuperSearch(Socorro):
                         break
 
             super(SuperSearch, self).__init__(Query(url, params, handler, handlerdata), **kwargs)
+
+    @staticmethod
+    def get_link(params):
+        return utils.get_url(SuperSearch.WEB_URL) + utils.get_params_for_url(params)
 
     @staticmethod
     def get_search_date(start, end=None):
