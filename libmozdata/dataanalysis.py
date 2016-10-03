@@ -263,6 +263,9 @@ def has_crash_stopped(data, date, threshold=51, f=mean, coeff=2., multi=True):
 
         n1 = data[dates[i - 1]]
         n2 = data[dates[i]]
+        if n1 == 0:
+            return 'yes' if n2 == 0 else 'no'
+
         percentage = round((n2 - n1) / n1 * 100.)
         if percentage <= -threshold:
             return 'yes'
