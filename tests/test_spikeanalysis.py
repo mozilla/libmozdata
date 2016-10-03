@@ -84,6 +84,57 @@ class SpikeAnalysisTest(MockTestCase):
         isp = spikeanalysis.is_spiking(x, alpha=0.01, win=-1, method='mean', plot=False)
         self.assertTrue(isp)
 
+    @responses.activate
+    def test_is_spiking_ma(self):
+        url = 'https://crash-analysis.mozilla.com/rkaiser/Firefox-beta-crashes-categories.json'
+        response = requests.get(url)
+        data = response.json()
+
+        x1 = {}
+        x2 = {}
+        max_date1 = utils.get_date_ymd('2016-09-09')
+        max_date2 = utils.get_date_ymd('2016-08-05')
+        for k, v in data.items():
+            if 'startup' in v:
+                s = v['startup']
+                date = utils.get_date_ymd(k)
+                if date <= max_date1:
+                    x1[date] = s.get('browser', 0)
+                if date <= max_date2:
+                    x2[date] = s.get('browser', 0)
+
+        y1 = [p[1] for p in sorted(x1.items(), key=lambda p: p[0])]
+        y2 = [p[1] for p in sorted(x2.items(), key=lambda p: p[0])]
+
+        isp = spikeanalysis.is_spiking_ma(y1, alpha=2.5, win=7, method='mean', plot=False)
+        self.assertEqual(isp, 'none')
+        isp = spikeanalysis.is_spiking_ma(y2, alpha=2.5, win=7, method='mean', plot=False)
+        self.assertEqual(isp, 'up')
+
+    @responses.activate
+    def test_get_spikes_ma(self):
+        # this test is quite long
+        url = 'https://crash-analysis.mozilla.com/rkaiser/Firefox-beta-crashes-categories.json'
+        response = requests.get(url)
+        data = response.json()
+
+        x1 = {}
+        max_date1 = utils.get_date_ymd('2016-10-02')
+        for k, v in data.items():
+            if 'startup' in v:
+                s = v['startup']
+                date = utils.get_date_ymd(k)
+                if date <= max_date1:
+                    x1[date] = s.get('browser', 0) + s.get('content', 0) + s.get('plugin', 0)
+
+        y1 = [p[1] for p in sorted(x1.items(), key=lambda p: p[0])]
+
+        up, down = spikeanalysis.get_spikes_ma(y1, alpha=2.5, win=7, method='mean', plot=False)
+        expected_up = [46, 47, 48, 82, 83, 84, 124, 125, 126, 127, 163, 164, 166, 169, 210, 220, 221, 222, 252, 253, 301, 302, 342, 343, 345, 346, 347, 348, 349, 383, 384, 386, 387, 422, 423, 425, 426, 460, 474, 512, 514, 533, 535, 659, 661, 689, 690, 734, 738, 757, 759, 760, 761, 852, 933, 934, 935, 944, 945]
+        expected_down = [53, 60, 109, 115, 137, 144, 178, 179, 199, 200, 228, 234, 235, 308, 310, 311, 312, 332, 333, 335, 336, 337, 357, 358, 365, 373, 374, 375, 400, 401, 402, 403, 430, 431, 438, 541, 544, 545, 546, 547, 548, 667, 714, 715, 716, 726, 784, 785, 786, 916, 952, 953, 954, 960, 961]
+
+        self.assertEqual(up, expected_up)
+        self.assertEqual(down, expected_down)
 
 if __name__ == '__main__':
     unittest.main()
