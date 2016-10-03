@@ -31,7 +31,7 @@ class Query(object):
         self.handlerdata = handlerdata
 
     def params_repr(self, params):
-        return utils.get_params_for_url(self.url, params)
+        return utils.get_params_for_url(params)
 
     def __repr__(self):
         params_list = self.params
