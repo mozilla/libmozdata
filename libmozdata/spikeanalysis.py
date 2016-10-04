@@ -2,9 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import scipy.stats as stats
 import numpy as np
 import matplotlib.pyplot as plt
+try:
+    import scipy.stats as stats
+    SCIPY_ENABLED = True
+except ImportError:
+    SCIPY_ENABLED = False
 
 
 def __get_grubb_lambda(n, alpha):
@@ -18,6 +22,9 @@ def __get_grubb_lambda(n, alpha):
     Returns:
         float: the critical value to use
     """
+    if not SCIPY_ENABLED:
+        raise NotImplementedError('Missing Scipy')
+
     n = float(n)
     p = alpha / (2. * n)
     t = np.abs(stats.t.ppf(p, n - 2.))
