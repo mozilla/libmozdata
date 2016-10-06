@@ -11,11 +11,13 @@ from setuptools import find_packages, setup
 
 here = os.path.dirname(__file__)
 
+
+def load_requirements(filename):
+    with open(os.path.join(here, filename)) as f:
+        return f.read().strip().split('\n')
+
 with open(os.path.join(here, 'VERSION')) as f:
     version = f.read().strip()
-
-with open(os.path.join(here, 'requirements.txt')) as f:
-    install_requires = f.read().strip().split('\n')
 
 setup(
     name='libmozdata',
@@ -24,7 +26,10 @@ setup(
     author='Mozilla Release Management',
     author_email='release-mgmt@mozilla.com',
     url='https://github.com/mozilla/libmozdata',
-    install_requires=install_requires,
+    install_requires=load_requirements('requirements.txt'),
+    extras_require={
+        'spikes': load_requirements('requirements-spikes.txt'),
+    },
     packages=find_packages(exclude=['*.tests', '*.tests.*', 'tests.*', 'tests']),
     include_package_data=True,
     zip_safe=False,
