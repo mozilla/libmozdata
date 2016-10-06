@@ -102,6 +102,59 @@ def __get_pd_mean(data, c=1.):
     return p, d
 
 
+def __get_lambda_critical(N, i, alpha):
+    """Get lambda for generalized ESD test (http://www.itl.nist.gov/div898/handbook/eda/section3/eda35h3.htm).
+
+    Args:
+        N (int): the number of data in sequence
+        i (int): the i-th outlier
+        alpha (float): the signifiance level
+
+    Returns:
+        list[int]: list of the index of outliers
+    """
+    if not SCIPY_ENABLED:
+        raise NotImplementedError('Missing Scipy')
+
+    p = 1. - alpha / (2. * (N - i + 1))
+    t = stats.t.ppf(p, N - i - 1)
+    return (N - i) * t / np.sqrt((N - i - 1 + t ** 2) * (N - i + 1))
+
+
+def generalized_esd(x, r, alpha=0.05, method='mean'):
+    """Generalized ESD test for outliers (http://www.itl.nist.gov/div898/handbook/eda/section3/eda35h3.htm).
+
+    Args:
+        x (numpy.ndarray): the data
+        r (int): max number of outliers
+        alpha (float): the signifiance level
+        method (str): 'median' or 'mean'
+
+    Returns:
+        list[int]: list of the index of outliers
+    """
+    x = np.asarray(x, dtype=np.float64)
+    fn = __get_pd_median if method == 'median' else __get_pd_mean
+    NaN = float('nan')
+    outliers = []
+    N = len(x)
+    for i in range(1, r + 1):
+        m, e = fn(x)
+        if e != 0.:
+            y = np.abs(x - m)
+            j = np.nanargmax(y)
+            R = y[j]
+            l = __get_lambda_critical(N, i, alpha)
+            if R > l * e:
+                outliers.append(j)
+                x[j] = NaN
+            else:
+                break
+        else:
+            break
+    return outliers
+
+
 def get_spikes(data, alpha=0.05, win=-1, threshold_up=-float('Inf'), threshold_down=+float('Inf'), method='median', plot=False):
     """Get the spikes in data.
        The Grubb's test is applyed to determinate if a value is an outlier or not (http://www.itl.nist.gov/div898/handbook/eda/section3/eda35h1.htm)
