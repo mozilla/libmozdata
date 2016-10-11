@@ -1,0 +1,11 @@
+Comment on attachment 8726034
+MozReview Request: bug 1230065 consider arrow size in dropdown minimum widget size r?acomminos
+
+Approval Request Comment for 46
+[Feature/regressing bug #]:
+Changes from bug 1198613 make a long standing bug much more obvious.
+[User impact if declined]: hard to read text in selects, sometimes requiring clicking on the select to see the current value.
+[Describe test coverage new/current, TreeHerder]:
+There are a number of existing tests for selects, but they do not cover this case.  There is no new test because the patch is more of a workaround than a fixing, merely mitigating the effect of the bug in comment situations.
+[Risks and why]: The patch is reasonably simple, but there is risk of larger than expected select buttons.
+[String/UUID change made/needed]: none.

@@ -1,5 +1,6 @@
 import base64
 import re
+import collections
 from datetime import (datetime, timedelta)
 try:
     from urllib.request import urlopen
@@ -696,3 +697,74 @@ def get_patch_info(bugs, base_versions=None):
         del info[r]
 
     return info
+
+
+def parse_uplift_comment(text, bug_id=None):
+    """
+    Parse a raw uplift comment to render
+    links and headers as HTML
+    """
+    headers = (
+        'Feature/regressing bug #',
+        'User impact if declined',
+        'Describe test coverage new/current, TreeHerder',
+        'Risks and why',
+        'String/UUID change made/needed',
+    )
+
+    def _replace_link(pattern, link, output, line):
+        replacement = '<a href="{}" target="_blank">{}</a>'.format(link, output)
+        return re.sub(pattern, replacement, line, flags=re.IGNORECASE)
+
+    def _parse_line(h, v):
+        # Detect initial http links first
+        v = _replace_link(r'(https?://[\w\.\/_@#-]*)', r'\1', r'\1', v)
+
+        # Bug XXX goes to bugzilla
+        v = _replace_link(r'bug (\d+)', r'{}/\1'.format(Bugzilla.URL), r'Bug \1', v)
+
+        # Attachment XXX goes to bugzilla
+        v = _replace_link(r'attachment (\d+)', r'{}/attachment.cgi?id=\1&action=edit'.format(Bugzilla.URL), r'Attachment \1', v)
+
+        # Comment XXX goes to bugzilla
+        if bug_id is not None:
+            v = _replace_link(r'comment (\d+)', r'{}/show_bug.cgi?id={}#c\1'.format(Bugzilla.URL, bug_id), r'Comment \1', v)
+
+        # Add to output structure
+        if h not in out:
+            out[h] = []
+        if v != '':
+            out[h].append(v)
+
+    lines = text.split('\n')
+
+    # Build headers
+    header_regex = '^\[({})\]:?\s*(.*)'.format('|'.join(headers))
+    header_regex = re.compile(header_regex, re.IGNORECASE)
+
+    out = collections.OrderedDict()
+
+    # Detect headers
+    no_header = '__NO_HEADER__'
+    header = no_header
+    for line in lines:
+        match = header_regex.match(line)
+        if match:
+            # Add on a new header
+            header, post_header = match.groups()
+            _parse_line(header, post_header)
+        else:
+            # Add on last header
+            _parse_line(header, line)
+
+    # Build complete html output
+    html = ''
+    for header, lines in out.items():
+        if header == no_header:
+            class_name = 'no-header'
+        else:
+            class_name = 'header'
+            html += '<h1>{}</h1>'.format(header)
+        html += '<div class="{}">{}</div>'.format(class_name, '<br />'.join(lines))
+
+    return html
