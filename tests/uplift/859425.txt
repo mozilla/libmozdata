@@ -1,0 +1,9 @@
+Comment on attachment 734729
+patch
+
+[Approval Request Comment]
+Bug caused by (feature/regressing bug #): 
+User impact if declined: DB code on the UI thread can cause ANR hangs and locks. Plus we are decoding bitmaps on the UI thread instead of the background thread.
+Testing completed (on m-c, etc.): on m-c
+Risk to taking this patch (and alternatives if risky): low risk. straight forward change
+String or IDL/UUID changes made by this patch: none

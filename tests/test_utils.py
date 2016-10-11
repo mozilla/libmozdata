@@ -88,5 +88,30 @@ class UtilsTest(unittest.TestCase):
         self.assertTrue(math.isnan(utils.rate(1.0, 0.0)))
         self.assertTrue(math.isnan(utils.rate(0.0, 0.0)))
 
+    def test_uplift_comment_html(self):
+        from libmozdata.patchanalysis import parse_uplift_comment as parse
+        import glob
+
+        # Bugzilla bug
+        out = parse('This is about bUg 12345. What a great bug.')
+        self.assertEqual(out, '<div class="no-header">This is about <a href="https://bugzilla.mozilla.org/12345" target="_blank">Bug 12345</a>. What a great bug.</div>')
+
+        # Simple link
+        out = parse('http://mozilla.org')
+        self.assertEqual(out, '<div class="no-header"><a href="http://mozilla.org" target="_blank">http://mozilla.org</a></div>')
+
+        # Complex link
+        out = parse('https://developer.mozilla.org/en-US/docs/Web/API/Media_Streams_API/Constraints#Result')
+        self.assertEqual(out, '<div class="no-header"><a href="https://developer.mozilla.org/en-US/docs/Web/API/Media_Streams_API/Constraints#Result" target="_blank">https://developer.mozilla.org/en-US/docs/Web/API/Media_Streams_API/Constraints#Result</a></div>')
+
+        # Full comments
+        for text_path in glob.glob('tests/uplift/*.txt'):
+            with open(text_path, 'r') as text:
+                out = parse(text.read())
+            html_path = text_path[:-4] + '.html'
+
+            with open(html_path, 'r') as html:
+                self.assertEqual(out, html.read())
+
 if __name__ == '__main__':
     unittest.main()
