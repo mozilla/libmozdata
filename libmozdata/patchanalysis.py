@@ -557,7 +557,7 @@ def uplift_info(bug, channel):
         return info
 
     # Delta between uplift request and next merge date.
-    release_date = versions.getCloserMajorRelease(uplift_request_date)[1]
+    release_date = versions.getCloserRelease(uplift_request_date)[1]
     info['release_delta'] = release_date - uplift_request_date
     assert info['release_delta'] > timedelta()
 
