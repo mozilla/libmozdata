@@ -144,8 +144,6 @@ def getCloserMajorRelease(date, negative=False):
     return __getCloserDate(date, __version_dates.items(), negative)
 
 
-
-
 def getCloserRelease(date, negative=False):
     global __version_dates, __stability_version_dates
     if not __version_dates:
