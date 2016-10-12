@@ -1,0 +1,28 @@
+{
+    "3f0b94325b80": {
+        "changes_size": 165,
+        "code_churn_last_3_releases": 330,
+        "code_churn_overall": 2312,
+        "developer_familiarity_last_3_releases": 7,
+        "developer_familiarity_overall": 61,
+        "modules_num": 4,
+        "reviewer_familiarity_last_3_releases": 0,
+        "reviewer_familiarity_overall": 0,
+        "source": "mercurial",
+        "test_changes_size": 0,
+        "url": "https://hg.mozilla.org/mozilla-central/rev/3f0b94325b80"
+    },
+    "7ae3089be8a5": {
+        "changes_size": 29,
+        "code_churn_last_3_releases": 196,
+        "code_churn_overall": 1458,
+        "developer_familiarity_last_3_releases": 5,
+        "developer_familiarity_overall": 25,
+        "modules_num": 1,
+        "reviewer_familiarity_last_3_releases": 196,
+        "reviewer_familiarity_overall": 1458,
+        "source": "mercurial",
+        "test_changes_size": 0,
+        "url": "https://hg.mozilla.org/mozilla-central/rev/7ae3089be8a5"
+    }
+}

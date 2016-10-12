@@ -1,0 +1,15 @@
+{
+    "a13edd3c49e7": {
+        "changes_size": 287,
+        "code_churn_last_3_releases": 27,
+        "code_churn_overall": 240,
+        "developer_familiarity_last_3_releases": 7,
+        "developer_familiarity_overall": 7,
+        "modules_num": 1,
+        "reviewer_familiarity_last_3_releases": 2,
+        "reviewer_familiarity_overall": 3,
+        "source": "mercurial",
+        "test_changes_size": 0,
+        "url": "https://hg.mozilla.org/mozilla-central/rev/a13edd3c49e7"
+    }
+}

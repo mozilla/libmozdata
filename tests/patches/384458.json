@@ -1,0 +1,67 @@
+{
+    "0d05e6a1bdc2": {
+        "changes_size": 72,
+        "code_churn_last_3_releases": 5,
+        "code_churn_overall": 25,
+        "developer_familiarity_last_3_releases": 2,
+        "developer_familiarity_overall": 2,
+        "modules_num": 1,
+        "reviewer_familiarity_last_3_releases": 0,
+        "reviewer_familiarity_overall": 0,
+        "source": "mercurial",
+        "test_changes_size": 0,
+        "url": "https://hg.mozilla.org/mozilla-central/rev/0d05e6a1bdc2"
+    },
+    "1c86ba5d7a5b": {
+        "changes_size": 35,
+        "code_churn_last_3_releases": 57,
+        "code_churn_overall": 406,
+        "developer_familiarity_last_3_releases": 8,
+        "developer_familiarity_overall": 13,
+        "modules_num": 3,
+        "reviewer_familiarity_last_3_releases": 0,
+        "reviewer_familiarity_overall": 0,
+        "source": "mercurial",
+        "test_changes_size": 462,
+        "url": "https://hg.mozilla.org/mozilla-central/rev/1c86ba5d7a5b"
+    },
+    "73176395400e": {
+        "changes_size": 1227,
+        "code_churn_last_3_releases": 354,
+        "code_churn_overall": 3616,
+        "developer_familiarity_last_3_releases": 20,
+        "developer_familiarity_overall": 63,
+        "modules_num": 3,
+        "reviewer_familiarity_last_3_releases": 0,
+        "reviewer_familiarity_overall": 1,
+        "source": "mercurial",
+        "test_changes_size": 0,
+        "url": "https://hg.mozilla.org/mozilla-central/rev/73176395400e"
+    },
+    "b94fedbf48b1": {
+        "changes_size": 1060,
+        "code_churn_last_3_releases": 34,
+        "code_churn_overall": 353,
+        "developer_familiarity_last_3_releases": 10,
+        "developer_familiarity_overall": 41,
+        "modules_num": 1,
+        "reviewer_familiarity_last_3_releases": 0,
+        "reviewer_familiarity_overall": 0,
+        "source": "mercurial",
+        "test_changes_size": 0,
+        "url": "https://hg.mozilla.org/mozilla-central/rev/b94fedbf48b1"
+    },
+    "de5d300e4687": {
+        "changes_size": 358,
+        "code_churn_last_3_releases": 363,
+        "code_churn_overall": 3805,
+        "developer_familiarity_last_3_releases": 11,
+        "developer_familiarity_overall": 43,
+        "modules_num": 3,
+        "reviewer_familiarity_last_3_releases": 0,
+        "reviewer_familiarity_overall": 1,
+        "source": "mercurial",
+        "test_changes_size": 0,
+        "url": "https://hg.mozilla.org/mozilla-central/rev/de5d300e4687"
+    }
+}

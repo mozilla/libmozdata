@@ -4,6 +4,8 @@
 
 import unittest
 import sys
+import os
+import json
 import warnings
 from datetime import timedelta
 from libmozdata.bugzilla import Bugzilla
@@ -36,12 +38,22 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(len(missed_warnings), 0)
         self.assertEqual(len(unexpected_warnings), 0)
 
-    def assertDictEqual(self, d1, d2, msg=None):
-        for k, v1 in d1.items():
-            self.assertIn(k, d2, msg)
-            self.assertEqual(v1, d2[k], msg)
+    def assertEqualPatches(self, patches, bug_id):
+        """
+        Check patches are equals to local dumps
+        """
+        path = 'tests/patches/{}.json'.format(bug_id)
+        self.assertTrue(os.path.exists(path))
+        with open(path, 'r') as f:
+            local_patches = json.load(f)
 
-        return True
+        # Compare str keys
+        keys = set(map(str, patches.keys()))
+        self.assertEqual(len(keys.symmetric_difference(list(local_patches.keys()))), 0)
+
+        # Keys can be int or str
+        for k, patch_data in patches.items():
+            self.assertDictEqual(patch_data, local_patches[str(k)])
 
     @responses.activate
     def test_bug_analysis(self):
@@ -170,7 +182,7 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['depends_on'], 60)
         self.assertEqual(info['comments'], 109)
         self.assertEqual(info['r-ed_patches'], 0)
-        self.assertEqual(info['patches'], {'1c86ba5d7a5b': {'modules_num': 3, 'code_churn_overall': 406, 'changes_size': 35, 'source': 'mercurial', 'developer_familiarity_last_3_releases': 8, 'developer_familiarity_overall': 13, 'url': 'https://hg.mozilla.org/mozilla-central/rev/1c86ba5d7a5b', 'reviewer_familiarity_last_3_releases': 0, 'test_changes_size': 462, 'code_churn_last_3_releases': 57, 'reviewer_familiarity_overall': 0}, 'b94fedbf48b1': {'modules_num': 1, 'code_churn_overall': 353, 'changes_size': 1060, 'source': 'mercurial', 'developer_familiarity_last_3_releases': 10, 'developer_familiarity_overall': 41, 'url': 'https://hg.mozilla.org/mozilla-central/rev/b94fedbf48b1', 'reviewer_familiarity_last_3_releases': 0, 'test_changes_size': 0, 'code_churn_last_3_releases': 34, 'reviewer_familiarity_overall': 0}, '0d05e6a1bdc2': {'modules_num': 1, 'code_churn_overall': 25, 'changes_size': 72, 'source': 'mercurial', 'developer_familiarity_last_3_releases': 2, 'developer_familiarity_overall': 2, 'url': 'https://hg.mozilla.org/mozilla-central/rev/0d05e6a1bdc2', 'reviewer_familiarity_last_3_releases': 0, 'test_changes_size': 0, 'code_churn_last_3_releases': 5, 'reviewer_familiarity_overall': 0}, 'de5d300e4687': {'modules_num': 3, 'code_churn_overall': 3805, 'changes_size': 358, 'source': 'mercurial', 'developer_familiarity_last_3_releases': 11, 'developer_familiarity_overall': 43, 'url': 'https://hg.mozilla.org/mozilla-central/rev/de5d300e4687', 'reviewer_familiarity_last_3_releases': 0, 'test_changes_size': 0, 'code_churn_last_3_releases': 363, 'reviewer_familiarity_overall': 1}, '73176395400e': {'modules_num': 3, 'code_churn_overall': 3616, 'changes_size': 1227, 'source': 'mercurial', 'developer_familiarity_last_3_releases': 20, 'developer_familiarity_overall': 63, 'url': 'https://hg.mozilla.org/mozilla-central/rev/73176395400e', 'reviewer_familiarity_last_3_releases': 0, 'test_changes_size': 0, 'code_churn_last_3_releases': 354, 'reviewer_familiarity_overall': 1}})
+        self.assertEqualPatches(info['patches'], 384458)
 
         # Custom backout (no reference to revision).
         # Author has a different name on Bugzilla and Mercurial and they don't use the email on Mercurial.
@@ -183,7 +195,7 @@ class PatchAnalysisTest(MockTestCase):
             self.assertEqual(info['depends_on'], 1)
             self.assertEqual(info['comments'], 42)
             self.assertEqual(info['r-ed_patches'], 0)
-            self.assertEqual(info['patches'], {'6126c53203f8': {'developer_familiarity_overall': 4, 'developer_familiarity_last_3_releases': 4, 'test_changes_size': 0, 'source': 'mercurial', 'modules_num': 1, 'changes_size': 40, 'code_churn_last_3_releases': 13, 'url': 'https://hg.mozilla.org/mozilla-central/rev/6126c53203f8', 'code_churn_overall': 14, 'reviewer_familiarity_last_3_releases': 1, 'reviewer_familiarity_overall': 1}, 'c17c6b68112c': {'developer_familiarity_overall': 1, 'developer_familiarity_last_3_releases': 1, 'test_changes_size': 50, 'source': 'mercurial', 'modules_num': 1, 'changes_size': 0, 'code_churn_last_3_releases': 5, 'url': 'https://hg.mozilla.org/mozilla-central/rev/c17c6b68112c', 'code_churn_overall': 13, 'reviewer_familiarity_last_3_releases': 0, 'reviewer_familiarity_overall': 0}, '933b5260480f': {'developer_familiarity_overall': 0, 'developer_familiarity_last_3_releases': 0, 'test_changes_size': 0, 'source': 'mercurial', 'modules_num': 1, 'changes_size': 27, 'code_churn_last_3_releases': 15, 'url': 'https://hg.mozilla.org/mozilla-central/rev/933b5260480f', 'code_churn_overall': 52, 'reviewer_familiarity_last_3_releases': 0, 'reviewer_familiarity_overall': 1}})
+            self.assertEqualPatches(info['patches'], 1220307)
 
         with warnings.catch_warnings(record=True) as w:
             info = patchanalysis.bug_analysis(1276850)
@@ -194,7 +206,7 @@ class PatchAnalysisTest(MockTestCase):
             self.assertEqual(info['depends_on'], 0)
             self.assertEqual(info['comments'], 24)
             self.assertEqual(info['r-ed_patches'], 0)
-            self.assertEqual(info['patches'], {'da10eecd0e76': {'source': 'mercurial', 'developer_familiarity_overall': 0, 'code_churn_overall': 26, 'test_changes_size': 0, 'developer_familiarity_last_3_releases': 0, 'code_churn_last_3_releases': 21, 'url': 'https://hg.mozilla.org/mozilla-central/rev/da10eecd0e76', 'modules_num': 1, 'reviewer_familiarity_last_3_releases': 21, 'changes_size': 40, 'reviewer_familiarity_overall': 26}})
+            self.assertEqualPatches(info['patches'], 1276850)
 
         # No landed patches.
         # The author of the patch changed his email on Bugzilla, so past contributions
@@ -205,7 +217,7 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['depends_on'], 0)
         self.assertEqual(info['comments'], 41)
         self.assertEqual(info['r-ed_patches'], 1)
-        self.assertEqual(info['patches'], {8447556: {'test_changes_size': 445, 'code_churn_last_3_releases': 316, 'reviewer_familiarity_overall': 266, 'developer_familiarity_overall': 4, 'modules_num': 6, 'developer_familiarity_last_3_releases': 4, 'code_churn_overall': 2465, 'source': 'attachment', 'url': 'https://bugzilla.mozilla.org/attachment.cgi?id=8447556', 'reviewer_familiarity_last_3_releases': 15, 'changes_size': 1020}, 8447557: {'test_changes_size': 0, 'code_churn_last_3_releases': 0, 'reviewer_familiarity_overall': 0, 'developer_familiarity_overall': 0, 'modules_num': 0, 'developer_familiarity_last_3_releases': 0, 'code_churn_overall': 0, 'source': 'attachment', 'url': 'https://bugzilla.mozilla.org/attachment.cgi?id=8447557', 'reviewer_familiarity_last_3_releases': 0, 'changes_size': 15}})
+        self.assertEqualPatches(info['patches'], 1007402)
 
         # No link between Bugzilla account and Mercurial author.
         # Reviewer uses different email on Bugzilla and Mercurial.
@@ -215,7 +227,7 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['depends_on'], 0)
         self.assertEqual(info['comments'], 11)
         self.assertEqual(info['r-ed_patches'], 0)
-        self.assertEqual(info['patches'], {'b43afcd4e347': {'developer_familiarity_last_3_releases': 23, 'developer_familiarity_overall': 115, 'code_churn_overall': 1088, 'source': 'mercurial', 'reviewer_familiarity_overall': 0, 'url': 'https://hg.mozilla.org/mozilla-central/rev/b43afcd4e347', 'changes_size': 18, 'test_changes_size': 0, 'reviewer_familiarity_last_3_releases': 0, 'code_churn_last_3_releases': 152, 'modules_num': 1}})
+        self.assertEqualPatches(info['patches'], 901821)
 
         # Reviewer has different emails on Bugzilla and Mercurial, and his short name is hard to find.
         info = patchanalysis.bug_analysis(859425)
@@ -224,7 +236,7 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['depends_on'], 0)
         self.assertEqual(info['comments'], 8)
         self.assertEqual(info['r-ed_patches'], 0)
-        self.assertEqual(info['patches'], {'5549afae23a7': {'test_changes_size': 0, 'modules_num': 1, 'source': 'mercurial', 'reviewer_familiarity_last_3_releases': 0, 'developer_familiarity_overall': 1, 'code_churn_last_3_releases': 30, 'changes_size': 31, 'reviewer_familiarity_overall': 0, 'code_churn_overall': 79, 'url': 'https://hg.mozilla.org/mozilla-central/rev/5549afae23a7', 'developer_familiarity_last_3_releases': 1}})
+        self.assertEqualPatches(info['patches'], 859425)
 
         # r=bustage
         info = patchanalysis.bug_analysis(701875)
@@ -233,7 +245,7 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['depends_on'], 1)
         self.assertEqual(info['comments'], 69)
         self.assertEqual(info['r-ed_patches'], 1)
-        self.assertEqual(info['patches'], {'3f0b94325b80': {'modules_num': 4, 'code_churn_last_3_releases': 330, 'url': 'https://hg.mozilla.org/mozilla-central/rev/3f0b94325b80', 'code_churn_overall': 2312, 'source': 'mercurial', 'reviewer_familiarity_last_3_releases': 0, 'changes_size': 165, 'reviewer_familiarity_overall': 0, 'developer_familiarity_last_3_releases': 7, 'test_changes_size': 0, 'developer_familiarity_overall': 61}, '7ae3089be8a5': {'modules_num': 1, 'code_churn_last_3_releases': 196, 'url': 'https://hg.mozilla.org/mozilla-central/rev/7ae3089be8a5', 'code_churn_overall': 1458, 'source': 'mercurial', 'reviewer_familiarity_last_3_releases': 196, 'changes_size': 29, 'reviewer_familiarity_overall': 1458, 'developer_familiarity_last_3_releases': 5, 'test_changes_size': 0, 'developer_familiarity_overall': 25}})
+        self.assertEqualPatches(info['patches'], 701875)
 
         # Reviewer doesn't have his short name in his Bugzilla name.
         with warnings.catch_warnings(record=True) as w:
@@ -244,7 +256,7 @@ class PatchAnalysisTest(MockTestCase):
             self.assertEqual(info['depends_on'], 0)
             self.assertEqual(info['comments'], 13)
             self.assertEqual(info['r-ed_patches'], 0)
-            self.assertEqual(info['patches'], {'bb210464e583': {'reviewer_familiarity_last_3_releases': 0, 'developer_familiarity_overall': 1, 'source': 'mercurial', 'modules_num': 1, 'code_churn_last_3_releases': 1, 'developer_familiarity_last_3_releases': 1, 'reviewer_familiarity_overall': 0, 'code_churn_overall': 4, 'test_changes_size': 0, 'changes_size': 18, 'url': 'https://hg.mozilla.org/mozilla-central/rev/bb210464e583'}})
+            self.assertEqualPatches(info['patches'], 853033)
 
         # There are users in the CC list with empty real names.
         info = patchanalysis.bug_analysis(699633)
@@ -253,7 +265,7 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['depends_on'], 0)
         self.assertEqual(info['comments'], 41)
         self.assertEqual(info['r-ed_patches'], 0)
-        self.assertEqual(info['patches'], {'936643625d71': {'code_churn_last_3_releases': 66, 'modules_num': 1, 'code_churn_overall': 66, 'reviewer_familiarity_last_3_releases': 0, 'source': 'mercurial', 'url': 'https://hg.mozilla.org/mozilla-central/rev/936643625d71', 'developer_familiarity_overall': 28, 'test_changes_size': 35, 'developer_familiarity_last_3_releases': 28, 'changes_size': 177, 'reviewer_familiarity_overall': 0}})
+        self.assertEqualPatches(info['patches'], 699633)
 
         # Reviewer with several IRC names.
         info = patchanalysis.bug_analysis(914034)
@@ -262,7 +274,7 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['depends_on'], 1)
         self.assertEqual(info['comments'], 26)
         self.assertEqual(info['r-ed_patches'], 0)
-        self.assertEqual(info['patches'], {'a13edd3c49e7': {'source': 'mercurial', 'developer_familiarity_overall': 7, 'test_changes_size': 0, 'modules_num': 1, 'code_churn_last_3_releases': 27, 'developer_familiarity_last_3_releases': 7, 'reviewer_familiarity_last_3_releases': 2, 'changes_size': 287, 'reviewer_familiarity_overall': 3, 'code_churn_overall': 240, 'url': 'https://hg.mozilla.org/mozilla-central/rev/a13edd3c49e7'}})
+        self.assertEqualPatches(info['patches'], 914034)
 
         # IRC handle in the domain of the email (mozilla@IRCHANDLE.org).
         info = patchanalysis.bug_analysis(903475)
@@ -271,7 +283,7 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['depends_on'], 0)
         self.assertEqual(info['comments'], 71)
         self.assertEqual(info['r-ed_patches'], 0)
-        self.assertEqual(info['patches'], {'d76cd808a5fc': {'source': 'mercurial', 'modules_num': 1, 'developer_familiarity_last_3_releases': 0, 'changes_size': 18, 'code_churn_overall': 13, 'reviewer_familiarity_last_3_releases': 0, 'reviewer_familiarity_overall': 0, 'test_changes_size': 0, 'developer_familiarity_overall': 0, 'url': 'https://hg.mozilla.org/mozilla-central/rev/d76cd808a5fc', 'code_churn_last_3_releases': 3}})
+        self.assertEqualPatches(info['patches'], 903475)
 
         # Backout without the 'changeset' word.
         info = patchanalysis.bug_analysis(829421)
@@ -280,7 +292,7 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['depends_on'], 0)
         self.assertEqual(info['comments'], 22)
         self.assertEqual(info['r-ed_patches'], 0)
-        self.assertEqual(info['patches'], {'9f56d7e548f1': {'reviewer_familiarity_overall': 11, 'test_changes_size': 0, 'reviewer_familiarity_last_3_releases': 4, 'developer_familiarity_last_3_releases': 0, 'url': 'https://hg.mozilla.org/mozilla-central/rev/9f56d7e548f1', 'developer_familiarity_overall': 0, 'modules_num': 1, 'source': 'mercurial', 'code_churn_overall': 110, 'changes_size': 21, 'code_churn_last_3_releases': 21}})
+        self.assertEqualPatches(info['patches'], 829421)
 
         # IRC handle first character is lower case in Mercurial, upper case in Bugzilla.
         info = patchanalysis.bug_analysis(799266)
@@ -289,7 +301,7 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['depends_on'], 0)
         self.assertEqual(info['comments'], 28)
         self.assertEqual(info['r-ed_patches'], 0)
-        self.assertEqual(info['patches'], {'53ae9eb476e9': {'reviewer_familiarity_overall': 1, 'url': 'https://hg.mozilla.org/mozilla-central/rev/53ae9eb476e9', 'developer_familiarity_last_3_releases': 5, 'code_churn_overall': 355, 'developer_familiarity_overall': 36, 'test_changes_size': 0, 'modules_num': 1, 'changes_size': 104, 'reviewer_familiarity_last_3_releases': 0, 'source': 'mercurial', 'code_churn_last_3_releases': 37}})
+        self.assertEqualPatches(info['patches'], 799266)
 
         # r=IRC_HANDLE_OF_THE_AUTHOR
         info = patchanalysis.bug_analysis(721760)
@@ -298,7 +310,7 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['depends_on'], 1)
         self.assertEqual(info['comments'], 72)
         self.assertEqual(info['r-ed_patches'], 0)
-        self.assertEqual(info['patches'], {'2ef72ec44da3': {'code_churn_last_3_releases': 1, 'modules_num': 1, 'source': 'mercurial', 'code_churn_overall': 2, 'test_changes_size': 0, 'url': 'https://hg.mozilla.org/mozilla-central/rev/2ef72ec44da3', 'developer_familiarity_last_3_releases': 0, 'changes_size': 44, 'reviewer_familiarity_last_3_releases': 0, 'reviewer_familiarity_overall': 0, 'developer_familiarity_overall': 0}, '66b36a145f89': {'code_churn_last_3_releases': 24, 'modules_num': 1, 'source': 'mercurial', 'code_churn_overall': 36, 'test_changes_size': 0, 'url': 'https://hg.mozilla.org/mozilla-central/rev/66b36a145f89', 'developer_familiarity_last_3_releases': 17, 'changes_size': 172, 'reviewer_familiarity_last_3_releases': 6, 'reviewer_familiarity_overall': 13, 'developer_familiarity_overall': 28}})
+        self.assertEqualPatches(info['patches'], 721760)
 
         # IRC handle is ':IRC_HANDLE.SURNAME' and reviewer is not a reviewer of the patch on Bugzilla.
         info = patchanalysis.bug_analysis(1021265)
@@ -307,7 +319,7 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['depends_on'], 0)
         self.assertEqual(info['comments'], 111)
         self.assertEqual(info['r-ed_patches'], 0)
-        self.assertEqual(info['patches'], {'3d0169c5795f': {'changes_size': 92, 'test_changes_size': 0, 'developer_familiarity_overall': 23, 'reviewer_familiarity_overall': 16, 'modules_num': 2, 'code_churn_last_3_releases': 62, 'source': 'mercurial', 'url': 'https://hg.mozilla.org/mozilla-central/rev/3d0169c5795f', 'reviewer_familiarity_last_3_releases': 6, 'code_churn_overall': 863, 'developer_familiarity_last_3_releases': 5}, '1b07e2892e9d': {'changes_size': 45, 'test_changes_size': 0, 'developer_familiarity_overall': 16, 'reviewer_familiarity_overall': 11, 'modules_num': 1, 'code_churn_last_3_releases': 28, 'source': 'mercurial', 'url': 'https://hg.mozilla.org/mozilla-central/rev/1b07e2892e9d', 'reviewer_familiarity_last_3_releases': 2, 'code_churn_overall': 299, 'developer_familiarity_last_3_releases': 5}, '0b298d91fbdd': {'changes_size': 18, 'test_changes_size': 0, 'developer_familiarity_overall': 15, 'reviewer_familiarity_overall': 298, 'modules_num': 1, 'code_churn_last_3_releases': 28, 'source': 'mercurial', 'url': 'https://hg.mozilla.org/mozilla-central/rev/0b298d91fbdd', 'reviewer_familiarity_last_3_releases': 28, 'code_churn_overall': 298, 'developer_familiarity_last_3_releases': 4}, '96f0df721845': {'changes_size': 18, 'test_changes_size': 0, 'developer_familiarity_overall': 12, 'reviewer_familiarity_overall': 0, 'modules_num': 1, 'code_churn_last_3_releases': 32, 'source': 'mercurial', 'url': 'https://hg.mozilla.org/mozilla-central/rev/96f0df721845', 'reviewer_familiarity_last_3_releases': 0, 'code_churn_overall': 303, 'developer_familiarity_last_3_releases': 3}})
+        self.assertEqualPatches(info['patches'], 1021265)
 
         # IRC handle is the beginning of the real name with a space after.
         info = patchanalysis.bug_analysis(1029098)
@@ -316,7 +328,7 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['depends_on'], 0)
         self.assertEqual(info['comments'], 15)
         self.assertEqual(info['r-ed_patches'], 0)
-        self.assertEqual(info['patches'], {'d41a6d09ccd6': {'test_changes_size': 97, 'code_churn_last_3_releases': 15, 'url': 'https://hg.mozilla.org/mozilla-central/rev/d41a6d09ccd6', 'code_churn_overall': 277, 'reviewer_familiarity_overall': 9, 'modules_num': 1, 'reviewer_familiarity_last_3_releases': 0, 'developer_familiarity_last_3_releases': 8, 'changes_size': 94, 'source': 'mercurial', 'developer_familiarity_overall': 81}})
+        self.assertEqualPatches(info['patches'], 1029098)
 
         # Typo in the reviewer name.
         with warnings.catch_warnings(record=True) as w:
@@ -330,7 +342,7 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['depends_on'], 1)
         self.assertEqual(info['comments'], 21)
         self.assertEqual(info['r-ed_patches'], 0)
-        self.assertEqual(info['patches'], {'b2c38a3b59dc': {'code_churn_overall': 8, 'changes_size': 19, 'modules_num': 1, 'reviewer_familiarity_overall': 8, 'source': 'mercurial', 'developer_familiarity_last_3_releases': 7, 'developer_familiarity_overall': 7, 'url': 'https://hg.mozilla.org/mozilla-central/rev/b2c38a3b59dc', 'reviewer_familiarity_last_3_releases': 8, 'code_churn_last_3_releases': 8, 'test_changes_size': 0}, '3c11909c216a': {'code_churn_overall': 879, 'changes_size': 129, 'modules_num': 1, 'reviewer_familiarity_overall': 0, 'source': 'mercurial', 'developer_familiarity_last_3_releases': 12, 'developer_familiarity_overall': 124, 'url': 'https://hg.mozilla.org/mozilla-central/rev/3c11909c216a', 'reviewer_familiarity_last_3_releases': 0, 'code_churn_last_3_releases': 141, 'test_changes_size': 0}})
+        self.assertEqualPatches(info['patches'], 843821)
 
         # r=backout
         info = patchanalysis.bug_analysis(679509)
@@ -339,7 +351,7 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['depends_on'], 0)
         self.assertEqual(info['comments'], 97)
         self.assertEqual(info['r-ed_patches'], 0)
-        self.assertEqual(info['patches'], {'8c59e49aea63': {'developer_familiarity_overall': 0, 'developer_familiarity_last_3_releases': 0, 'url': 'https://hg.mozilla.org/mozilla-central/rev/8c59e49aea63', 'modules_num': 1, 'changes_size': 17, 'reviewer_familiarity_last_3_releases': 0, 'code_churn_last_3_releases': 9, 'test_changes_size': 36, 'reviewer_familiarity_overall': 0, 'code_churn_overall': 11, 'source': 'mercurial'}, '38f53f45bbf4': {'developer_familiarity_overall': 113, 'developer_familiarity_last_3_releases': 40, 'url': 'https://hg.mozilla.org/mozilla-central/rev/38f53f45bbf4', 'modules_num': 2, 'changes_size': 145, 'reviewer_familiarity_last_3_releases': 41, 'code_churn_last_3_releases': 294, 'test_changes_size': 36, 'reviewer_familiarity_overall': 50, 'code_churn_overall': 1811, 'source': 'mercurial'}, '97f2fc986824': {'developer_familiarity_overall': 0, 'developer_familiarity_last_3_releases': 0, 'url': 'https://hg.mozilla.org/mozilla-central/rev/97f2fc986824', 'modules_num': 1, 'changes_size': 84, 'reviewer_familiarity_last_3_releases': 0, 'code_churn_last_3_releases': 9, 'test_changes_size': 0, 'reviewer_familiarity_overall': 0, 'code_churn_overall': 18, 'source': 'mercurial'}, '40f077f9c4a2': {'developer_familiarity_overall': 3, 'developer_familiarity_last_3_releases': 3, 'url': 'https://hg.mozilla.org/mozilla-central/rev/40f077f9c4a2', 'modules_num': 1, 'changes_size': 101, 'reviewer_familiarity_last_3_releases': 22, 'code_churn_last_3_releases': 22, 'test_changes_size': 36, 'reviewer_familiarity_overall': 34, 'code_churn_overall': 34, 'source': 'mercurial'}})
+        self.assertEqualPatches(info['patches'], 679509)
 
         # Bugzilla user is impossible to find from IRC handle.
         with warnings.catch_warnings(record=True) as w:
