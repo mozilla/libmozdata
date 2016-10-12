@@ -1,5 +1,7 @@
 {
     "5549afae23a7": {
+        "changes_add": 6,
+        "changes_del": 5,
         "changes_size": 31,
         "code_churn_last_3_releases": 30,
         "code_churn_overall": 79,

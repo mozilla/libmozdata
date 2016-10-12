@@ -1,5 +1,7 @@
 {
     "bb210464e583": {
+        "changes_add": 1,
+        "changes_del": 1,
         "changes_size": 18,
         "code_churn_last_3_releases": 1,
         "code_churn_overall": 4,

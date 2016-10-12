@@ -1,5 +1,7 @@
 {
     "3c11909c216a": {
+        "changes_add": 39,
+        "changes_del": 7,
         "changes_size": 129,
         "code_churn_last_3_releases": 141,
         "code_churn_overall": 879,
@@ -13,6 +15,8 @@
         "url": "https://hg.mozilla.org/mozilla-central/rev/3c11909c216a"
     },
     "b2c38a3b59dc": {
+        "changes_add": 0,
+        "changes_del": 3,
         "changes_size": 19,
         "code_churn_last_3_releases": 8,
         "code_churn_overall": 8,

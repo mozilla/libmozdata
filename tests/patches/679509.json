@@ -1,5 +1,7 @@
 {
     "38f53f45bbf4": {
+        "changes_add": 92,
+        "changes_del": 8,
         "changes_size": 145,
         "code_churn_last_3_releases": 294,
         "code_churn_overall": 1811,
@@ -13,6 +15,8 @@
         "url": "https://hg.mozilla.org/mozilla-central/rev/38f53f45bbf4"
     },
     "40f077f9c4a2": {
+        "changes_add": 16,
+        "changes_del": 41,
         "changes_size": 101,
         "code_churn_last_3_releases": 22,
         "code_churn_overall": 34,
@@ -26,6 +30,8 @@
         "url": "https://hg.mozilla.org/mozilla-central/rev/40f077f9c4a2"
     },
     "8c59e49aea63": {
+        "changes_add": 37,
+        "changes_del": 0,
         "changes_size": 17,
         "code_churn_last_3_releases": 9,
         "code_churn_overall": 11,
@@ -39,6 +45,8 @@
         "url": "https://hg.mozilla.org/mozilla-central/rev/8c59e49aea63"
     },
     "97f2fc986824": {
+        "changes_add": 4,
+        "changes_del": 16,
         "changes_size": 84,
         "code_churn_last_3_releases": 9,
         "code_churn_overall": 18,

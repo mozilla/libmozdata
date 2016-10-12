@@ -1,5 +1,7 @@
 {
     "d41a6d09ccd6": {
+        "changes_add": 82,
+        "changes_del": 8,
         "changes_size": 94,
         "code_churn_last_3_releases": 15,
         "code_churn_overall": 277,

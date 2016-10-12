@@ -1,5 +1,7 @@
 {
     "8447556": {
+        "changes_add": 273,
+        "changes_del": 352,
         "changes_size": 1020,
         "code_churn_last_3_releases": 316,
         "code_churn_overall": 2465,
@@ -13,6 +15,8 @@
         "url": "https://bugzilla.mozilla.org/attachment.cgi?id=8447556"
     },
     "8447557": {
+        "changes_add": 9,
+        "changes_del": 0,
         "changes_size": 15,
         "code_churn_last_3_releases": 0,
         "code_churn_overall": 0,

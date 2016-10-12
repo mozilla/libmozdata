@@ -1,5 +1,7 @@
 {
     "a13edd3c49e7": {
+        "changes_add": 66,
+        "changes_del": 31,
         "changes_size": 287,
         "code_churn_last_3_releases": 27,
         "code_churn_overall": 240,

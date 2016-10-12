@@ -1,5 +1,7 @@
 {
     "d76cd808a5fc": {
+        "changes_add": 1,
+        "changes_del": 1,
         "changes_size": 18,
         "code_churn_last_3_releases": 3,
         "code_churn_overall": 13,
