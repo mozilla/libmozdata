@@ -1,0 +1,17 @@
+{
+    "9f56d7e548f1": {
+        "changes_add": 3,
+        "changes_del": 1,
+        "changes_size": 21,
+        "code_churn_last_3_releases": 21,
+        "code_churn_overall": 110,
+        "developer_familiarity_last_3_releases": 0,
+        "developer_familiarity_overall": 0,
+        "modules_num": 1,
+        "reviewer_familiarity_last_3_releases": 4,
+        "reviewer_familiarity_overall": 11,
+        "source": "mercurial",
+        "test_changes_size": 0,
+        "url": "https://hg.mozilla.org/mozilla-central/rev/9f56d7e548f1"
+    }
+}
