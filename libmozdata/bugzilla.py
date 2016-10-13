@@ -67,6 +67,11 @@ class Bugzilla(Connection):
             self.got_data = False
             self.extra = extra
 
+            # TODO: remove next line after the fix of bug 1283392
+            # and fix in __get_history and __get_comment
+            if self.historyhandler or self.commenthandler:
+                self.no_private_bugids = Bugzilla.remove_private_bugs(self.bugids)
+
     def get_header(self):
         header = super(Bugzilla, self).get_header()
         header['X-Bugzilla-API-Key'] = self.get_apikey()
@@ -490,7 +495,7 @@ class Bugzilla(Connection):
         url = Bugzilla.API_URL + '/%s/history'
         header = self.get_header()
         # TODO: remove next line after the fix of bug 1283392
-        bugids = Bugzilla.remove_private_bugs(self.bugids)
+        bugids = self.no_private_bugids
         for _bugids in Connection.chunks(bugids):
             first = _bugids[0]
             remainder = _bugids[1:] if len(_bugids) >= 2 else []
@@ -526,7 +531,7 @@ class Bugzilla(Connection):
         url = Bugzilla.API_URL + '/%s/comment'
         header = self.get_header()
         # TODO: remove next line after the fix of bug 1283392
-        bugids = Bugzilla.remove_private_bugs(self.bugids)
+        bugids = self.no_private_bugids
         if self.extra:
             include_fields = Bugzilla.__merge_fields(self.comment_include_fields, self.extra.get_comment_include_fields())
         else:
