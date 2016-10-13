@@ -28,14 +28,9 @@ def __getVersions():
     Returns:
         dict: versions for each channel
     """
-    try:
-        resp = urlopen('https://product-details.mozilla.org/1.0/firefox_versions.json')
-        data = json.loads(resp.read().decode('utf-8'))
-        resp.close()
-    except:
-        resp = urlopen('http://svn.mozilla.org/libs/product-details/json/firefox_versions.json')
-        data = json.loads(resp.read().decode('utf-8'))
-        resp.close()
+    resp = urlopen('https://product-details.mozilla.org/1.0/firefox_versions.json')
+    data = json.loads(resp.read().decode('utf-8'))
+    resp.close()
 
     aurora = data['FIREFOX_AURORA']
     nightly = data['FIREFOX_NIGHTLY'] if 'FIREFOX_NIGHTLY' in data else '%d.0a1' % (__get_major(aurora) + 1)
@@ -53,14 +48,9 @@ def __getVersions():
 
 
 def __getVersionDates():
-    try:
-        resp = urlopen('https://product-details.mozilla.org/1.0/firefox_history_major_releases.json')
-        data = json.loads(resp.read().decode('utf-8'))
-        resp.close()
-    except:
-        resp = urlopen('http://svn.mozilla.org/libs/product-details/json/firefox_history_major_releases.json')
-        data = json.loads(resp.read().decode('utf-8'))
-        resp.close()
+    resp = urlopen('https://product-details.mozilla.org/1.0/firefox_history_major_releases.json')
+    data = json.loads(resp.read().decode('utf-8'))
+    resp.close()
 
     data = dict([(v, utils.get_moz_date(d)) for v, d in data.items()])
 
