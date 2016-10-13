@@ -574,7 +574,7 @@ def uplift_info(bug, channel):
     return info
 
 
-def get_patch_info(bugs, base_versions=None):
+def get_patch_info(bugs, base_versions=None, extra_handlers=None):
     channels = ['release', 'beta', 'aurora', 'nightly']
     landing_patterns = Bugzilla.get_landing_patterns(channels=channels)
     approval_pattern = re.compile('approval-mozilla-([a-zA-Z0-9]+)\+')
@@ -632,7 +632,7 @@ def get_patch_info(bugs, base_versions=None):
                 # Bug for thunderbird or anything else except Firefox
                 toremove.add(bugid)
 
-    Bugzilla(bugs, include_fields=['id', 'cf_crash_signature'] + list(status_flags.values()), bughandler=bug_handler, bugdata=info, commenthandler=comment_handler, commentdata=info, historyhandler=history_handler, historydata=info).get_data().wait()
+    Bugzilla(bugs, include_fields=['id', 'cf_crash_signature'] + list(status_flags.values()), bughandler=bug_handler, bugdata=info, commenthandler=comment_handler, commentdata=info, historyhandler=history_handler, historydata=info, extra=extra_handlers).get_data().wait()
 
     for r in toremove:
         del info[r]
