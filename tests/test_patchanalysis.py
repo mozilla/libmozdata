@@ -38,6 +38,11 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(len(missed_warnings), 0)
         self.assertEqual(len(unexpected_warnings), 0)
 
+    def assertDictEqual(self, d1, d2, msg=None):
+        for k, v1 in d1.items():
+            self.assertIn(k, d2, msg)
+            self.assertEqual(v1, d2[k], msg)
+
     def assertEqualPatches(self, patches, bug_id):
         """
         Check patches are equals to local dumps
@@ -53,7 +58,7 @@ class PatchAnalysisTest(MockTestCase):
 
         # Keys can be int or str
         for k, patch_data in patches.items():
-            self.assertDictEqual(patch_data, local_patches[str(k)])
+            self.assertEqual(patch_data, local_patches[str(k)])
 
     @responses.activate
     def test_bug_analysis(self):
