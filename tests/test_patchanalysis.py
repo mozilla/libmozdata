@@ -423,7 +423,7 @@ class PatchAnalysisTest(MockTestCase):
             info = patchanalysis.uplift_info(859425, 'release')
             self.assertWarnings(w, ['Bug 859425 doesn\'t have a uplift request date.'])
             self.assertEqual(info['landing_delta'], timedelta(1, 60500))
-            self.assertEqual(info['release_delta'], timedelta(33, 50345))
+            self.assertEqual(info['release_delta'], timedelta(0, 50345))
             self.assertEqual(info['uplift_accepted'], True)
             self.assertEqual(info['response_delta'], timedelta(0))
             self.assertEqual(info['uplift_author']['email'], 'mark.finkle@gmail.com')
