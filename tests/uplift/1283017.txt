@@ -1,0 +1,9 @@
+Comment on attachment 8766195
+The fix
+
+Approval Request Comment
+[Feature/regressing bug #]: Bug 1274516
+[User impact if declined]: The browser tries to access a delegate of the content process. Probably crash like bug 1280150.
+[Describe test coverage new/current, TreeHerder]: Tested locally. Autotests on try pending.
+[Risks and why]: Pretty low. This is a small change to fix a regression, and we carefully move the pointer along the list data structure using the condition and try not to introduce more regressions.
+[String/UUID change made/needed]: None.

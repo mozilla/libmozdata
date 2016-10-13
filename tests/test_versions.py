@@ -30,6 +30,12 @@ class VersionsTest(unittest.TestCase):
         self.assertEqual(versions.getMajorDate('33.0'), datetime.datetime(2014, 10, 14, 7, 0, tzinfo=tzutc()))
         self.assertEqual(versions.getMajorDate('33.1'), datetime.datetime(2014, 11, 10, 8, 0, tzinfo=tzutc()))
 
+        self.assertEqual(versions.getMajorDate('46'), versions.getDate('46'))
+        self.assertEqual(versions.getMajorDate('46.0'), versions.getDate('46.0'))
+        self.assertNotEqual(versions.getMajorDate('48.0'), versions.getDate('48.0.1'))
+        self.assertEqual(versions.getDate('48.0.1'), datetime.datetime(2016, 8, 18, 7, 0, tzinfo=tzutc()))
+        self.assertEqual(versions.getDate('48.0.2'), datetime.datetime(2016, 8, 24, 7, 0, tzinfo=tzutc()))
+
         v = versions.get(base=True)
         if versions.getMajorDate(v['nightly']) is not None:
             self.assertTrue(versions.getMajorDate(v['release']) <= versions.getMajorDate(v['beta']) <= versions.getMajorDate(v['aurora']) <= versions.getMajorDate(v['nightly']))
@@ -42,6 +48,11 @@ class VersionsTest(unittest.TestCase):
         self.assertEqual(versions.getCloserMajorRelease(date), ('7.0', datetime.datetime(2011, 9, 27, 7, 0, tzinfo=tzutc())))
         self.assertEqual(versions.getCloserMajorRelease(date, negative=True), ('6.0', datetime.datetime(2011, 8, 16, 7, 0, tzinfo=tzutc())))
         self.assertEqual(versions.getCloserMajorRelease(date, negative=False), ('7.0', datetime.datetime(2011, 9, 27, 7, 0, tzinfo=tzutc())))
+
+        date = utils.get_date_ymd('2016-08-19')
+        self.assertEqual(versions.getCloserRelease(date), ('48.0.2', datetime.datetime(2016, 8, 24, 7, 0, tzinfo=tzutc())))
+        self.assertEqual(versions.getCloserRelease(date, negative=True), ('48.0.1', datetime.datetime(2016, 8, 18, 7, 0, tzinfo=tzutc())))
+        self.assertEqual(versions.getCloserRelease(date, negative=False), ('48.0.2', datetime.datetime(2016, 8, 24, 7, 0, tzinfo=tzutc())))
 
 if __name__ == '__main__':
     unittest.main()

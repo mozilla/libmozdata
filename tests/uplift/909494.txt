@@ -1,0 +1,14 @@
+Comment on attachment 797549
+aurora.patch
+
+[Approval Request Comment]
+Bug caused by (feature/regressing bug #): 909494
+User impact if declined: See bug 909494
+Testing completed (on m-c, etc.): The patch is green on m-c.
+Risk to taking this patch (and alternatives if risky):
+
+It seems low. The patch is small and simple, and there are no known complications.
+
+String or IDL/UUID changes made by this patch:
+
+None.

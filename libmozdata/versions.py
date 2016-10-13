@@ -16,6 +16,7 @@ from . import utils
 
 __versions = None
 __version_dates = None
+__stability_version_dates = None
 
 
 def __get_major(v):
@@ -28,14 +29,9 @@ def __getVersions():
     Returns:
         dict: versions for each channel
     """
-    try:
-        resp = urlopen('https://product-details.mozilla.org/1.0/firefox_versions.json')
-        data = json.loads(resp.read().decode('utf-8'))
-        resp.close()
-    except:
-        resp = urlopen('http://svn.mozilla.org/libs/product-details/json/firefox_versions.json')
-        data = json.loads(resp.read().decode('utf-8'))
-        resp.close()
+    resp = urlopen('https://product-details.mozilla.org/1.0/firefox_versions.json')
+    data = json.loads(resp.read().decode('utf-8'))
+    resp.close()
 
     aurora = data['FIREFOX_AURORA']
     nightly = data['FIREFOX_NIGHTLY'] if 'FIREFOX_NIGHTLY' in data else '%d.0a1' % (__get_major(aurora) + 1)
@@ -53,14 +49,9 @@ def __getVersions():
 
 
 def __getVersionDates():
-    try:
-        resp = urlopen('https://product-details.mozilla.org/1.0/firefox_history_major_releases.json')
-        data = json.loads(resp.read().decode('utf-8'))
-        resp.close()
-    except:
-        resp = urlopen('http://svn.mozilla.org/libs/product-details/json/firefox_history_major_releases.json')
-        data = json.loads(resp.read().decode('utf-8'))
-        resp.close()
+    resp = urlopen('https://product-details.mozilla.org/1.0/firefox_history_major_releases.json')
+    data = json.loads(resp.read().decode('utf-8'))
+    resp.close()
 
     data = dict([(v, utils.get_moz_date(d)) for v, d in data.items()])
 
@@ -77,6 +68,14 @@ def __getVersionDates():
                     data[version] = utils.get_moz_date(utils.get_date_str(component.decoded('dtstart')))
 
     return data
+
+
+def __getStabilityVersionDates():
+    resp = urlopen('https://product-details.mozilla.org/1.0/firefox_history_stability_releases.json')
+    data = json.loads(resp.read().decode('utf-8'))
+    resp.close()
+
+    return dict([(v, utils.get_moz_date(d)) for v, d in data.items()])
 
 
 def get(base=False):
@@ -98,15 +97,11 @@ def get(base=False):
     return __versions
 
 
-def getMajorDate(version):
-    global __version_dates
-    if not __version_dates:
-        __version_dates = __getVersionDates()
-
+def __getMatchingVersion(version, versions_dates):
     date = None
     longest_match = []
     longest_match_v = None
-    for v, d in __version_dates.items():
+    for v, d in versions_dates:
         match = commonprefix([v.split('.'), str(version).split('.')])
         if len(match) > 0 and (len(match) > len(longest_match) or (len(match) == len(longest_match) and int(v[-1]) <= int(longest_match_v[-1]))):
             longest_match = match
@@ -116,12 +111,44 @@ def getMajorDate(version):
     return date
 
 
+def getMajorDate(version):
+    global __version_dates
+    if not __version_dates:
+        __version_dates = __getVersionDates()
+
+    return __getMatchingVersion(version, __version_dates.items())
+
+
+def getDate(version):
+    global __version_dates, __stability_version_dates
+    if not __version_dates:
+        __version_dates = __getVersionDates()
+    if not __stability_version_dates:
+        __stability_version_dates = __getStabilityVersionDates()
+
+    return __getMatchingVersion(version, list(__version_dates.items()) + list(__stability_version_dates.items()))
+
+
+def __getCloserDate(date, versions_dates, negative=False):
+    def diff(d):
+        return d - date
+
+    return min([(v, d) for v, d in versions_dates if negative or diff(d) > timedelta(0)], key=lambda i: abs(diff(i[1])))
+
+
 def getCloserMajorRelease(date, negative=False):
     global __version_dates
     if not __version_dates:
         __version_dates = __getVersionDates()
 
-    def diff(d):
-        return d - date
+    return __getCloserDate(date, __version_dates.items(), negative)
 
-    return min([(v, d) for v, d in __version_dates.items() if negative or diff(d) > timedelta(0)], key=lambda i: abs(diff(i[1])))
+
+def getCloserRelease(date, negative=False):
+    global __version_dates, __stability_version_dates
+    if not __version_dates:
+        __version_dates = __getVersionDates()
+    if not __stability_version_dates:
+        __stability_version_dates = __getStabilityVersionDates()
+
+    return __getCloserDate(date, list(__version_dates.items()) + list(__stability_version_dates.items()), negative)
