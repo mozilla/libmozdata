@@ -14,10 +14,11 @@ SCOPES = ['https://www.googleapis.com/auth/gmail.send']
 CREDENTIALS_PATH = os.path.expanduser(config.get('Gmail', 'credentials', ''))
 
 
-def send(To, Subject, Body, Cc=[], Bcc=[]):
+def send(To, Subject, Body, Cc=[], Bcc=[], html=False):
     """Send an email
     """
-    message = MIMEText(Body)
+    subtype = 'html' if html else 'plain'
+    message = MIMEText(Body, subtype)
     message['To'] = ', '.join(To)
     message['Subject'] = Subject
     message['Cc'] = ', '.join(Cc)
