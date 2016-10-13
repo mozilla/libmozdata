@@ -4,6 +4,7 @@
 
 import unittest
 import os
+from collections import defaultdict
 from libmozdata import bugzilla
 from libmozdata.connection import Query
 import responses
@@ -48,6 +49,25 @@ class BugIDTest(MockTestCase):
         self.assertEqual(bugs[12346]['resolution'], u'FIXED')
         self.assertEqual(bugs[12346]['assigned_to'], u'doug.turner@gmail.com')
         self.assertEqual(bugs[12346]['summary'], u'nsOutputFileStream should buffer the output')
+
+    @responses.activate
+    def test_bugids_with_extra(self):
+
+        def bughandler1(bug, data):
+            data[bug['id']]['id'] = bug['id']
+
+        def bughandler2(bug, data):
+            data[bug['id']]['resolution'] = bug['resolution']
+
+        bugs = defaultdict(lambda: dict())
+        extra = bugzilla.ExtraHandlers(include_fields=['resolution'], bughandler=bughandler2, bugdata=bugs)
+        bugzilla.Bugzilla([12345, 12346], include_fields=['id'], bughandler=bughandler1, bugdata=bugs, extra=extra).get_data().wait()
+
+        self.assertEqual(bugs[12345]['id'], 12345)
+        self.assertEqual(bugs[12345]['resolution'], u'FIXED')
+
+        self.assertEqual(bugs[12346]['id'], 12346)
+        self.assertEqual(bugs[12346]['resolution'], u'FIXED')
 
     @responses.activate
     def test_queries(self):
@@ -194,6 +214,41 @@ class BugCommentHistoryTest(MockTestCase):
         self.assertEqual(len(data['comment']), 19)
         self.assertTrue(data['comment'][0]['text'].startswith(u'Steps to reproduce'))
         self.assertEqual(len(data['history']['history']), 24)
+
+    @responses.activate
+    def test_bugid_with_extra(self):
+        def bughandler1(bug, data):
+            data['bug'] = bug
+
+        def commenthandler1(bug, bugid, data):
+            data['comment'] = bug['comments']
+
+        def historyhandler1(bug, data):
+            data['history'] = bug
+
+        def bughandler2(bug, data):
+            data['bug'] = bug
+
+        def commenthandler2(bug, bugid, data):
+            data['comment'] = bug['comments']
+
+        def historyhandler2(bug, data):
+            data['history'] = bug
+
+        data1 = {}
+        data2 = {}
+        extra = bugzilla.ExtraHandlers(bughandler=bughandler2, bugdata=data2, commenthandler=commenthandler2, commentdata=data2, historyhandler=historyhandler2, historydata=data2)
+        bugzilla.Bugzilla(12345, bughandler=bughandler1, bugdata=data1, commenthandler=commenthandler1, commentdata=data1, historyhandler=historyhandler1, historydata=data1, extra=extra).get_data().wait()
+
+        self.assertEqual(data1['bug']['id'], 12345)
+        self.assertEqual(len(data1['comment']), 19)
+        self.assertTrue(data1['comment'][0]['text'].startswith(u'Steps to reproduce'))
+        self.assertEqual(len(data1['history']['history']), 24)
+
+        self.assertEqual(data2['bug']['id'], 12345)
+        self.assertEqual(len(data2['comment']), 19)
+        self.assertTrue(data2['comment'][0]['text'].startswith(u'Steps to reproduce'))
+        self.assertEqual(len(data2['history']['history']), 24)
 
     @responses.activate
     def test_search(self):
