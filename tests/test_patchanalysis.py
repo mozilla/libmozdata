@@ -69,16 +69,16 @@ class PatchAnalysisTest(MockTestCase):
 
         bug = {}
 
-        def bughandler(found_bug, data):
+        def bughandler(found_bug):
             bug.update(found_bug)
 
-        def commenthandler(found_bug, bugid, data):
+        def commenthandler(found_bug, bugid):
             bug['comments'] = found_bug['comments']
 
-        def historyhandler(found_bug, data):
+        def historyhandler(found_bug):
             bug['history'] = found_bug['history']
 
-        def attachmenthandler(attachments, bugid, data):
+        def attachmenthandler(attachments, bugid):
             bug['attachments'] = attachments
 
         Bugzilla('id=547914', bughandler=bughandler, commenthandler=commenthandler, attachmenthandler=attachmenthandler, historyhandler=historyhandler).get_data().wait()

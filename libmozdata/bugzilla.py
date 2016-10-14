@@ -8,6 +8,7 @@ import functools
 from .connection import (Connection, Query)
 from . import config
 from . import utils
+from .handler import Handler
 import libmozdata.versions
 
 
@@ -21,7 +22,7 @@ class Bugzilla(Connection):
     TOKEN = config.get('Bugzilla', 'token', '')
     # TOKEN = config.get('Allizgub', 'token', '')
 
-    def __init__(self, bugids=None, include_fields='_default', bughandler=None, bugdata=None, historyhandler=None, historydata=None, commenthandler=None, commentdata=None, comment_include_fields=None, attachmenthandler=None, attachmentdata=None, attachment_include_fields=None, queries=None, extra=None, **kwargs):
+    def __init__(self, bugids=None, include_fields='_default', bughandler=None, bugdata=None, historyhandler=None, historydata=None, commenthandler=None, commentdata=None, comment_include_fields=None, attachmenthandler=None, attachmentdata=None, attachment_include_fields=None, queries=None, **kwargs):
         """Constructor
 
         Args:
@@ -50,27 +51,18 @@ class Bugzilla(Connection):
             else:
                 self.bugids = list(bugids)
             self.include_fields = include_fields
-            self.bughandler = bughandler
-            self.bugdata = bugdata
-            self.historyhandler = historyhandler
-            self.historydata = historydata
-            self.commenthandler = commenthandler
-            self.commentdata = commentdata
+            self.bughandler = Handler.get(bughandler, bugdata)
+            self.historyhandler = Handler.get(historyhandler, historydata)
+            self.commenthandler = Handler.get(commenthandler, commentdata)
             self.comment_include_fields = comment_include_fields
-            self.attachmenthandler = attachmenthandler
-            self.attachmentdata = attachmentdata
+            self.attachmenthandler = Handler.get(attachmenthandler, attachmentdata)
             self.attachment_include_fields = attachment_include_fields
             self.bugs_results = []
             self.history_results = []
             self.comment_results = []
             self.attachment_results = []
             self.got_data = False
-            self.extra = extra
-
-            # TODO: remove next line after the fix of bug 1283392
-            # and fix in __get_history and __get_comment
-            if self.historyhandler or self.commenthandler:
-                self.no_private_bugids = Bugzilla.remove_private_bugs(self.bugids)
+            self.no_private_bugids = None
 
     def get_header(self):
         header = super(Bugzilla, self).get_header()
@@ -121,15 +113,15 @@ class Bugzilla(Connection):
         if not self.got_data:
             self.got_data = True
             if self.__is_bugid():
-                if self.bughandler:
+                if self.bughandler.isactive():
                     self.__get_bugs()
-                if self.historyhandler:
+                if self.historyhandler.isactive():
                     self.__get_history()
-                if self.commenthandler:
+                if self.commenthandler.isactive():
                     self.__get_comment()
-                if self.attachmenthandler:
+                if self.attachmenthandler.isactive():
                     self.__get_attachment()
-            elif self.bughandler:
+            elif self.bughandler.isactive():
                 self.__get_bugs_for_history_comment()
 
         return self
@@ -152,6 +144,40 @@ class Bugzilla(Connection):
         """
         for r in self.bugs_results:
             r.result()
+
+    def merge(self, bz):
+        if self.bugids is None or bz.bugids is None:
+            return None
+
+        def __merge_fields(f1, f2):
+            if f1:
+                f1 = {f1} if isinstance(f1, six.string_types) else set(f1)
+                if f2:
+                    f2 = {f2} if isinstance(f2, six.string_types) else set(f2)
+                    return list(f1.union(f2))
+                else:
+                    return f1
+            else:
+                if f2:
+                    return f2
+                else:
+                    return None
+
+        bugids = list(set(self.bugids).union(set(bz.bugids)))
+        include_fields = __merge_fields(self.include_fields, bz.include_fields)
+        comment_include_fields = __merge_fields(self.comment_include_fields, bz.comment_include_fields)
+        attachment_include_fields = __merge_fields(self.attachment_include_fields, bz.attachment_include_fields)
+        bughandler = self.bughandler.merge(bz.bughandler)
+        historyhandler = self.historyhandler.merge(bz.historyhandler)
+        commenthandler = self.commenthandler.merge(bz.commenthandler)
+        attachmenthandler = self.attachmenthandler.merge(bz.attachmenthandler)
+
+        return Bugzilla(bugids=bugids, include_fields=include_fields, bughandler=bughandler, historyhandler=historyhandler, commenthandler=commenthandler, attachmenthandler=attachmenthandler, comment_include_fields=comment_include_fields, attachment_include_fields=attachment_include_fields)
+
+    def __get_no_private_ids(self):
+        if not self.no_private_bugids:
+            self.no_private_bugids = Bugzilla.remove_private_bugs(self.bugids)
+        return self.no_private_bugids
 
     @staticmethod
     def get_nightly_version():
@@ -195,7 +221,7 @@ class Bugzilla(Connection):
         for bugid in bugids:
             dup[str(bugid)] = None
 
-        def bughandler(bug, data):
+        def bughandler(bug):
             if bug['resolution'] == 'DUPLICATE':
                 dupeofid = str(bug['dupe_of'])
                 dup[str(bug['id'])] = [dupeofid]
@@ -204,7 +230,7 @@ class Bugzilla(Connection):
         bz = Bugzilla(bugids=bugids, include_fields=include_fields, bughandler=bughandler).get_data()
         bz.wait_bugs()
 
-        def bughandler2(bug, data):
+        def bughandler2(bug):
             if bug['resolution'] == 'DUPLICATE':
                 bugid = str(bug['id'])
                 for _id, dupid in dup.items():
@@ -217,7 +243,7 @@ class Bugzilla(Connection):
                             dup[_id].append(dupeofid)
                             _set.add(dupeofid)
 
-        bz.bughandler = bughandler2
+        bz.bughandler = Handler(bughandler2)
 
         while _set:
             bz.bugids = list(_set)
@@ -366,33 +392,29 @@ class Bugzilla(Connection):
     def __get_bugs_for_history_comment(self):
         """Get history and comment (if there are some handlers) after a search query
         """
-        if self.historyhandler or self.commenthandler or self.attachmenthandler:
+        if self.historyhandler.isactive() or self.commenthandler.isactive() or self.attachmenthandler.isactive():
             bugids = []
             bughandler = self.bughandler
-            bugdata = self.bugdata
 
             def __handler(bug, bd):
-                bughandler(bug, bugdata)
+                bughandler.handle(bug)
                 bd.append(bug['id'])
 
-            self.bughandler = __handler
-            self.bugdata = bugids
+            self.bughandler = Handler(__handler, bugids)
 
             self.__get_bugs_by_search()
             self.wait_bugs()
 
             self.bughandler = bughandler
-            self.bugdata = bugdata
-
             self.bugids = bugids
 
-            if self.historyhandler:
+            if self.historyhandler.isactive():
                 self.history_results = []
                 self.__get_history()
-            if self.commenthandler:
+            if self.commenthandler.isactive():
                 self.comment_results = []
                 self.__get_comment()
-            if self.attachmenthandler:
+            if self.attachmenthandler.isactive():
                 self.attachment_results = []
                 self.__get_attachment()
         else:
@@ -407,23 +429,16 @@ class Bugzilla(Connection):
         """
         if res.status_code == 200:
             for bug in res.json()['bugs']:
-                self.bughandler(bug, self.bugdata)
-                if self.extra:
-                    self.extra.handler_bug(bug)
+                self.bughandler.handle(bug)
 
     def __get_bugs(self):
         """Get the bugs
         """
         header = self.get_header()
-        if self.extra:
-            include_fields = Bugzilla.__merge_fields(self.include_fields, self.extra.get_bug_include_fields())
-        else:
-            include_fields = self.include_fields
-
         for bugids in Connection.chunks(self.bugids):
             self.bugs_results.append(self.session.get(Bugzilla.API_URL,
                                                       params={'id': ','.join(map(str, bugids)),
-                                                              'include_fields': include_fields},
+                                                              'include_fields': self.include_fields},
                                                       headers=header,
                                                       verify=True,
                                                       timeout=self.TIMEOUT,
@@ -485,9 +500,7 @@ class Bugzilla(Connection):
             json = res.json()
             if 'bugs' in json and json['bugs']:
                 for h in json['bugs']:
-                    self.historyhandler(h, self.historydata)
-                    if self.extra:
-                        self.extra.handler_history(h)
+                    self.historyhandler.handle(h)
 
     def __get_history(self):
         """Get the bug history
@@ -495,7 +508,7 @@ class Bugzilla(Connection):
         url = Bugzilla.API_URL + '/%s/history'
         header = self.get_header()
         # TODO: remove next line after the fix of bug 1283392
-        bugids = self.no_private_bugids
+        bugids = self.__get_no_private_ids()
         for _bugids in Connection.chunks(bugids):
             first = _bugids[0]
             remainder = _bugids[1:] if len(_bugids) >= 2 else []
@@ -521,9 +534,7 @@ class Bugzilla(Connection):
                     for key in bugs.keys():
                         if isinstance(key, six.string_types) and key.isdigit():
                             comments = bugs[key]
-                            self.commenthandler(comments, key, self.commentdata)
-                            if self.extra:
-                                self.extra.handler_comment(comments, key)
+                            self.commenthandler.handle(comments, key)
 
     def __get_comment(self):
         """Get the bug comment
@@ -531,12 +542,7 @@ class Bugzilla(Connection):
         url = Bugzilla.API_URL + '/%s/comment'
         header = self.get_header()
         # TODO: remove next line after the fix of bug 1283392
-        bugids = self.no_private_bugids
-        if self.extra:
-            include_fields = Bugzilla.__merge_fields(self.comment_include_fields, self.extra.get_comment_include_fields())
-        else:
-            include_fields = self.comment_include_fields
-
+        bugids = self.__get_no_private_ids()
         for _bugids in Connection.chunks(bugids):
             first = _bugids[0]
             remainder = _bugids[1:] if len(_bugids) >= 2 else []
@@ -544,7 +550,7 @@ class Bugzilla(Connection):
                                                          headers=header,
                                                          params={
                                                              'ids': remainder,
-                                                             'include_fields': include_fields
+                                                             'include_fields': self.comment_include_fields
                                                          },
                                                          verify=True,
                                                          timeout=self.TIMEOUT,
@@ -565,9 +571,7 @@ class Bugzilla(Connection):
                     for key in bugs.keys():
                         if isinstance(key, six.string_types) and key.isdigit():
                             attachments = bugs[key]
-                            self.attachmenthandler(attachments, key, self.attachmentdata)
-                            if self.extra:
-                                self.extra.handler_attachment(attachments, key)
+                            self.attachmenthandler.handle(attachments, key)
                             break
 
     def __get_attachment(self):
@@ -575,12 +579,7 @@ class Bugzilla(Connection):
         """
         url = Bugzilla.API_URL + '/%s/attachment'
         header = self.get_header()
-        if self.extra:
-            include_fields = Bugzilla.__merge_fields(self.attachment_include_fields, self.extra.get_attachment_include_fields())
-        else:
-            include_fields = self.attachment_include_fields
-
-        req_params = {'include_fields': include_fields}
+        req_params = {'include_fields': self.attachment_include_fields}
         for bugid in self.bugids:
             self.attachment_results.append(self.session.get(url % bugid,
                                                             headers=header,
@@ -588,21 +587,6 @@ class Bugzilla(Connection):
                                                             verify=True,
                                                             timeout=self.TIMEOUT,
                                                             background_callback=self.__attachment_cb))
-
-    @staticmethod
-    def __merge_fields(f1, f2):
-        if f1:
-            f1 = {f1} if isinstance(f1, six.string_types) else set(f1)
-            if f2:
-                f2 = {f2} if isinstance(f2, six.string_types) else set(f2)
-                return list(f1.union(f2))
-            else:
-                return f1
-        else:
-            if f2:
-                return f2
-            else:
-                return None
 
 
 class BugzillaUser(Connection):
@@ -623,8 +607,7 @@ class BugzillaUser(Connection):
             user_handler (Optional[function]): the handler to use with each retrieved user
             user_data (Optional): the data to use with the user handler
         """
-        self.user_handler = user_handler
-        self.user_data = user_data
+        self.user_handler = Handler.get(user_handler, user_data)
 
         if user_names is not None:
             if isinstance(user_names, six.string_types) or isinstance(user_names, int):
@@ -653,52 +636,8 @@ class BugzillaUser(Connection):
         return header
 
     def __users_cb(self, res):
-        if not self.user_handler:
+        if not self.user_handler.isactive():
             return
 
         for user in res['users']:
-            if self.user_data is not None:
-                self.user_handler(user, self.user_data)
-            else:
-                self.user_handler(user)
-
-
-class ExtraHandlers(object):
-
-    def __init__(self, include_fields=None, bughandler=None, bugdata=None, historyhandler=None, historydata=None, commenthandler=None, commentdata=None, comment_include_fields=None, attachmenthandler=None, attachmentdata=None, attachment_include_fields=None):
-        self.include_fields = include_fields
-        self.bughandler = bughandler
-        self.bugdata = bugdata
-        self.historyhandler = historyhandler
-        self.historydata = historydata
-        self.commenthandler = commenthandler
-        self.commentdata = commentdata
-        self.comment_include_fields = comment_include_fields
-        self.attachmenthandler = attachmenthandler
-        self.attachmentdata = attachmentdata
-        self.attachment_include_fields = attachment_include_fields
-
-    def get_bug_include_fields(self):
-        return self.include_fields
-
-    def get_comment_include_fields(self):
-        return self.comment_include_fields
-
-    def get_attachment_include_fields(self):
-        return self.attachment_include_fields
-
-    def handler_bug(self, bug):
-        if self.bughandler:
-            self.bughandler(bug, self.bugdata)
-
-    def handler_history(self, history):
-        if self.historyhandler:
-            self.historyhandler(history, self.historydata)
-
-    def handler_comment(self, comment, key):
-        if self.commenthandler:
-            self.commenthandler(comment, key, self.commentdata)
-
-    def handler_attachment(self, attachment, key):
-        if self.attachmenthandler:
-            self.attachmenthandler(attachment, key, self.attachmentdata)
+            self.user_handler.handle(user)

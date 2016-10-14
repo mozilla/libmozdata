@@ -343,16 +343,16 @@ def bug_analysis(bug, uplift_channel='release'):
         bug_id = bug
         bug = {}
 
-        def bughandler(found_bug, data):
+        def bughandler(found_bug):
             bug.update(found_bug)
 
-        def commenthandler(found_bug, bugid, data):
+        def commenthandler(found_bug, bugid):
             bug['comments'] = found_bug['comments']
 
-        def attachmenthandler(attachments, bugid, data):
+        def attachmenthandler(attachments, bugid):
             bug['attachments'] = attachments
 
-        def historyhandler(found_bug, data):
+        def historyhandler(found_bug):
             bug['history'] = found_bug['history']
 
         INCLUDE_FIELDS = [
@@ -417,7 +417,7 @@ def bug_analysis(bug, uplift_channel='release'):
 
             info['patches'][rev].update(patch_analysis(hgmozilla.RawRevision.get_revision(obj['channel'], rev), author_names, reviewers, utils.as_utc(datetime.utcfromtimestamp(obj['creation_date']))))
     else:
-        def attachmenthandler(attachments, bugid, data):
+        def attachmenthandler(attachments, bugid):
             for i in range(0, len(bug['attachments'])):
                 bug['attachments'][i].update(attachments[i])
 
@@ -477,16 +477,16 @@ def uplift_info(bug, channel):
         bug_id = bug
         bug = {}
 
-        def bughandler(found_bug, data):
+        def bughandler(found_bug):
             bug.update(found_bug)
 
-        def commenthandler(found_bug, bugid, data):
+        def commenthandler(found_bug, bugid):
             bug['comments'] = found_bug['comments']
 
-        def historyhandler(found_bug, data):
+        def historyhandler(found_bug):
             bug['history'] = found_bug['history']
 
-        def attachmenthandler(attachments, bugid, data):
+        def attachmenthandler(attachments, bugid):
             bug['attachments'] = attachments
 
         INCLUDE_FIELDS = [
@@ -574,7 +574,7 @@ def uplift_info(bug, channel):
     return info
 
 
-def get_patch_info(bugs, base_versions=None, extra_handlers=None):
+def get_patch_info(bugs, base_versions=None, extra=None):
     channels = ['release', 'beta', 'aurora', 'nightly']
     landing_patterns = Bugzilla.get_landing_patterns(channels=channels)
     approval_pattern = re.compile('approval-mozilla-([a-zA-Z0-9]+)\+')
@@ -632,7 +632,10 @@ def get_patch_info(bugs, base_versions=None, extra_handlers=None):
                 # Bug for thunderbird or anything else except Firefox
                 toremove.add(bugid)
 
-    Bugzilla(bugs, include_fields=['id', 'cf_crash_signature'] + list(status_flags.values()), bughandler=bug_handler, bugdata=info, commenthandler=comment_handler, commentdata=info, historyhandler=history_handler, historydata=info, extra=extra_handlers).get_data().wait()
+    bz = Bugzilla(bugs, include_fields=['id', 'cf_crash_signature'] + list(status_flags.values()), bughandler=bug_handler, bugdata=info, commenthandler=comment_handler, commentdata=info, historyhandler=history_handler, historydata=info)
+    if extra:
+        bz = extra.merge(bz)
+    bz.get_data().wait()
 
     for r in toremove:
         del info[r]
