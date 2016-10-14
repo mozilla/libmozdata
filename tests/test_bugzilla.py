@@ -5,6 +5,7 @@
 import unittest
 import os
 from libmozdata import bugzilla
+from libmozdata import handler
 from libmozdata.connection import Query
 import responses
 from tests.auto_mock import MockTestCase
@@ -48,6 +49,83 @@ class BugIDTest(MockTestCase):
         self.assertEqual(bugs[12346]['resolution'], u'FIXED')
         self.assertEqual(bugs[12346]['assigned_to'], u'doug.turner@gmail.com')
         self.assertEqual(bugs[12346]['summary'], u'nsOutputFileStream should buffer the output')
+
+    @responses.activate
+    def test_bugids_multihandlers1(self):
+
+        def bughandler1(bug, data):
+            data[bug['id']] = bug
+
+        def bughandler2(bug, data):
+            data[bug['id']] = bug
+
+        bugs1 = {}
+        bugs2 = {}
+        h1 = handler.Handler(bughandler1, bugs1)
+        h2 = handler.Handler(bughandler2, bugs2)
+        bugzilla.Bugzilla([12345, 12346], bughandler=handler.MultipleHandler(h1, h2)).get_data().wait()
+
+        for bugs in [bugs1, bugs2]:
+            self.assertEqual(bugs[12345]['id'], 12345)
+            self.assertEqual(bugs[12345]['resolution'], u'FIXED')
+            self.assertEqual(bugs[12345]['assigned_to'], u'jefft@formerly-netscape.com.tld')
+            self.assertEqual(bugs[12345]['summary'], u'[DOGFOOD] Unable to Forward a message received as an Inline page or an attachment')
+
+            self.assertEqual(bugs[12346]['id'], 12346)
+            self.assertEqual(bugs[12346]['resolution'], u'FIXED')
+            self.assertEqual(bugs[12346]['assigned_to'], u'doug.turner@gmail.com')
+            self.assertEqual(bugs[12346]['summary'], u'nsOutputFileStream should buffer the output')
+
+    @responses.activate
+    def test_bugids_multihandlers2(self):
+        bugs1 = {}
+        bugs2 = {}
+        bugs3 = {}
+
+        def bughandler1(bug):
+            bugs1[bug['id']] = bug
+
+        def bughandler2(bug):
+            bugs2[bug['id']] = bug
+
+        def bughandler3(bug, data):
+            data[bug['id']] = bug
+
+        bugzilla.Bugzilla([12345, 12346], bughandler=[bughandler1, bughandler2, (bughandler3, bugs3)]).get_data().wait()
+
+        for bugs in [bugs1, bugs2, bugs3]:
+            self.assertEqual(bugs[12345]['id'], 12345)
+            self.assertEqual(bugs[12345]['resolution'], u'FIXED')
+            self.assertEqual(bugs[12345]['assigned_to'], u'jefft@formerly-netscape.com.tld')
+            self.assertEqual(bugs[12345]['summary'], u'[DOGFOOD] Unable to Forward a message received as an Inline page or an attachment')
+
+            self.assertEqual(bugs[12346]['id'], 12346)
+            self.assertEqual(bugs[12346]['resolution'], u'FIXED')
+            self.assertEqual(bugs[12346]['assigned_to'], u'doug.turner@gmail.com')
+            self.assertEqual(bugs[12346]['summary'], u'nsOutputFileStream should buffer the output')
+
+    @responses.activate
+    def test_merge(self):
+
+        def bughandler1(bug, data):
+            data[bug['id']] = bug
+
+        def bughandler2(bug, data):
+            data[bug['id']] = bug
+
+        bugs1 = {}
+        bugs2 = {}
+        bz1 = bugzilla.Bugzilla([12345, 12346], include_fields=['id'], bughandler=bughandler1, bugdata=bugs1)
+        bz2 = bugzilla.Bugzilla([12345, 12346], include_fields=['id', 'resolution'], bughandler=bughandler2, bugdata=bugs2)
+
+        bz1.merge(bz2).get_data().wait()
+
+        self.assertEqual(bugs1[12345]['id'], 12345)
+        self.assertEqual(bugs1[12346]['id'], 12346)
+        self.assertEqual(bugs2[12345]['id'], 12345)
+        self.assertEqual(bugs2[12345]['resolution'], u'FIXED')
+        self.assertEqual(bugs2[12346]['id'], 12346)
+        self.assertEqual(bugs2[12346]['resolution'], u'FIXED')
 
     @responses.activate
     def test_queries(self):

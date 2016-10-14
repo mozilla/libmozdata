@@ -102,7 +102,7 @@ class BZInfo(Bugzilla):
 
         return utils.get_best(comps_prods)
 
-    def __bug_handler(self, bug, data):
+    def __bug_handler(self, bug):
         """Handler to use with the bug retrieved from bugzilla
 
         Args:
@@ -116,7 +116,7 @@ class BZInfo(Bugzilla):
                                           'reporter': bug['creator'],
                                           'owner': bug['assigned_to_detail']['email']})
 
-    def __history_handler(self, bug, data):
+    def __history_handler(self, bug):
         """Handler to use with the history retrieved from bugzilla
 
         Args:
@@ -166,7 +166,7 @@ class BZInfo(Bugzilla):
                                  'reviewers': reviewers,
                                  'feedbacks': feedbacks})
 
-    def __comment_handler(self, bug, bugid, data):
+    def __comment_handler(self, bug, bugid):
         """Handler to use with the comment retrieved from bugzilla
 
         Args:
