@@ -161,6 +161,8 @@ def patch_analysis(patch, authors, reviewers, creation_date=utils.get_date_ymd('
     info = {
         'changes_size': 0,
         'test_changes_size': 0,
+        'changes_add': 0,
+        'changes_del': 0,
         'modules_num': 0,
         'code_churn_overall': 0,
         'code_churn_last_3_releases': 0,
@@ -174,6 +176,15 @@ def patch_analysis(patch, authors, reviewers, creation_date=utils.get_date_ymd('
     for diff in whatthepatch.parse_patch(patch):
         old_path = diff.header.old_path[2:] if diff.header.old_path.startswith('a/') else diff.header.old_path
         new_path = diff.header.new_path[2:] if diff.header.new_path.startswith('b/') else diff.header.new_path
+
+        # Calc changes additions & deletions
+        counts = [(
+            old is None and new is not None,
+            new is None and old is not None
+        ) for old, new, _ in diff.changes]
+        counts = list(zip(*counts))  # inverse zip
+        info['changes_add'] += sum(counts[0])
+        info['changes_del'] += sum(counts[1])
 
         # TODO: Split C/C++, Rust, Java, JavaScript, build system changes
         if _is_test(new_path):
