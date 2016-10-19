@@ -750,6 +750,15 @@ def parse_uplift_comment(text, bug_id=None):
         if v != '':
             out[h].append(v)
 
+    # Remove html entities
+    html_escape_table = {
+        '&': '&amp;',
+        '"': '&quot;',
+        "'": '&apos;',
+        '>': '&gt;',
+        '<': '&lt;',
+    }
+    text = ''.join(html_escape_table.get(c, c) for c in text)
     lines = text.split('\n')
 
     # Build headers

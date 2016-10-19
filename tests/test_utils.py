@@ -104,6 +104,10 @@ class UtilsTest(unittest.TestCase):
         out = parse('https://developer.mozilla.org/en-US/docs/Web/API/Media_Streams_API/Constraints#Result')
         self.assertEqual(out, '<div class="no-header"><a href="https://developer.mozilla.org/en-US/docs/Web/API/Media_Streams_API/Constraints#Result" target="_blank">https://developer.mozilla.org/en-US/docs/Web/API/Media_Streams_API/Constraints#Result</a></div>')
 
+        # Html escaped
+        out = parse('Bug on <select/> element')
+        self.assertEqual(out, '<div class="no-header">Bug on &lt;select/&gt; element</div>')
+
         # Full comments
         for text_path in glob.glob('tests/uplift/*.txt'):
             with open(text_path, 'r') as text:
