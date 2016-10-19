@@ -58,6 +58,9 @@ class HGFileInfo(object):
 
         for entry in entries:
             assert self.date_type in entry
+            if isinstance(entry[self.date_type], six.string_types):
+                continue
+
             assert isinstance(entry[self.date_type], list)
             utc_date = entry[self.date_type][0]
 
