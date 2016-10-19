@@ -42,10 +42,7 @@ def get_timestamp(dt):
         int: the corresponding timestamp
     """
     if isinstance(dt, six.string_types):
-        if dt == 'now':
-            dt = datetime.utcnow()
-        else:
-            dt = get_date_ymd(dt)
+        dt = datetime.utcnow() if dt == 'now' else get_date_ymd(dt)
     return int(calendar.timegm(dt.timetuple()))
 
 
