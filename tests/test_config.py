@@ -82,6 +82,24 @@ class ConfigTest(unittest.TestCase):
         self.assertIsNone(config.get('Section', 'Option3'))
         self.assertEqual(config.get('Section', 'Option3', 'Default'), 'Default')
 
+    def test_config_get_with_type(self):
+        with open('mozdata.ini', 'w') as f:
+            custom_conf = ConfigParser()
+            custom_conf.add_section('Section')
+            custom_conf.set('Section', 'Option', 'Value')
+            custom_conf.set('Section', 'Option2', '123')
+            custom_conf.add_section('Section2')
+            custom_conf.set('Section2', 'Option', 'Value1, Value2, Value3')
+            custom_conf.write(f)
+
+        from libmozdata import config
+
+        self.assertEqual(config.get('Section', 'Option'), 'Value')
+        self.assertEqual(config.get('Section', 'Option2', type=int), 123)
+        self.assertEqual(config.get('Section', 'Option2', type=str), '123')
+        self.assertEqual(config.get('Section2', 'Option', type=list), ['Value1', 'Value2', 'Value3'])
+        self.assertEqual(config.get('Section2', 'Option', type=set), {'Value1', 'Value2', 'Value3'})
+
     def test_config_exists_in_home(self):
         with open(os.path.expanduser('~/.mozdata.ini'), 'w') as f:
             custom_conf = ConfigParser()
