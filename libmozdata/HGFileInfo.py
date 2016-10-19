@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import logging
 import re
 import six
 from .connection import Query
@@ -58,6 +59,13 @@ class HGFileInfo(object):
 
         for entry in entries:
             assert self.date_type in entry
+
+            # no pushdate
+            # TODO: find a way to estimate the pushdate (e.g. (prev + next) / 2 or use the author date)
+            if entry[self.date_type] == '':
+                logging.getLogger(__name__).warning('Entry for file %s with node %s has no pushdate' % (path, entry['node']))
+                continue
+
             assert isinstance(entry[self.date_type], list)
             utc_date = entry[self.date_type][0]
 

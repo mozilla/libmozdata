@@ -42,8 +42,20 @@ def get_timestamp(dt):
         int: the corresponding timestamp
     """
     if isinstance(dt, six.string_types):
-        dt = get_date_ymd(dt)
+        dt = datetime.utcnow() if dt == 'now' else get_date_ymd(dt)
     return int(calendar.timegm(dt.timetuple()))
+
+
+def get_date_from_timestamp(ts):
+    """Get a UTC date from a timestamp
+
+    Args:
+        ts(int): a timestamp
+
+    Returns:
+        datetime.datetime: the corresponding datetime in UTC tz
+    """
+    return datetime.utcfromtimestamp(ts).replace(tzinfo=pytz.utc)
 
 
 def get_date_ymd(dt):

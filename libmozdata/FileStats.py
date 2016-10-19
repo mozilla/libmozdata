@@ -18,7 +18,7 @@ class FileStats(object):
     """Stats about a file in the repo.
     """
 
-    def __init__(self, path, channel='nightly', node='tip', utc_ts=None):
+    def __init__(self, path, channel='nightly', node='tip', utc_ts=None, max_days=None):
         """Constructor
 
         Args:
@@ -28,7 +28,7 @@ class FileStats(object):
             utc_ts (Optional[int]): UTC timestamp, file pushdate <= utc_ts
         """
         self.utc_ts = utc_ts if isinstance(utc_ts, numbers.Number) and utc_ts > 0 else None
-        self.max_days = int(config.get('FileStats', 'MaxDays', 3))
+        self.max_days = max_days if isinstance(max_days, numbers.Number) else int(config.get('FileStats', 'MaxDays', 3))
         self.utc_ts_from = utils.get_timestamp(datetime.utcfromtimestamp(utc_ts) + timedelta(-self.max_days)) if isinstance(utc_ts, numbers.Number) and utc_ts > 0 else None
         self.path = path
         self.hi = HGFileInfo(path, channel=channel, node=node)
@@ -50,6 +50,9 @@ class FileStats(object):
 
         return info
 
+    def get_last_patches(self):
+        return self.hi.get(self.path, self.utc_ts_from, self.utc_ts)['patches']
+
     def get_info(self, guilty_only=False):
         """Get info
 
@@ -60,7 +63,7 @@ class FileStats(object):
             dict: info
         """
 
-        last = self.hi.get(self.path, self.utc_ts_from, self.utc_ts)['patches']
+        last = self.get_last_patches()
         if guilty_only and not last:
             return None
 

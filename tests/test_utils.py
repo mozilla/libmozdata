@@ -7,6 +7,7 @@ import datetime
 from dateutil.tz import tzutc
 import math
 from libmozdata import utils
+import time
 
 
 class UtilsTest(unittest.TestCase):
@@ -21,6 +22,10 @@ class UtilsTest(unittest.TestCase):
         self.assertEqual(utils.get_timestamp(date), 671760000)
         self.assertEqual(utils.get_timestamp(datetime.datetime.strptime(date, '%Y-%m-%d')), 671760000)
         self.assertGreater(utils.get_timestamp('today'), utils.get_timestamp(date))
+        ts1 = utils.get_timestamp('now')
+        time.sleep(1.01)
+        ts2 = utils.get_timestamp('now')
+        self.assertGreater(ts2, ts1)
 
     def test_get_date_ymd(self):
         self.assertIsNotNone(utils.get_date_ymd('today'))
@@ -54,6 +59,15 @@ class UtilsTest(unittest.TestCase):
     def test_get_now_timestamp(self):
         date = '1991-04-16'
         self.assertGreater(utils.get_now_timestamp(), utils.get_timestamp(date))
+
+    def test_date_from_timestamp(self):
+        date = '1975-03-16'
+        dt = utils.get_date_ymd(date)
+        ts = utils.get_timestamp(dt)
+        self.assertEqual(dt, datetime.datetime(1975, 3, 16, tzinfo=tzutc()))
+        self.assertEqual(ts, 164160000)
+        new_dt = utils.get_date_from_timestamp(ts)
+        self.assertEqual(new_dt, dt)
 
     def test_is64(self):
         self.assertTrue(utils.is64('64bit'))

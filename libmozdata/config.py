@@ -22,18 +22,21 @@ class ConfigIni(Config):
         if path is not None:
             self.config.read(path)
         else:
-            paths = [
-                os.path.join(os.getcwd(), 'mozdata.ini'),
-                os.path.expanduser('~/.mozdata.ini')
-            ]
-            self.config.read(paths)
+            self.config.read(self.get_default_paths())
         self.path = path
 
-    def get(self, section, option, default=None):
+    def get_default_paths(self):
+        return [os.path.join(os.getcwd(), 'mozdata.ini'), os.path.expanduser('~/.mozdata.ini')]
+
+    def get(self, section, option, default=None, type=str):
         if not self.config.has_option(section, option):
             return default
 
-        return self.config.get(section, option)
+        res = self.config.get(section, option)
+        if type == list or type == set:
+            return type([s.strip(' /t') for s in res.split(',')])
+        else:
+            return type(res)
 
     def __repr__(self):
         return self.path
@@ -59,6 +62,6 @@ def set_config(conf):
     __config = conf
 
 
-def get(section, option, default=None):
+def get(section, option, default=None, type=str):
     global __config
-    return __config.get(section, option, default=default)
+    return __config.get(section, option, default=default, type=type)
