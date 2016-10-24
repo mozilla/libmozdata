@@ -11,6 +11,7 @@ before_install:
        sudo apt-get install -qq python-numpy python-scipy ;
     fi
 install:
+  - $PIP install "setuptools>=28.6.1"
   - $PIP install -r requirements.txt
   - $PIP install -r requirements-spikes.txt
   - $PIP install -r test-requirements.txt
