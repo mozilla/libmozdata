@@ -1,18 +1,27 @@
 language: python
-python:
-  - "2.7"
-  - "3.5"
+env:
+    # Enable python 2 and python 3 builds
+    - PYTHON=python2.7 PIP=pip2.7 PYSUF='2.7'
+    - PYTHON=python3 PIP=pip3 PYSUF=3
+
 before_install:
-  - sudo apt-get install -qq python-numpy python-scipy python3-numpy python3-scipy
+  - if [ "${PYSUF}" == "3" ]; then
+       sudo apt-get install -qq python3-numpy python3-scipy ;
+    else
+       sudo apt-get install -qq python-numpy python-scipy ;
+    fi
 install:
-  - pip install -r requirements.txt
-  - pip install -r requirements-spikes.txt
-  - pip install -r test-requirements.txt
+  - $PIP install -r requirements.txt
+  - $PIP install -r requirements-spikes.txt
+  - $PIP install -r test-requirements.txt
+  - if [ "${PYSUF}" == "2.7" ]; then
+       $PIP install -r requirements-mercurial.txt ;
+    fi
 script:
   - flake8 .
   - coverage run --source=libmozdata -m unittest discover tests/
-  - python setup.py sdist
-  - pip install dist/libmozdata-$(cat VERSION).tar.gz
+  - $PYTHON setup.py sdist
+  - $PIP install dist/libmozdata-$(cat VERSION).tar.gz
 after_success:
   - bash <(curl -s https://codecov.io/bash)
-cache: pip
+cache: $PIP

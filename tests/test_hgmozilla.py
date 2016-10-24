@@ -2,14 +2,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import sys
 import unittest
 from libmozdata import hgmozilla
 from libmozdata.connection import Query
-import mercurial
-from mercurial import hg, commands
 import os
 import tempfile
 import time
+
+if sys.version_info < (3, 0):  # NOQA
+    import mercurial  # NOQA
+    from mercurial import hg, commands  # NOQA
 
 
 class HGMozillaTest(unittest.TestCase):
@@ -45,28 +48,29 @@ class HGMozillaTest(unittest.TestCase):
         return srcdir
 
     def test_getfilelog(self):
-        tmpdst = tempfile.mkdtemp()
-        ui = mercurial.ui.ui().copy()
-        hgmo = hgmozilla.HGMozilla(self.create_repo(tmpdst, ui), ui=ui)
-        data = hgmo.get_filelog(['myfile1', 'myfile2'])
+        if sys.version_info < (3, 0):
+            tmpdst = tempfile.mkdtemp()
+            ui = mercurial.ui.ui().copy()
+            hgmo = hgmozilla.HGMozilla(self.create_repo(tmpdst, ui), ui=ui)
+            data = hgmo.get_filelog(['myfile1', 'myfile2'])
 
-        self.assertIn('myfile1', data)
-        self.assertIn('myfile2', data)
-        self.assertEqual(len(data['myfile1']), 5)
-        self.assertEqual(len(data['myfile2']), 5)
-        self.assertIn('user', data['myfile2'][3])
-        self.assertIn('desc', data['myfile2'][3])
-        self.assertIn('node', data['myfile2'][3])
-        self.assertIn('date', data['myfile2'][3])
-        self.assertIn('pushdate', data['myfile2'][3])
+            self.assertIn('myfile1', data)
+            self.assertIn('myfile2', data)
+            self.assertEqual(len(data['myfile1']), 5)
+            self.assertEqual(len(data['myfile2']), 5)
+            self.assertIn('user', data['myfile2'][3])
+            self.assertIn('desc', data['myfile2'][3])
+            self.assertIn('node', data['myfile2'][3])
+            self.assertIn('date', data['myfile2'][3])
+            self.assertIn('pushdate', data['myfile2'][3])
 
-        self.assertEqual(data['myfile2'][3]['user'], 'scooper@tbbt.com')
-        self.assertEqual(data['myfile2'][3]['desc'], 'message1')
-        self.assertIsInstance(data['myfile2'][3]['pushdate'], list)
-        self.assertEqual(len(data['myfile2'][3]['pushdate']), 2)
-        self.assertIsInstance(data['myfile2'][3]['date'], list)
-        self.assertEqual(len(data['myfile2'][3]['date']), 2)
-        self.assertIsInstance(data['myfile2'][3]['node'], str)
+            self.assertEqual(data['myfile2'][3]['user'], 'scooper@tbbt.com')
+            self.assertEqual(data['myfile2'][3]['desc'], 'message1')
+            self.assertIsInstance(data['myfile2'][3]['pushdate'], list)
+            self.assertEqual(len(data['myfile2'][3]['pushdate']), 2)
+            self.assertIsInstance(data['myfile2'][3]['date'], list)
+            self.assertEqual(len(data['myfile2'][3]['date']), 2)
+            self.assertIsInstance(data['myfile2'][3]['node'], str)
 
 
 class RevisionTest(unittest.TestCase):

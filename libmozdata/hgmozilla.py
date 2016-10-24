@@ -3,10 +3,13 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import six
-import mercurial
-from mercurial import hg
+import sys
 from .connection import (Connection, Query)
 from . import config
+
+if sys.version_info < (3, 0):  # NOQA
+    import mercurial  # NOQA
+    from mercurial import hg  # NOQA
 
 
 class Mercurial(Connection):
