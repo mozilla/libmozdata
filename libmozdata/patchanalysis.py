@@ -563,6 +563,21 @@ def uplift_info(bug, channel):
         if info['uplift_comment'] and info['uplift_author']:
             break
 
+    # Landing dates per useful channels
+    all_channels = ['nightly', 'aurora', 'beta', 'release']
+    if channel not in all_channels:
+        raise Exception('Invalid channel {}'.format(channel))
+    channels = all_channels[:all_channels.index(channel) + 1]
+    landing_patterns = Bugzilla.get_landing_patterns(channels=channels)
+    landing_comments = Bugzilla.get_landing_comments(bug['comments'], [], landing_patterns)
+    landings = dict(zip(channels, [None, ] * 4))
+    for c in landing_comments:
+        channel = c['channel']
+        dt = utils.get_date_ymd(c['comment']['time'])
+        if landings[channel] is None or landings[channel] < dt:
+            landings[channel] = dt
+    info['landings'] = landings
+
     if uplift_request_date == 0:
         # No deltas calculations
         return info
