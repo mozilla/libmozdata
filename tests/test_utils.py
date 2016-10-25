@@ -130,7 +130,7 @@ class UtilsTest(unittest.TestCase):
         out = parse('[String/UUID change made/needed]: yes, we need a change')
         self.assertEqual(out, '<h1 class="string-uuid-change risky">String/UUID change made/needed</h1><div class="string-uuid-change risky">yes, we need a change</div>')
         out = parse('[String/UUID change made/needed]: N/A')
-        self.assertEqual(out, '<h1 class="string-uuid-change">String/UUID change made/needed</h1><div class="string-uuid-change">N/A</div>') # not risky
+        self.assertEqual(out, '<h1 class="string-uuid-change">String/UUID change made/needed</h1><div class="string-uuid-change">N/A</div>')  # not risky
 
         # Risky test coverage
         out = parse('[Describe test coverage new/current, TreeHerder]: none')
