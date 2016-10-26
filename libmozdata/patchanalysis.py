@@ -563,24 +563,29 @@ def uplift_info(bug, channel):
         if info['uplift_comment'] and info['uplift_author']:
             break
 
-    if uplift_request_date == 0:
-        # No deltas calculations
-        return info
-
-    # Delta between uplift request and next merge date.
-    release_date = versions.getCloserRelease(uplift_request_date)[1]
-    info['release_delta'] = release_date - uplift_request_date
-    assert info['release_delta'] > timedelta()
+    # Landing dates per useful channels
+    channels = ['nightly', 'aurora', 'beta', 'release', 'esr', ]
+    landing_comments = Bugzilla.get_landing_comments(bug['comments'], channels)
+    landings = dict(zip(channels, [None, ] * len(channels)))
+    for c in landing_comments:
+        channel = c['channel']
+        dt = utils.get_date_ymd(c['comment']['time'])
+        if landings[channel] is None or landings[channel] < dt:
+            landings[channel] = dt
+    info['landings'] = landings
 
     # Delta between patch landing on central and uplift request
-    landing_comments = Bugzilla.get_landing_comments(bug['comments'], 'central')
-    if landing_comments:
-        landing_date = utils.get_date_ymd(landing_comments[-1]['comment']['time'])
-        info['landing_delta'] = uplift_request_date - landing_date
-        # Sometimes the request is done earlier than landing on central.
+    landing_nightly = landings.get('nightly')
+    if landing_nightly and uplift_request_date != 0:
+        info['landing_delta'] = uplift_request_date - landing_nightly
+        # Sometimes the request is done earlier than landing on nightly.
         # assert bug_data['landing_delta'] > timedelta()
-    else:
-        info['landing_delta'] = timedelta()
+
+    # Delta between uplift request and next merge date.
+    if uplift_request_date != 0:
+        release_date = versions.getCloserRelease(uplift_request_date)[1]
+        info['release_delta'] = release_date - uplift_request_date
+        assert info['release_delta'] > timedelta()
 
     return info
 
