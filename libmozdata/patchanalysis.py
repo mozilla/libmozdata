@@ -796,12 +796,12 @@ def parse_uplift_comment(text, bug_id=None):
 
     # Detect risks on specific items
     if 'risks-and-why' in out:
-        # If risk is tagged as “medium” or “high”
+        # If risk is tagged as "medium" or "high"
         cleaned = _cleanup_lines(out['risks-and-why']['lines'])
         out['risks-and-why']['risky'] = cleaned in ('medium', 'high')
 
     if 'string-uuid-change' in out:
-        # If the “string/UUID change” is set to anything but “No or None or N/A”.
+        # If the "string/UUID change" is set to anything but "No or None or N/A".
         cleaned = _cleanup_lines(out['string-uuid-change']['lines'])
         out['string-uuid-change']['risky'] = cleaned not in ('no', 'none', 'n a')
 
