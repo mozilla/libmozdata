@@ -564,13 +564,9 @@ def uplift_info(bug, channel):
             break
 
     # Landing dates per useful channels
-    all_channels = ['nightly', 'aurora', 'beta', 'release']
-    if channel not in all_channels:
-        raise Exception('Invalid channel {}'.format(channel))
-    channels = all_channels[:all_channels.index(channel) + 1]
-    landing_patterns = Bugzilla.get_landing_patterns(channels=channels)
-    landing_comments = Bugzilla.get_landing_comments(bug['comments'], [], landing_patterns)
-    landings = dict(zip(channels, [None, ] * 4))
+    channels = ['central', 'nightly', 'aurora', 'beta', 'release', 'esr', ]
+    landing_comments = Bugzilla.get_landing_comments(bug['comments'], channels)
+    landings = dict(zip(channels, [None, ] * len(channels)))
     for c in landing_comments:
         channel = c['channel']
         dt = utils.get_date_ymd(c['comment']['time'])
@@ -588,10 +584,9 @@ def uplift_info(bug, channel):
     assert info['release_delta'] > timedelta()
 
     # Delta between patch landing on central and uplift request
-    landing_comments = Bugzilla.get_landing_comments(bug['comments'], 'central')
-    if landing_comments:
-        landing_date = utils.get_date_ymd(landing_comments[-1]['comment']['time'])
-        info['landing_delta'] = uplift_request_date - landing_date
+    landing_central = landings.get('central')
+    if landing_central:
+        info['landing_delta'] = uplift_request_date - landing_central
         # Sometimes the request is done earlier than landing on central.
         # assert bug_data['landing_delta'] > timedelta()
     else:
