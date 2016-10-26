@@ -89,7 +89,6 @@ class PatchAnalysisTest(MockTestCase):
         self.assertIsNone(info['landings']['release'])
         self.assertIsNone(info['landings']['beta'])
         self.assertIsNone(info['landings']['aurora'])
-        self.assertEqual(info['landings']['central'], datetime(2010, 4, 5, 23, 12, 52, tzinfo=pytz.UTC))
         self.assertIsNone(info['landings']['esr'])
 
         bug = {}
@@ -133,7 +132,6 @@ class PatchAnalysisTest(MockTestCase):
         self.assertIsNone(info['landings']['release'])
         self.assertIsNone(info['landings']['beta'])
         self.assertIsNone(info['landings']['aurora'])
-        self.assertEqual(info['landings']['central'], datetime(2011, 5, 26, 6, 40, 11, tzinfo=pytz.UTC))
         self.assertIsNone(info['landings']['esr'])
 
         # Backed out once (when it was on inbound) with changesets from anther bug.
@@ -163,7 +161,6 @@ class PatchAnalysisTest(MockTestCase):
             self.assertIsNone(info['landings']['release'])
             self.assertIsNone(info['landings']['beta'])
             self.assertIsNone(info['landings']['aurora'])
-            self.assertEqual(info['landings']['central'], datetime(2016, 5, 19, 16, 54, 30, tzinfo=pytz.UTC))
             self.assertIsNone(info['landings']['esr'])
 
         # Backed out from central and relanded on central.
@@ -202,7 +199,6 @@ class PatchAnalysisTest(MockTestCase):
         self.assertIsNone(info['landings']['release'])
         self.assertIsNone(info['landings']['beta'])
         self.assertIsNone(info['landings']['aurora'])
-        self.assertEqual(info['landings']['central'], datetime(2011, 12, 11, 4, 15, 3, tzinfo=pytz.UTC))
         self.assertIsNone(info['landings']['esr'])
 
         # Changeset with multiple unrelated backouts (on fx-team).
@@ -218,7 +214,6 @@ class PatchAnalysisTest(MockTestCase):
         self.assertIsNone(info['landings']['release'])
         self.assertIsNone(info['landings']['beta'])
         self.assertIsNone(info['landings']['aurora'])
-        self.assertEqual(info['landings']['central'], datetime(2016, 6, 10, 13, 42, 45, tzinfo=pytz.UTC))
         self.assertIsNone(info['landings']['esr'])
 
         # Custom backout (no reference to revision).
@@ -248,7 +243,6 @@ class PatchAnalysisTest(MockTestCase):
             self.assertIsNone(info['landings']['release'])
             self.assertIsNone(info['landings']['beta'])
             self.assertIsNone(info['landings']['aurora'])
-            self.assertEqual(info['landings']['central'], datetime(2016, 6, 6, 15, 4, 18, tzinfo=pytz.UTC))
             self.assertIsNone(info['landings']['esr'])
 
         # No landed patches.
@@ -441,7 +435,6 @@ class PatchAnalysisTest(MockTestCase):
         # ESR landing too
         info = patchanalysis.bug_analysis(1254980)
         self.assertEqual(info['landings']['nightly'], datetime(2016, 3, 26, 2, 12, 27, tzinfo=pytz.UTC))
-        self.assertEqual(info['landings']['central'], datetime(2016, 3, 26, 2, 12, 27, tzinfo=pytz.UTC))
         self.assertEqual(info['landings']['aurora'], datetime(2016, 3, 28, 23, 24, 6, tzinfo=pytz.UTC))
         self.assertEqual(info['landings']['beta'], datetime(2016, 3, 31, 19, 48, 30, tzinfo=pytz.UTC))
         self.assertEqual(info['landings']['release'], datetime(2016, 4, 6, 19, 35, 18, tzinfo=pytz.UTC))

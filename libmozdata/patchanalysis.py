@@ -564,7 +564,7 @@ def uplift_info(bug, channel):
             break
 
     # Landing dates per useful channels
-    channels = ['central', 'nightly', 'aurora', 'beta', 'release', 'esr', ]
+    channels = ['nightly', 'aurora', 'beta', 'release', 'esr', ]
     landing_comments = Bugzilla.get_landing_comments(bug['comments'], channels)
     landings = dict(zip(channels, [None, ] * len(channels)))
     for c in landing_comments:
@@ -574,23 +574,18 @@ def uplift_info(bug, channel):
             landings[channel] = dt
     info['landings'] = landings
 
-    if uplift_request_date == 0:
-        # No deltas calculations
-        return info
+    # Delta between patch landing on central and uplift request
+    landing_nightly = landings.get('nightly')
+    if landing_nightly and uplift_request_date != 0:
+        info['landing_delta'] = uplift_request_date - landing_nightly
+        # Sometimes the request is done earlier than landing on nightly.
+        # assert bug_data['landing_delta'] > timedelta()
 
     # Delta between uplift request and next merge date.
-    release_date = versions.getCloserRelease(uplift_request_date)[1]
-    info['release_delta'] = release_date - uplift_request_date
-    assert info['release_delta'] > timedelta()
-
-    # Delta between patch landing on central and uplift request
-    landing_central = landings.get('central')
-    if landing_central:
-        info['landing_delta'] = uplift_request_date - landing_central
-        # Sometimes the request is done earlier than landing on central.
-        # assert bug_data['landing_delta'] > timedelta()
-    else:
-        info['landing_delta'] = timedelta()
+    if uplift_request_date != 0:
+        release_date = versions.getCloserRelease(uplift_request_date)[1]
+        info['release_delta'] = release_date - uplift_request_date
+        assert info['release_delta'] > timedelta()
 
     return info
 
