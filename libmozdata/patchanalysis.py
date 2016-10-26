@@ -725,6 +725,7 @@ def parse_uplift_comment(text, bug_id=None):
         'Risks and why',
         'String/UUID change made/needed',
     )
+    no_header = 'no-header'
 
     def _replace_link(pattern, link, output, line):
         replacement = '<a href="{}" target="_blank">{}</a>'.format(link, output)
@@ -745,10 +746,20 @@ def parse_uplift_comment(text, bug_id=None):
             v = _replace_link(r'comment (\d+)', r'{}/show_bug.cgi?id={}#c\1'.format(Bugzilla.URL, bug_id), r'Comment \1', v)
 
         # Add to output structure
+        if h == no_header:
+            key = no_header
+        else:
+            # Build clean key from header
+            parts = re.sub(r'[^\w]+', ' ', h.lower()).split(' ')[:3]
+            key = '-'.join(parts)
         if h not in out:
-            out[h] = []
+            out[key] = {
+                'title': h,
+                'lines': [],
+                'risky': False,
+            }
         if v != '':
-            out[h].append(v)
+            out[key]['lines'].append(v)
 
     # Remove html entities
     html_escape_table = {
@@ -768,7 +779,6 @@ def parse_uplift_comment(text, bug_id=None):
     out = collections.OrderedDict()
 
     # Detect headers
-    no_header = '__NO_HEADER__'
     header = no_header
     for line in lines:
         match = header_regex.match(line)
@@ -780,14 +790,34 @@ def parse_uplift_comment(text, bug_id=None):
             # Add on last header
             _parse_line(header, line)
 
+    def _cleanup_lines(lines):
+        text = re.sub('[^\w]+', ' ', ''.join(lines))
+        return text.lower().strip()
+
+    # Detect risks on specific items
+    if 'risks-and-why' in out:
+        # If risk is tagged as "medium" or "high"
+        cleaned = _cleanup_lines(out['risks-and-why']['lines'])
+        out['risks-and-why']['risky'] = cleaned in ('medium', 'high')
+
+    if 'string-uuid-change' in out:
+        # If the "string/UUID change" is set to anything but "No or None or N/A".
+        cleaned = _cleanup_lines(out['string-uuid-change']['lines'])
+        out['string-uuid-change']['risky'] = cleaned not in ('no', 'none', 'n a')
+
+    if 'describe-test-coverage' in out:
+        # If test coverage question is empty or No or N/A
+        cleaned = _cleanup_lines(out['describe-test-coverage']['lines'])
+        out['describe-test-coverage']['risky'] = cleaned in ('', 'no', 'none', 'n a')
+
     # Build complete html output
     html = ''
-    for header, lines in out.items():
-        if header == no_header:
-            class_name = 'no-header'
-        else:
-            class_name = 'header'
-            html += '<h1>{}</h1>'.format(header)
-        html += '<div class="{}">{}</div>'.format(class_name, '<br />'.join(lines))
+    for key, p in out.items():
+        css_classes = [key, ]
+        if p['risky']:
+            css_classes.append('risky')
+        if key != no_header:
+            html += '<h1 class="{}">{}</h1>'.format(' '.join(css_classes), p['title'])
+        html += '<div class="{}">{}</div>'.format(' '.join(css_classes), '<br />'.join(p['lines']))
 
     return html

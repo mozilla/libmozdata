@@ -122,12 +122,25 @@ class UtilsTest(unittest.TestCase):
         out = parse('Bug on <select/> element')
         self.assertEqual(out, '<div class="no-header">Bug on &lt;select/&gt; element</div>')
 
+        # Risky "risks and why"
+        out = parse('[Risks and why]: Medium.')
+        self.assertEqual(out, '<h1 class="risks-and-why risky">Risks and why</h1><div class="risks-and-why risky">Medium.</div>')
+
+        # Risky string change
+        out = parse('[String/UUID change made/needed]: yes, we need a change')
+        self.assertEqual(out, '<h1 class="string-uuid-change risky">String/UUID change made/needed</h1><div class="string-uuid-change risky">yes, we need a change</div>')
+        out = parse('[String/UUID change made/needed]: N/A')
+        self.assertEqual(out, '<h1 class="string-uuid-change">String/UUID change made/needed</h1><div class="string-uuid-change">N/A</div>')  # not risky
+
+        # Risky test coverage
+        out = parse('[Describe test coverage new/current, TreeHerder]: none')
+        self.assertEqual(out, '<h1 class="describe-test-coverage risky">Describe test coverage new/current, TreeHerder</h1><div class="describe-test-coverage risky">none</div>')
+
         # Full comments
         for text_path in glob.glob('tests/uplift/*.txt'):
             with open(text_path, 'r') as text:
                 out = parse(text.read())
             html_path = text_path[:-4] + '.html'
-
             with open(html_path, 'r') as html:
                 self.assertEqual(out, html.read())
 
