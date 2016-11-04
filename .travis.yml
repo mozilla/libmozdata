@@ -11,13 +11,11 @@ before_install:
        sudo apt-get install -qq python-numpy python-scipy ;
     fi
 install:
+  - $PIP install --upgrade pip
   - $PIP install "setuptools>=28.6.1"
   - $PIP install -r requirements.txt
   - $PIP install -r requirements-spikes.txt
   - $PIP install -r test-requirements.txt
-  - if [ "${PYSUF}" == "2.7" ]; then
-       $PIP install -r requirements-mercurial.txt ;
-    fi
 script:
   - flake8 .
   - coverage run --source=libmozdata -m unittest discover tests/
