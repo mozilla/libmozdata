@@ -44,9 +44,9 @@ def short_name_match(short_name, real_name, email, exact_matching=True):
                (short_name == email[email.index('@') + 1:email.rindex('.')])
 
 
-def reviewer_match(short_name, bugzilla_names, cc_list):
+def reviewer_match(short_name, bugzilla_reviewers, cc_list):
     if short_name in reviewer_cache:
-        if reviewer_cache[short_name] not in bugzilla_names:
+        if reviewer_cache[short_name] not in bugzilla_reviewers:
             warnings.warn('Reviewer ' + reviewer_cache[short_name] + ' is not in the list of reviewers on Bugzilla.', stacklevel=3)
 
         return reviewer_cache[short_name]
@@ -55,7 +55,7 @@ def reviewer_match(short_name, bugzilla_names, cc_list):
     bugzilla_users = []
 
     # Check if we can find the reviewer in the list of reviewers from the bug.
-    for bugzilla_name in bugzilla_names:
+    for bugzilla_name in bugzilla_reviewers:
         if bugzilla_name.startswith(short_name):
             found.add(bugzilla_name)
 
@@ -71,7 +71,7 @@ def reviewer_match(short_name, bugzilla_names, cc_list):
         INCLUDE_FIELDS = ['email', 'real_name']
 
         BugzillaUser(search_strings='match=' + short_name + '&include_fields=' + ','.join(INCLUDE_FIELDS), user_handler=user_handler).wait()
-        for bugzilla_name in bugzilla_names:
+        for bugzilla_name in bugzilla_reviewers:
             BugzillaUser(bugzilla_name, include_fields=INCLUDE_FIELDS, user_handler=user_handler).wait()
 
         found |= set([user['email'] for user in bugzilla_users if short_name_match(short_name, user['real_name'], user['email'])])
@@ -88,7 +88,7 @@ def reviewer_match(short_name, bugzilla_names, cc_list):
         return None
 
     for elem in found:
-        if elem not in bugzilla_names:
+        if elem not in bugzilla_reviewers:
             warnings.warn('Reviewer ' + elem + ' is not in the list of reviewers on Bugzilla.', stacklevel=3)
 
     assert len(found) <= 1, 'Too many matching reviewers (' + ', '.join(found) + ') found for ' + short_name
@@ -98,14 +98,14 @@ def reviewer_match(short_name, bugzilla_names, cc_list):
     return reviewer_cache[short_name]
 
 
-def author_match(author_mercurial, author_real_name, bugzilla_names, cc_list):
-    if author_mercurial in bugzilla_names:
+def author_match(author_mercurial, author_real_name, bugzilla_authors, cc_list):
+    if author_mercurial in bugzilla_authors:
         return set([author_mercurial])
 
     found = set()
 
-    if len(bugzilla_names) == 1:
-        found.add(list(bugzilla_names)[0])
+    if len(bugzilla_authors) == 1:
+        found.add(list(bugzilla_authors)[0])
 
     # Check in the cc_list, so we don't have to hit Bugzilla.
     for entry in cc_list:
@@ -131,8 +131,12 @@ def author_match(author_mercurial, author_real_name, bugzilla_names, cc_list):
         return set([])
 
     for elem in found:
-        if elem not in bugzilla_names:
+        if elem not in bugzilla_authors:
             warnings.warn('Author ' + elem + ' is not in the list of authors on Bugzilla.', stacklevel=3)
+
+    for elem in found:
+        if author_mercurial == elem:
+            return set([author_mercurial])
 
     assert len(found) <= 1, 'Too many matching authors (' + ', '.join(found) + ') found for ' + author_mercurial
 

@@ -462,6 +462,14 @@ class PatchAnalysisTest(MockTestCase):
         info = patchanalysis.bug_analysis(1234567)
         self.assertEqual(info['in-testsuite'], '')
 
+        info = patchanalysis.bug_analysis(712363)
+        self.assertEqual(info['backout_num'], 0)
+        self.assertIn('e610972755d9', info['patches'])
+        self.assertIn('0bcaac9fadf1', info['patches'])
+        self.assertIn('efae575a79e4', info['patches'])
+        self.assertIn('9576aeb57bd4', info['patches'])
+        self.assertIn('d9eab22ce37a', info['patches'])
+
     @responses.activate
     def test_uplift_info(self):
         info = patchanalysis.uplift_info(909494, 'release')
