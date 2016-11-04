@@ -29,7 +29,6 @@ setup(
     install_requires=load_requirements('requirements.txt'),
     extras_require={
         'spikes': load_requirements('requirements-spikes.txt'),
-        ':python_version < "3.0"': load_requirements('requirements-mercurial.txt')
     },
     packages=find_packages(exclude=['*.tests', '*.tests.*', 'tests.*', 'tests']),
     include_package_data=True,
