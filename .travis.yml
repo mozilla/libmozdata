@@ -3,8 +3,13 @@ python:
   - "2.7"
   - "3.5"
 before_install:
-  - sudo apt-get install -qq python-numpy python-scipy python3-numpy python3-scipy
+  - if [[ ${TRAVIS_PYTHON_VERSION%%.*} == '3' ]]; then
+       sudo apt-get install -qq python3-numpy python3-scipy ;
+    else
+       sudo apt-get install -qq python-numpy python-scipy ;
+    fi
 install:
+  - pip install --upgrade pip
   - pip install -r requirements.txt
   - pip install -r requirements-spikes.txt
   - pip install -r test-requirements.txt
