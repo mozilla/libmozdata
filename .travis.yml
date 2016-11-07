@@ -1,4 +1,6 @@
 language: python
+  - "2.7"
+  - "3.5"
 before_install:
   - if [[ ${TRAVIS_PYTHON_VERSION%%.*} == '3' ]]; then
        sudo apt-get install -qq python3-numpy python3-scipy ;
@@ -14,7 +16,7 @@ install:
 script:
   - flake8 .
   - coverage run --source=libmozdata -m unittest discover tests/
-  - $PYTHON setup.py sdist
+  - python setup.py sdist
   - pip install dist/libmozdata-$(cat VERSION).tar.gz
 after_success:
   - bash <(curl -s https://codecov.io/bash)
