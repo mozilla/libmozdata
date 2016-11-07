@@ -13,6 +13,8 @@ from libmozdata.socorro import Socorro
 from libmozdata.hgmozilla import Mercurial
 from libmozdata import patchanalysis
 from libmozdata import utils
+from datetime import datetime
+import pytz
 from tests.auto_mock import MockTestCase
 import responses
 
@@ -83,6 +85,11 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(len(info['patches']), 1)
         self.assertEqual(info['patches']['1584ba8c1b86']['source'], 'mercurial')
         self.assertEqual(info['patches']['1584ba8c1b86']['url'], 'https://hg.mozilla.org/mozilla-central/rev/1584ba8c1b86')
+        self.assertEqual(info['landings']['nightly'], datetime(2010, 4, 5, 23, 12, 52, tzinfo=pytz.UTC))
+        self.assertIsNone(info['landings']['release'])
+        self.assertIsNone(info['landings']['beta'])
+        self.assertIsNone(info['landings']['aurora'])
+        self.assertIsNone(info['landings']['esr'])
 
         bug = {}
 
@@ -121,6 +128,11 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(len(info['patches']), 1)
         self.assertEqual(info['patches']['8641afbd20e6']['source'], 'mercurial')
         self.assertEqual(info['patches']['8641afbd20e6']['url'], 'https://hg.mozilla.org/mozilla-central/rev/8641afbd20e6')
+        self.assertEqual(info['landings']['nightly'], datetime(2011, 5, 26, 6, 40, 11, tzinfo=pytz.UTC))
+        self.assertIsNone(info['landings']['release'])
+        self.assertIsNone(info['landings']['beta'])
+        self.assertIsNone(info['landings']['aurora'])
+        self.assertIsNone(info['landings']['esr'])
 
         # Backed out once (when it was on inbound) with changesets from anther bug.
         # Author of the patch uses a different email in Bugzilla and Mercurial.
@@ -145,6 +157,11 @@ class PatchAnalysisTest(MockTestCase):
             self.assertEqual(len(info['patches']), 1)
             self.assertEqual(info['patches']['154b951082e3']['source'], 'mercurial')
             self.assertEqual(info['patches']['154b951082e3']['url'], 'https://hg.mozilla.org/mozilla-central/rev/154b951082e3')
+            self.assertEqual(info['landings']['nightly'], datetime(2016, 5, 19, 16, 54, 30, tzinfo=pytz.UTC))
+            self.assertIsNone(info['landings']['release'])
+            self.assertIsNone(info['landings']['beta'])
+            self.assertIsNone(info['landings']['aurora'])
+            self.assertIsNone(info['landings']['esr'])
 
         # Backed out from central and relanded on central.
         # One of the reviewers email doesn't start with his nick and he isn't in CC list.
@@ -178,6 +195,11 @@ class PatchAnalysisTest(MockTestCase):
         self.assertIn(info['patches']['b9d0984bdd95']['url'], 'https://hg.mozilla.org/mozilla-central/rev/b9d0984bdd95')
         self.assertEqual(info['patches']['f5578fdc50ef']['source'], 'mercurial')
         self.assertIn(info['patches']['f5578fdc50ef']['url'], 'https://hg.mozilla.org/mozilla-central/rev/f5578fdc50ef')
+        self.assertEqual(info['landings']['nightly'], datetime(2011, 12, 11, 4, 15, 3, tzinfo=pytz.UTC))
+        self.assertIsNone(info['landings']['release'])
+        self.assertIsNone(info['landings']['beta'])
+        self.assertIsNone(info['landings']['aurora'])
+        self.assertIsNone(info['landings']['esr'])
 
         # Changeset with multiple unrelated backouts (on fx-team).
         # Landing comment with long revision (Entire hash instead of first 12 characters).
@@ -188,6 +210,11 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['comments'], 109)
         self.assertEqual(info['r-ed_patches'], 0)
         self.assertEqualPatches(info['patches'], 384458)
+        self.assertEqual(info['landings']['nightly'], datetime(2016, 6, 10, 13, 42, 45, tzinfo=pytz.UTC))
+        self.assertIsNone(info['landings']['release'])
+        self.assertIsNone(info['landings']['beta'])
+        self.assertIsNone(info['landings']['aurora'])
+        self.assertIsNone(info['landings']['esr'])
 
         # Custom backout (no reference to revision).
         # Author has a different name on Bugzilla and Mercurial and they don't use the email on Mercurial.
@@ -212,6 +239,11 @@ class PatchAnalysisTest(MockTestCase):
             self.assertEqual(info['comments'], 24)
             self.assertEqual(info['r-ed_patches'], 0)
             self.assertEqualPatches(info['patches'], 1276850)
+            self.assertEqual(info['landings']['nightly'], datetime(2016, 6, 6, 15, 4, 18, tzinfo=pytz.UTC))
+            self.assertIsNone(info['landings']['release'])
+            self.assertIsNone(info['landings']['beta'])
+            self.assertIsNone(info['landings']['aurora'])
+            self.assertIsNone(info['landings']['esr'])
 
         # No landed patches.
         # The author of the patch changed his email on Bugzilla, so past contributions
@@ -400,7 +432,13 @@ class PatchAnalysisTest(MockTestCase):
         info = patchanalysis.bug_analysis(1277522)
 
         # Author in mercurial doesn't have email
+        # ESR landing too
         info = patchanalysis.bug_analysis(1254980)
+        self.assertEqual(info['landings']['nightly'], datetime(2016, 3, 26, 2, 12, 27, tzinfo=pytz.UTC))
+        self.assertEqual(info['landings']['aurora'], datetime(2016, 3, 28, 23, 24, 6, tzinfo=pytz.UTC))
+        self.assertEqual(info['landings']['beta'], datetime(2016, 3, 31, 19, 48, 30, tzinfo=pytz.UTC))
+        self.assertEqual(info['landings']['release'], datetime(2016, 4, 6, 19, 35, 18, tzinfo=pytz.UTC))
+        self.assertEqual(info['landings']['esr'], datetime(2016, 4, 7, 18, 41, 3, tzinfo=pytz.UTC))
 
         # Check uplift request
         info = patchanalysis.bug_analysis(1230065)
@@ -423,6 +461,14 @@ class PatchAnalysisTest(MockTestCase):
         # in-testsuite not set
         info = patchanalysis.bug_analysis(1234567)
         self.assertEqual(info['in-testsuite'], '')
+
+        info = patchanalysis.bug_analysis(712363)
+        self.assertEqual(info['backout_num'], 0)
+        self.assertIn('e610972755d9', info['patches'])
+        self.assertIn('0bcaac9fadf1', info['patches'])
+        self.assertIn('efae575a79e4', info['patches'])
+        self.assertIn('9576aeb57bd4', info['patches'])
+        self.assertIn('d9eab22ce37a', info['patches'])
 
     @responses.activate
     def test_uplift_info(self):

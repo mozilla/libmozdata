@@ -296,6 +296,12 @@ class Bugzilla(Connection):
                 landing_patterns += [(re.compile('://hg.mozilla.org/integration/mozilla-inbound/rev/([0-9a-z]+)'), 'inbound')]
             elif channel in ['release', 'beta', 'aurora']:
                 landing_patterns += [(re.compile('://hg.mozilla.org/releases/mozilla-' + channel + '/rev/([0-9a-z]+)'), channel)]
+            elif channel == 'esr':
+                # Use last esr version
+                versions = libmozdata.versions.get(True)
+                if 'esr' not in versions:
+                    raise Exception('Missing esr version')
+                landing_patterns += [(re.compile('://hg.mozilla.org/releases/mozilla-esr' + str(versions['esr']) + '/rev/([0-9a-z]+)'), channel)]
             elif channel == 'fx-team':
                 landing_patterns += [(re.compile('://hg.mozilla.org/integration/fx-team/rev/([0-9a-z]+)'), 'inbound')]
             else:

@@ -44,9 +44,9 @@ def short_name_match(short_name, real_name, email, exact_matching=True):
                (short_name == email[email.index('@') + 1:email.rindex('.')])
 
 
-def reviewer_match(short_name, bugzilla_names, cc_list):
+def reviewer_match(short_name, bugzilla_reviewers, cc_list):
     if short_name in reviewer_cache:
-        if reviewer_cache[short_name] not in bugzilla_names:
+        if reviewer_cache[short_name] not in bugzilla_reviewers:
             warnings.warn('Reviewer ' + reviewer_cache[short_name] + ' is not in the list of reviewers on Bugzilla.', stacklevel=3)
 
         return reviewer_cache[short_name]
@@ -55,7 +55,7 @@ def reviewer_match(short_name, bugzilla_names, cc_list):
     bugzilla_users = []
 
     # Check if we can find the reviewer in the list of reviewers from the bug.
-    for bugzilla_name in bugzilla_names:
+    for bugzilla_name in bugzilla_reviewers:
         if bugzilla_name.startswith(short_name):
             found.add(bugzilla_name)
 
@@ -71,7 +71,7 @@ def reviewer_match(short_name, bugzilla_names, cc_list):
         INCLUDE_FIELDS = ['email', 'real_name']
 
         BugzillaUser(search_strings='match=' + short_name + '&include_fields=' + ','.join(INCLUDE_FIELDS), user_handler=user_handler).wait()
-        for bugzilla_name in bugzilla_names:
+        for bugzilla_name in bugzilla_reviewers:
             BugzillaUser(bugzilla_name, include_fields=INCLUDE_FIELDS, user_handler=user_handler).wait()
 
         found |= set([user['email'] for user in bugzilla_users if short_name_match(short_name, user['real_name'], user['email'])])
@@ -88,7 +88,7 @@ def reviewer_match(short_name, bugzilla_names, cc_list):
         return None
 
     for elem in found:
-        if elem not in bugzilla_names:
+        if elem not in bugzilla_reviewers:
             warnings.warn('Reviewer ' + elem + ' is not in the list of reviewers on Bugzilla.', stacklevel=3)
 
     assert len(found) <= 1, 'Too many matching reviewers (' + ', '.join(found) + ') found for ' + short_name
@@ -98,14 +98,14 @@ def reviewer_match(short_name, bugzilla_names, cc_list):
     return reviewer_cache[short_name]
 
 
-def author_match(author_mercurial, author_real_name, bugzilla_names, cc_list):
-    if author_mercurial in bugzilla_names:
+def author_match(author_mercurial, author_real_name, bugzilla_authors, cc_list):
+    if author_mercurial in bugzilla_authors:
         return set([author_mercurial])
 
     found = set()
 
-    if len(bugzilla_names) == 1:
-        found.add(list(bugzilla_names)[0])
+    if len(bugzilla_authors) == 1:
+        found.add(list(bugzilla_authors)[0])
 
     # Check in the cc_list, so we don't have to hit Bugzilla.
     for entry in cc_list:
@@ -131,8 +131,12 @@ def author_match(author_mercurial, author_real_name, bugzilla_names, cc_list):
         return set([])
 
     for elem in found:
-        if elem not in bugzilla_names:
+        if elem not in bugzilla_authors:
             warnings.warn('Author ' + elem + ' is not in the list of authors on Bugzilla.', stacklevel=3)
+
+    for elem in found:
+        if author_mercurial == elem:
+            return set([author_mercurial])
 
     assert len(found) <= 1, 'Too many matching authors (' + ', '.join(found) + ') found for ' + author_mercurial
 
@@ -563,24 +567,29 @@ def uplift_info(bug, channel):
         if info['uplift_comment'] and info['uplift_author']:
             break
 
-    if uplift_request_date == 0:
-        # No deltas calculations
-        return info
-
-    # Delta between uplift request and next merge date.
-    release_date = versions.getCloserRelease(uplift_request_date)[1]
-    info['release_delta'] = release_date - uplift_request_date
-    assert info['release_delta'] > timedelta()
+    # Landing dates per useful channels
+    channels = ['nightly', 'aurora', 'beta', 'release', 'esr', ]
+    landing_comments = Bugzilla.get_landing_comments(bug['comments'], channels)
+    landings = dict(zip(channels, [None, ] * len(channels)))
+    for c in landing_comments:
+        channel = c['channel']
+        dt = utils.get_date_ymd(c['comment']['time'])
+        if landings[channel] is None or landings[channel] < dt:
+            landings[channel] = dt
+    info['landings'] = landings
 
     # Delta between patch landing on central and uplift request
-    landing_comments = Bugzilla.get_landing_comments(bug['comments'], 'central')
-    if landing_comments:
-        landing_date = utils.get_date_ymd(landing_comments[-1]['comment']['time'])
-        info['landing_delta'] = uplift_request_date - landing_date
-        # Sometimes the request is done earlier than landing on central.
+    landing_nightly = landings.get('nightly')
+    if landing_nightly and uplift_request_date != 0:
+        info['landing_delta'] = uplift_request_date - landing_nightly
+        # Sometimes the request is done earlier than landing on nightly.
         # assert bug_data['landing_delta'] > timedelta()
-    else:
-        info['landing_delta'] = timedelta()
+
+    # Delta between uplift request and next merge date.
+    if uplift_request_date != 0:
+        release_date = versions.getCloserRelease(uplift_request_date)[1]
+        info['release_delta'] = release_date - uplift_request_date
+        assert info['release_delta'] > timedelta()
 
     return info
 
@@ -725,6 +734,7 @@ def parse_uplift_comment(text, bug_id=None):
         'Risks and why',
         'String/UUID change made/needed',
     )
+    no_header = 'no-header'
 
     def _replace_link(pattern, link, output, line):
         replacement = '<a href="{}" target="_blank">{}</a>'.format(link, output)
@@ -745,10 +755,20 @@ def parse_uplift_comment(text, bug_id=None):
             v = _replace_link(r'comment (\d+)', r'{}/show_bug.cgi?id={}#c\1'.format(Bugzilla.URL, bug_id), r'Comment \1', v)
 
         # Add to output structure
+        if h == no_header:
+            key = no_header
+        else:
+            # Build clean key from header
+            parts = re.sub(r'[^\w]+', ' ', h.lower()).split(' ')[:3]
+            key = '-'.join(parts)
         if h not in out:
-            out[h] = []
+            out[key] = {
+                'title': h,
+                'lines': [],
+                'risky': False,
+            }
         if v != '':
-            out[h].append(v)
+            out[key]['lines'].append(v)
 
     # Remove html entities
     html_escape_table = {
@@ -768,7 +788,6 @@ def parse_uplift_comment(text, bug_id=None):
     out = collections.OrderedDict()
 
     # Detect headers
-    no_header = '__NO_HEADER__'
     header = no_header
     for line in lines:
         match = header_regex.match(line)
@@ -780,14 +799,34 @@ def parse_uplift_comment(text, bug_id=None):
             # Add on last header
             _parse_line(header, line)
 
+    def _cleanup_lines(lines):
+        text = re.sub('[^\w]+', ' ', ''.join(lines))
+        return text.lower().strip()
+
+    # Detect risks on specific items
+    if 'risks-and-why' in out:
+        # If risk is tagged as "medium" or "high"
+        cleaned = _cleanup_lines(out['risks-and-why']['lines'])
+        out['risks-and-why']['risky'] = cleaned in ('medium', 'high')
+
+    if 'string-uuid-change' in out:
+        # If the "string/UUID change" is set to anything but "No or None or N/A".
+        cleaned = _cleanup_lines(out['string-uuid-change']['lines'])
+        out['string-uuid-change']['risky'] = cleaned not in ('no', 'none', 'n a')
+
+    if 'describe-test-coverage' in out:
+        # If test coverage question is empty or No or N/A
+        cleaned = _cleanup_lines(out['describe-test-coverage']['lines'])
+        out['describe-test-coverage']['risky'] = cleaned in ('', 'no', 'none', 'n a')
+
     # Build complete html output
     html = ''
-    for header, lines in out.items():
-        if header == no_header:
-            class_name = 'no-header'
-        else:
-            class_name = 'header'
-            html += '<h1>{}</h1>'.format(header)
-        html += '<div class="{}">{}</div>'.format(class_name, '<br />'.join(lines))
+    for key, p in out.items():
+        css_classes = [key, ]
+        if p['risky']:
+            css_classes.append('risky')
+        if key != no_header:
+            html += '<h1 class="{}">{}</h1>'.format(' '.join(css_classes), p['title'])
+        html += '<div class="{}">{}</div>'.format(' '.join(css_classes), '<br />'.join(p['lines']))
 
     return html
