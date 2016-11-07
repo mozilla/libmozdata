@@ -1,26 +1,21 @@
 language: python
-env:
-    # Enable python 2 and python 3 builds
-    - PYTHON=python2.7 PIP=pip2.7 PYSUF='2.7'
-    - PYTHON=python3 PIP=pip3 PYSUF=3
-
 before_install:
-  - if [ "${PYSUF}" == "3" ]; then
+  - if [[ ${TRAVIS_PYTHON_VERSION%%.*} == '3' ]]; then
        sudo apt-get install -qq python3-numpy python3-scipy ;
     else
        sudo apt-get install -qq python-numpy python-scipy ;
     fi
 install:
-  - $PIP install --upgrade pip
-  - $PIP install "setuptools>=28.6.1"
-  - $PIP install -r requirements.txt
-  - $PIP install -r requirements-spikes.txt
-  - $PIP install -r test-requirements.txt
+  - pip install --upgrade pip
+  - pip install "setuptools>=28.6.1"
+  - pip install -r requirements.txt
+  - pip install -r requirements-spikes.txt
+  - pip install -r test-requirements.txt
 script:
   - flake8 .
   - coverage run --source=libmozdata -m unittest discover tests/
   - $PYTHON setup.py sdist
-  - $PIP install dist/libmozdata-$(cat VERSION).tar.gz
+  - pip install dist/libmozdata-$(cat VERSION).tar.gz
 after_success:
   - bash <(curl -s https://codecov.io/bash)
-cache: $PIP
+cache: pip
