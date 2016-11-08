@@ -515,6 +515,8 @@ class Bugzilla(Connection):
         header = self.get_header()
         # TODO: remove next line after the fix of bug 1283392
         bugids = self.__get_no_private_ids()
+        # always have the bugids in same order (useful to mock)
+        bugids = sorted(bugids)
         for _bugids in Connection.chunks(bugids):
             first = _bugids[0]
             remainder = _bugids[1:] if len(_bugids) >= 2 else []
@@ -549,6 +551,8 @@ class Bugzilla(Connection):
         header = self.get_header()
         # TODO: remove next line after the fix of bug 1283392
         bugids = self.__get_no_private_ids()
+        # always have the bugids in same order (useful to mock)
+        bugids = sorted(bugids)
         for _bugids in Connection.chunks(bugids):
             first = _bugids[0]
             remainder = _bugids[1:] if len(_bugids) >= 2 else []
