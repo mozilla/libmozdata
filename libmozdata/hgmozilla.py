@@ -255,6 +255,25 @@ class HGMozilla(object):
         self.ui = ui if ui else mercurial.ui.ui()
         self.repo = hg.repository(self.ui, path)
         self.haspushlog = hasattr(self.repo, 'pushlog')
+        try:
+            self.hgmo = mercurial.extensions.find('hgmo')
+        except:
+            self.hgmo = None
+
+    def __addpushdate(self, d, ctx):
+        if self.haspushlog:
+            pushinfo = self.repo.pushlog.pushfromchangeset(ctx)
+            if pushinfo:
+                # pushdate is a 2-uple with timestamp (UTC) and the timezone of the pusher.
+                pushdate = mercurial.util.makedate(pushinfo.when)
+                d['pushdate'] = list(pushdate)
+                return
+
+        d['pushdate'] = ''
+
+    def __addmetadata(self, d, ctx, onlycheap=False):
+        if self.hgmo:
+            self.hgmo.addmetadata(self.repo, ctx, d, onlycheap=onlycheap)
 
     def get_filelog(self, paths, rev='tip'):
         rev = rev.encode('ascii')
@@ -274,13 +293,20 @@ class HGMozilla(object):
                     _entry['date'] = list(_fctx.date())
                     _entry['desc'] = _fctx.description()
                     _entry['node'] = mercurial.node.hex(_fctx.node())
-                    if self.haspushlog:
-                        pushinfo = self.repo.pushlog.pushfromchangeset(_fctx)
-                        if pushinfo:
-                            # pushdate is a 2-uple with timestamp (UTC) and the timezone of the pusher.
-                            pushdate = mercurial.util.makedate(pushinfo.when)
-                            _entry['pushdate'] = list(pushdate)
+                    self.__addpushdate(_entry, _fctx)
                 entries.reverse()
                 data[path] = entries
+
+        return data
+
+    def get_revision(self, node='tip'):
+        node = node.encode('ascii')
+        ctx = self.repo[node]
+        data = {'author': ctx.user(),
+                'desc': ctx.description(),
+                'date': list(ctx.date()),
+                'node': mercurial.node.hex(ctx.node())}
+        self.__addpushdate(data, ctx)
+        self.__addmetadata(data, ctx)
 
         return data
