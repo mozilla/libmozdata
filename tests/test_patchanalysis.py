@@ -207,7 +207,7 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['backout_num'], 1)
         self.assertEqual(info['blocks'], 6)
         self.assertEqual(info['depends_on'], 60)
-        self.assertEqual(info['comments'], 110)
+        self.assertEqual(info['comments'], 109)
         self.assertEqual(info['r-ed_patches'], 0)
         self.assertEqualPatches(info['patches'], 384458)
         self.assertEqual(info['landings']['nightly'], datetime(2016, 6, 10, 13, 42, 45, tzinfo=pytz.UTC))
@@ -225,7 +225,7 @@ class PatchAnalysisTest(MockTestCase):
             self.assertEqual(info['backout_num'], 2)
             self.assertEqual(info['blocks'], 4)
             self.assertEqual(info['depends_on'], 1)
-            self.assertEqual(info['comments'], 43)
+            self.assertEqual(info['comments'], 42)
             self.assertEqual(info['r-ed_patches'], 0)
             self.assertEqualPatches(info['patches'], 1220307)
 
