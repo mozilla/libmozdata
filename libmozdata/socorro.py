@@ -5,10 +5,6 @@
 import six
 import functools
 from operator import itemgetter
-try:
-    from urllib.parse import urlparse
-except ImportError:
-    from urlparse import urlparse
 from .connection import (Connection, Query)
 from . import utils
 from datetime import timedelta
