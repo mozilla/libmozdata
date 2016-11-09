@@ -5,10 +5,6 @@
 import six
 import functools
 from operator import itemgetter
-try:
-    from urllib.parse import urlparse
-except ImportError:
-    from urlparse import urlparse
 from .connection import (Connection, Query)
 from . import utils
 from datetime import timedelta
@@ -728,95 +724,6 @@ class ADI(Socorro):
                     'platforms': platforms if platforms else Platforms.get_cached_all()},
             handler=ADI.default_handler,
             handlerdata=data).wait()
-
-        return data
-
-
-class SignatureURLs(Socorro):
-    """SignatureURLs: https://crash-stats.mozilla.com/api/#SignatureURLs
-    """
-
-    URL = Socorro.API_URL + '/SignatureURLs'
-
-    def __init__(self, params=None, handler=None, handlerdata=None, queries=None, **kwargs):
-        """Constructor
-
-        Args:
-            params (Optional[dict]): the params for the query
-            handler (Optional[function]): handler to use with the result of the query
-            handlerdata (Optional): data used in second argument of the handler
-            queries (Optional[List[Query]]): queries to execute
-        """
-        if queries:
-            super(SignatureURLs, self).__init__(queries, **kwargs)
-        else:
-            super(SignatureURLs, self).__init__(Query(SignatureURLs.URL, params, handler, handlerdata), **kwargs)
-
-    @staticmethod
-    def get_default_handler(trunc):
-        def handler(json, data):
-            """Default handler
-
-            Args:
-                json (dict): json
-                data (list): list to append the urls
-            """
-            if json['total']:
-                for hit in json['hits']:
-                    if 'url' in hit:
-                        url = hit['url']
-                        if trunc:
-                            url = urlparse(url).netloc
-                        count = hit['crash_count']
-                        data[url] = data[url] + count if url in data else count
-
-        return handler
-
-    @staticmethod
-    def get_urls(signatures, version=None, channel=None, duration=7, end_date='today', product='Firefox', trunc=True):
-        """Get signatures urls
-
-        Args:
-            signatures (List[str]): the signatures
-            version (Optional[str]): the version
-            channel (Optional[str]): 'nightly', 'aurora', 'beta' or 'release'
-            duration (Optional[int]): the duration
-            end_date (Optional[str]): the last date
-            trunc (Optional[bool]): if True, then the url are truncated to their first part (netloc)
-                                    e.g. http://foo.com/bar/blah/blah.html will be truncated in foo.com
-
-        Returns:
-            dict: the URLs for each signature
-        """
-        if not version:
-            version = ProductVersions.get_last_version(channel)
-            if not version:
-                return None
-
-        data = {}
-        start_date = utils.get_date(end_date, duration)
-        end_date = utils.get_date(end_date)
-        __base = {'products': product,
-                  'versions': '%s:%s' % (product, version),
-                  'start_date': start_date,
-                  'end_date': end_date,
-                  'signature': None}
-        handler = SignatureURLs.get_default_handler(trunc)
-
-        if isinstance(signatures, six.string_types):
-            __base['signature'] = signatures
-            _list = []
-            data[signatures] = _list
-            SignatureURLs(params=__base, handler=handler, handlerdata=_list).wait()
-        else:
-            queries = []
-            for signature in signatures:
-                cparams = __base.copy()
-                cparams['signature'] = signature
-                _list = []
-                data[signature] = _list
-                queries.append(Query(SignatureURLs.URL, cparams, handler, _list))
-            SignatureURLs(queries=queries).wait()
 
         return data
 
