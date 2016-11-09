@@ -9,7 +9,6 @@ from libmozdata.connection import Query
 import os
 import tempfile
 import time
-import shutil
 
 if sys.version_info < (3, 0):  # NOQA
     import mercurial  # NOQA
@@ -23,7 +22,6 @@ class HGMozillaTest(unittest.TestCase):
         commands.clone(ui, vct, dest=os.path.join(dest, 'vct.hg'))
 
         ui.setconfig('extensions', 'pushlog', os.path.join(dest, 'vct.hg/hgext/pushlog'))
-        ui.setconfig('extensions', 'hgmo', os.path.join(dest, 'vct.hg/hgext/hgmo'))
 
         srcdir = os.path.join(dest, 'test')
         destdir = os.path.join(dest, 'testwork')
@@ -43,17 +41,21 @@ class HGMozillaTest(unittest.TestCase):
                 In.write(str(i))
             with open(myfile2, 'a') as In:
                 In.write(str(i))
-            if i == 4:
-                commands.commit(ui, repo, myfile1, myfile2, message='bug %d -- message, r=hwolowitz, r=affowler' % i, user='scooper@tbbt.com', addremove=True)
-            else:
-                commands.commit(ui, repo, myfile1, myfile2, message='message%d' % i, user='scooper@tbbt.com', addremove=True)
+            commands.commit(ui, repo, myfile1, myfile2, message='message' + str(i), user='scooper@tbbt.com', addremove=True)
             commands.push(ui, repo, dest=srcdir)
             time.sleep(1.01)
 
         return srcdir
 
-    def __getfilelog(self, hgmo):
+    def test_getfilelog(self):
+        if sys.version_info >= (3, 0):
+            return
+
+        tmpdst = tempfile.mkdtemp()
+        ui = mercurial.ui.ui().copy()
+        hgmo = hgmozilla.HGMozilla(self.create_repo(tmpdst, ui), ui=ui)
         data = hgmo.get_filelog(['myfile1', 'myfile2'])
+
         self.assertIn('myfile1', data)
         self.assertIn('myfile2', data)
         self.assertEqual(len(data['myfile1']), 5)
@@ -71,33 +73,6 @@ class HGMozillaTest(unittest.TestCase):
         self.assertIsInstance(data['myfile2'][3]['date'], list)
         self.assertEqual(len(data['myfile2'][3]['date']), 2)
         self.assertIsInstance(data['myfile2'][3]['node'], str)
-
-    def __getrevision(self, hgmo):
-        data = hgmo.get_revision(node='tip')
-        self.assertEqual(data['author'], 'scooper@tbbt.com')
-        self.assertEqual(data['desc'], 'bug 4 -- message, r=hwolowitz, r=affowler')
-        self.assertIsInstance(data['bugs'], list)
-        self.assertEqual(len(data['bugs']), 1)
-        self.assertEqual(data['bugs'][0]['no'], '4')
-        self.assertEqual(data['bugs'][0]['url'], 'https://bugzilla.mozilla.org/show_bug.cgi?id=4')
-
-        self.assertIsInstance(data['reviewers'], list)
-        self.assertEqual(len(data['reviewers']), 2)
-        self.assertEqual(data['reviewers'][0]['name'], 'hwolowitz')
-        self.assertEqual(data['reviewers'][1]['name'], 'affowler')
-
-    def test(self):
-        if sys.version_info >= (3, 0):
-            return
-
-        try:
-            tmpdst = tempfile.mkdtemp()
-            ui = mercurial.ui.ui().copy()
-            hgmo = hgmozilla.HGMozilla(self.create_repo(tmpdst, ui), ui=ui)
-            self.__getfilelog(hgmo)
-            self.__getrevision(hgmo)
-        finally:
-            shutil.rmtree(tmpdst)
 
 
 class RevisionTest(unittest.TestCase):
