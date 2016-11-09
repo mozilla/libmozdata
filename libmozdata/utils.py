@@ -310,7 +310,7 @@ def get_x_fwed_for_str(s):
 
 
 def get_params_for_url(params):
-    return '?' + '&'.join([quote(name) + '=' + quote(str(value)) if not isinstance(value, list) else '&'.join([quote(name) + '=' + quote(str(intValue)) for intValue in value]) for name, value in params.items() if value is not None]) if params else ''
+    return '?' + '&'.join([quote(name) + '=' + quote(str(value)) if not isinstance(value, list) else '&'.join([quote(name) + '=' + quote(str(intValue)) for intValue in value]) for name, value in sorted(params.items(), key=lambda p: p[0]) if value is not None]) if params else ''
 
 
 def get_url(url):
