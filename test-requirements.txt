@@ -1,3 +1,5 @@
 coverage
 flake8
 responses
+mozbuild>=0.2; python_version < '3.0'
+
