@@ -98,6 +98,7 @@ class ADITest(unittest.TestCase):
 
 class SignatureURLsTest(unittest.TestCase):
 
+    @unittest.skip('SignatureURLs no more available on Socorro')
     def test_signature(self):
         signature = []
         socorro.SuperSearch(params={'product': 'Firefox',

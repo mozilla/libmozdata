@@ -441,7 +441,7 @@ class Bugzilla(Connection):
         """Get the bugs
         """
         header = self.get_header()
-        for bugids in Connection.chunks(self.bugids):
+        for bugids in Connection.chunks(sorted(self.bugids)):
             self.bugs_results.append(self.session.get(Bugzilla.API_URL,
                                                       params={'id': ','.join(map(str, bugids)),
                                                               'include_fields': self.include_fields},
@@ -515,7 +515,7 @@ class Bugzilla(Connection):
         header = self.get_header()
         # TODO: remove next line after the fix of bug 1283392
         bugids = self.__get_no_private_ids()
-        for _bugids in Connection.chunks(bugids):
+        for _bugids in Connection.chunks(sorted(bugids)):
             first = _bugids[0]
             remainder = _bugids[1:] if len(_bugids) >= 2 else []
             self.history_results.append(self.session.get(url % first,
@@ -549,7 +549,7 @@ class Bugzilla(Connection):
         header = self.get_header()
         # TODO: remove next line after the fix of bug 1283392
         bugids = self.__get_no_private_ids()
-        for _bugids in Connection.chunks(bugids):
+        for _bugids in Connection.chunks(sorted(bugids)):
             first = _bugids[0]
             remainder = _bugids[1:] if len(_bugids) >= 2 else []
             self.comment_results.append(self.session.get(url % first,
