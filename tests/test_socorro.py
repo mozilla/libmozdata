@@ -96,23 +96,6 @@ class ADITest(unittest.TestCase):
         self.assertIsNotNone(adis)
 
 
-class SignatureURLsTest(unittest.TestCase):
-
-    @unittest.skip('SignatureURLs no more available on Socorro')
-    def test_signature(self):
-        signature = []
-        socorro.SuperSearch(params={'product': 'Firefox',
-                                    'signature': '~OOM',
-                                    '_results_number': 0,
-                                    '_facets': ['signature']},
-                            handler=lambda j, d: d.extend([j['facets']['signature'][0]['term'], j['facets']['signature'][1]['term']]),
-                            handlerdata=signature).wait()
-
-        self.assertEqual(len(signature), 2)
-        urls = socorro.SignatureURLs.get_urls(signature, channel='nightly')
-        self.assertIsNotNone(urls)
-
-
 class BugsTest(unittest.TestCase):
 
     def test_bugs(self):
