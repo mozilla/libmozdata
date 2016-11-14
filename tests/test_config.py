@@ -5,6 +5,8 @@
 import unittest
 import sys
 import os
+import shutil
+import tempfile
 try:
     from configparser import ConfigParser
 except ImportError:
@@ -81,6 +83,40 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual(config.get('Section2', 'Option', 'Default'), 'Value3')
         self.assertIsNone(config.get('Section', 'Option3'))
         self.assertEqual(config.get('Section', 'Option3', 'Default'), 'Default')
+
+    def test_config_exists_in_env(self):
+        try:
+            senv = os.environ.get('MOZDATA_INI')
+            tmp = tempfile.mkdtemp()
+            path = os.path.join(tmp, 'mozdata.ini')
+            with open(path, 'w') as f:
+                custom_conf = ConfigParser()
+                custom_conf.add_section('Section env')
+                custom_conf.set('Section env', 'Option', 'Value')
+                custom_conf.set('Section env', 'Option2', 'Value2')
+                custom_conf.add_section('Section2')
+                custom_conf.set('Section2', 'Option', 'Value3')
+                custom_conf.write(f)
+
+            os.environ['MOZDATA_INI'] = path
+
+            from libmozdata import config
+
+            self.assertEqual(config.get('Section env', 'Option'), 'Value')
+            self.assertEqual(config.get('Section env', 'Option', 'Default'), 'Value')
+            self.assertEqual(config.get('Section env', 'Option2'), 'Value2')
+            self.assertEqual(config.get('Section env', 'Option2', 'Default'), 'Value2')
+            self.assertEqual(config.get('Section2', 'Option'), 'Value3')
+            self.assertEqual(config.get('Section2', 'Option', 'Default'), 'Value3')
+            self.assertIsNone(config.get('Section env', 'Option3'))
+            self.assertEqual(config.get('Section env', 'Option3', 'Default'), 'Default')
+        finally:
+            if senv is None:
+                os.environ.pop('MOZDATA_INI')
+            else:
+                os.environ['MOZDATA_INI'] = senv
+
+            shutil.rmtree(tmp)
 
     def test_config_get_with_type(self):
         with open('mozdata.ini', 'w') as f:

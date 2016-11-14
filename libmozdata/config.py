@@ -26,7 +26,9 @@ class ConfigIni(Config):
         self.path = path
 
     def get_default_paths(self):
-        return [os.path.join(os.getcwd(), 'mozdata.ini'), os.path.expanduser('~/.mozdata.ini')]
+        paths = [os.path.join(os.getcwd(), 'mozdata.ini'), os.path.expanduser('~/.mozdata.ini')]
+        env = os.environ.get('MOZDATA_INI')
+        return [os.path.expanduser(env)] + paths if env else paths
 
     def get(self, section, option, default=None, type=str):
         if not self.config.has_option(section, option):
