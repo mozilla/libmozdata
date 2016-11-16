@@ -206,7 +206,7 @@ class PatchAnalysisTest(MockTestCase):
         info = patchanalysis.bug_analysis(384458)
         self.assertEqual(info['backout_num'], 1)
         self.assertEqual(info['blocks'], 6)
-        self.assertEqual(info['depends_on'], 60)
+        self.assertEqual(info['depends_on'], 64)
         self.assertEqual(info['comments'], 110)
         self.assertEqual(info['r-ed_patches'], 0)
         self.assertEqualPatches(info['patches'], 384458)

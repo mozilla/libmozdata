@@ -82,7 +82,7 @@ class MockTestCase(unittest.TestCase):
         directory = os.path.join(MOCKS_DIR, *parts)
 
         # Build sorted query filename
-        query = sorted(parse_qsl(out.query), key=lambda x: x[0])
+        query = sorted(parse_qsl(out.query))
         query = ['{}={}'.format(k, v.replace('/', '_')) for k, v in query]
         query_str = '_'.join(query)
 

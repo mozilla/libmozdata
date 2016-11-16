@@ -21,7 +21,7 @@ class CrashInfoTest(MockTestCase):
 
         ci = CrashInfo(path).get()
 
-        self.assertEqual(ci[path], 148761)
+        self.assertEqual(ci[path], 147022)
 
     @responses.activate
     def test_multiple(self):
@@ -30,8 +30,8 @@ class CrashInfoTest(MockTestCase):
 
         ci = CrashInfo([path1, path2]).get()
 
-        self.assertEqual(ci[path1], 148761)
-        self.assertEqual(ci[path2], 11553)
+        self.assertEqual(ci[path1], 147022)
+        self.assertEqual(ci[path2], 10322)
 
     @responses.activate
     def test_not_lower(self):
