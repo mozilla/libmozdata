@@ -16,6 +16,7 @@ def load_requirements(filename):
     with open(os.path.join(here, filename)) as f:
         return f.read().strip().split('\n')
 
+
 with open(os.path.join(here, 'VERSION')) as f:
     version = f.read().strip()
 

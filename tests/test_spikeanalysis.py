@@ -136,5 +136,6 @@ class SpikeAnalysisTest(MockTestCase):
         self.assertEqual(up, expected_up)
         self.assertEqual(down, expected_down)
 
+
 if __name__ == '__main__':
     unittest.main()

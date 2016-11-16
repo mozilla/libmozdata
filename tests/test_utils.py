@@ -148,5 +148,6 @@ class UtilsTest(unittest.TestCase):
         params = {'a': 1, 'abc': 2, 'efgh': 3, 'bcd': [4, 5, 6]}
         self.assertEqual(utils.get_params_for_url(params), '?a=1&abc=2&bcd=4&bcd=5&bcd=6&efgh=3')
 
+
 if __name__ == '__main__':
     unittest.main()

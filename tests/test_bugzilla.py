@@ -692,5 +692,6 @@ class BugLinksTest(unittest.TestCase):
         self.assertEqual(bugzilla.Bugzilla.get_links(['12345', '123456']), ['https://bugzil.la/12345', 'https://bugzil.la/123456'])
         self.assertEqual(bugzilla.Bugzilla.get_links([12345, 123456]), ['https://bugzil.la/12345', 'https://bugzil.la/123456'])
 
+
 if __name__ == '__main__':
     unittest.main()
