@@ -360,7 +360,7 @@ def have_crashes_stopped(crashes_info, all_versions, product='Firefox', threshol
     socorro.SuperSearch(queries=queries).wait()
 
 
-def analyze_bugs(bugs, min_date=None, thresholds=None, minimal_releases=None, minimal_days=None):
+def analyze_bugs(bugs, base_versions=None, min_date=None, thresholds=None, minimal_releases=None, minimal_days=None):
     if thresholds is None:
         chans = utils.get_channels()
         thresholds = {chan: int(config.get('Thresholds', chan, -1)) for chan in chans}
@@ -371,7 +371,7 @@ def analyze_bugs(bugs, min_date=None, thresholds=None, minimal_releases=None, mi
         chans = utils.get_channels()
         minimal_days = {chan: int(config.get('Minimal-Days', chan, -1)) for chan in chans}
 
-    patch_info = patchanalysis.get_patch_info(bugs)
+    patch_info = patchanalysis.get_patch_info(bugs, base_versions=base_versions)
     all_versions = socorro.ProductVersions.get_all_versions()
     tomorrow = utils.get_date_ymd('tomorrow')
     today = utils.get_date_ymd('today')

@@ -33,5 +33,6 @@ class MemoryTest(unittest.TestCase):
         with self.assertRaises(Exception):
             self.assertTrue(memory.isweird(42, '32'))
 
+
 if __name__ == '__main__':
     unittest.main()

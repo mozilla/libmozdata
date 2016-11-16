@@ -54,5 +54,6 @@ class VersionsTest(unittest.TestCase):
         self.assertEqual(versions.getCloserRelease(date, negative=True), ('48.0.1', datetime.datetime(2016, 8, 18, 7, 0, tzinfo=tzutc())))
         self.assertEqual(versions.getCloserRelease(date, negative=False), ('48.0.2', datetime.datetime(2016, 8, 24, 7, 0, tzinfo=tzutc())))
 
+
 if __name__ == '__main__':
     unittest.main()

@@ -34,5 +34,6 @@ class BZInfoTest(unittest.TestCase):
         self.assertIsNone(bzi.get_best_collaborator())
         self.assertIsNone(bzi.get_best_component_product())
 
+
 if __name__ == '__main__':
     unittest.main()

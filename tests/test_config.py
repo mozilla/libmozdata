@@ -152,5 +152,6 @@ class ConfigEnvTest(unittest.TestCase):
         self.assertEqual(cfg.get('Bugzilla', 'token', 'default'), 'my_bugzilla_api_key')
         self.assertEqual(cfg.get('Section', 'Option', 'default'), 'default')
 
+
 if __name__ == '__main__':
     unittest.main()

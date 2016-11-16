@@ -37,5 +37,6 @@ class ModulesTest(unittest.TestCase):
         self.assertEqual(modules.module_info('xpcom')['name'], 'XPCOM')
         self.assertIsNone(modules.module_info('DoesntExist'))
 
+
 if __name__ == '__main__':
     unittest.main()
