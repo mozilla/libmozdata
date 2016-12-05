@@ -1,0 +1,19 @@
+Comment on attachment 8816550 [details] [diff] [review]
+Cross-origin objects should allow gets of certain symbol-named properties but force the value to be undefined
+
+Approval Request Comment
+[Feature/Bug causing the regression]: Bug 1114580
+[User impact if declined]: Some sites won't work.
+[Is this code covered by automated tests?]: Yes
+[Has the fix been verified in Nightly?]: Not yet.
+[Needs manual test from QE? If yes, steps to reproduce]: Verifying that this
+   fixes the SalesForce site would be good.  I don't have steps to reproduce,
+   but maybe Jessilyn does.
+[List of other uplifts needed for the feature/fix]: None.
+[Is the change risky?]: Slightly.
+[Why is the change risky/not risky?]: Changes web-visible behavior.  That said,
+   the new behavior is one that other browsers (e.g. Chrome) already ship and
+   is the one we had decided on a while ago to avoid breaking sites.  The real
+   question is whether this is more or less risky than backing out bug 1114580.
+   I suspect it's less risky.
+[String changes made/needed]: None.

@@ -1,0 +1,22 @@
+Comment on attachment 8809499 [details] [diff] [review]
+allow tracking in an accessible if it has a pending show / hide / reorder event
+
+Approval Request Comment
+[Feature/Bug causing the regression]:
+e10s
+[User impact if declined]:
+e10s+touch screen support will slip a release. currently targeted at 52.
+[Is this code covered by automated tests?]:
+yes
+[Has the fix been verified in Nightly?]:
+yes, ~3 weeks.
+[Needs manual test from QE? If yes, steps to reproduce]: 
+no
+[List of other uplifts needed for the feature/fix]:
+I'm flagging the first patch here, but this request is for the entire patch set that originally landed.
+[Is the change risky?]:
+low
+[Why is the change risky/not risky?]:
+this code landed right after the merge, aurora and nightly should be in pretty close sync.
+[String changes made/needed]:
+none
