@@ -12,6 +12,7 @@ import random
 import dateutil.parser
 import pytz
 from requests.utils import quote
+import os.path
 
 
 __pacific = pytz.timezone('US/Pacific')
@@ -315,3 +316,32 @@ def get_params_for_url(params):
 
 def get_url(url):
     return url if url.endswith('/') else url + '/'
+
+
+def get_language(path):
+    """
+    Detect programming language or tool
+    from a filename
+    """
+    name = os.path.basename(path)
+    extension = os.path.splitext(name)[1][1:]
+    langs = {
+        'Shell': ['sh'],
+        'Xml': ['xml', 'xst'],
+        'Html': ['html', 'xhtml'],
+        'Css': ['css'],
+        'Javascript': ['js', 'jsm'],
+        'Makefile': ['mk', 'Makefile', 'Makefile.am', 'Makefile.in', 'configure.in', 'autoconf.mk.in'],
+        'C++': ['cpp', 'hpp', 'hh'],
+        'C': ['c', 'h'],
+        'Java': ['java'],
+        'Font': ['ttf', 'ttf^headers^'],
+        'Tests': ['reftest.list', 'crashtests.list', ],
+        'Windows IDL': ['idl'],
+        'Mozilla XUL': ['xul'],
+        'Ini': ['ini'],
+        'License': ['LICENSE']
+    }
+    for lang, names in langs.items():
+        if name in names or extension in names:
+            return lang
