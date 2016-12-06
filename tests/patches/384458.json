@@ -7,6 +7,10 @@
         "code_churn_overall": 25,
         "developer_familiarity_last_3_releases": 2,
         "developer_familiarity_overall": 2,
+        "languages": [
+            "C",
+            "C++"
+        ],
         "modules_num": 1,
         "reviewer_familiarity_last_3_releases": 0,
         "reviewer_familiarity_overall": 0,
@@ -22,6 +26,11 @@
         "code_churn_overall": 406,
         "developer_familiarity_last_3_releases": 8,
         "developer_familiarity_overall": 13,
+        "languages": [
+            "Ini",
+            "Javascript",
+            "Mozilla XUL"
+        ],
         "modules_num": 3,
         "reviewer_familiarity_last_3_releases": 0,
         "reviewer_familiarity_overall": 0,
@@ -37,6 +46,10 @@
         "code_churn_overall": 3617,
         "developer_familiarity_last_3_releases": 20,
         "developer_familiarity_overall": 63,
+        "languages": [
+            "Javascript",
+            "Xml"
+        ],
         "modules_num": 3,
         "reviewer_familiarity_last_3_releases": 0,
         "reviewer_familiarity_overall": 1,
@@ -52,6 +65,10 @@
         "code_churn_overall": 353,
         "developer_familiarity_last_3_releases": 10,
         "developer_familiarity_overall": 41,
+        "languages": [
+            "Javascript",
+            "Xml"
+        ],
         "modules_num": 1,
         "reviewer_familiarity_last_3_releases": 0,
         "reviewer_familiarity_overall": 0,
@@ -67,6 +84,10 @@
         "code_churn_overall": 3806,
         "developer_familiarity_last_3_releases": 11,
         "developer_familiarity_overall": 43,
+        "languages": [
+            "Javascript",
+            "Xml"
+        ],
         "modules_num": 3,
         "reviewer_familiarity_last_3_releases": 0,
         "reviewer_familiarity_overall": 1,
