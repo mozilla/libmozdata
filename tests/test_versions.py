@@ -39,8 +39,10 @@ class VersionsTest(unittest.TestCase):
         v = versions.get(base=True)
         if versions.getMajorDate(v['nightly']) is not None:
             self.assertTrue(versions.getMajorDate(v['release']) <= versions.getMajorDate(v['beta']) <= versions.getMajorDate(v['aurora']) <= versions.getMajorDate(v['nightly']))
-        else:
+        elif versions.getMajorDate(v['aurora']) is not None:
             self.assertTrue(versions.getMajorDate(v['release']) <= versions.getMajorDate(v['beta']) <= versions.getMajorDate(v['aurora']))
+        else:
+            self.assertTrue(versions.getMajorDate(v['release']) <= versions.getMajorDate(v['beta']))
 
         date = utils.get_date_ymd('2011-08-24T14:52:52Z')
         self.assertEqual(date - versions.getMajorDate('7'), datetime.timedelta(-34, 28372))

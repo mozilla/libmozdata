@@ -729,10 +729,18 @@ def parse_uplift_comment(text, bug_id=None):
     """
     headers = (
         'Feature/regressing bug #',
+        'Feature/Bug causing the regression',
         'User impact if declined',
+        'Is this code covered by automated tests\?',
+        'Has the fix been verified in Nightly\?',
         'Describe test coverage new/current, TreeHerder',
+        'Needs manual test from QE\? If yes, steps to reproduce',
+        'List of other uplifts needed for the feature/fix',
         'Risks and why',
+        'Is the change risky\?',
+        'Why is the change risky/not risky\?',
         'String/UUID change made/needed',
+        'String changes made/needed',
     )
     no_header = 'no-header'
 
@@ -761,7 +769,8 @@ def parse_uplift_comment(text, bug_id=None):
             # Build clean key from header
             parts = re.sub(r'[^\w]+', ' ', h.lower()).split(' ')[:3]
             key = '-'.join(parts)
-        if h not in out:
+
+        if key not in out:
             out[key] = {
                 'title': h,
                 'lines': [],

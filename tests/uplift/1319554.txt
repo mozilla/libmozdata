@@ -1,0 +1,13 @@
+Comment on attachment 8816114
+allow WindowSurfaceX11Image to render to any visual format
+
+Approval Request Comment
+[Feature/Bug causing the regression]: Bug 1285561
+[User impact if declined]: Rendering is distorted or fails entirely in some remote desktop situations.
+[Is this code covered by automated tests?]: No
+[Has the fix been verified in Nightly?]: Yes
+[Needs manual test from QE? If yes, steps to reproduce]: No
+[List of other uplifts needed for the feature/fix]: aurora, beta
+[Is the change risky?]: Low-ish risk.
+[Why is the change risky/not risky?]: It is mostly concerned with fixing up a rendering fallback that we don't really trigger except in said remote desktop situations. It extends the range of formats we actually support so instead of silently failing to render correctly, we should actually render correctly now.
+[String changes made/needed]: None
