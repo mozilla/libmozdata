@@ -7,6 +7,12 @@
         "code_churn_overall": 2465,
         "developer_familiarity_last_3_releases": 4,
         "developer_familiarity_overall": 4,
+        "languages": [
+            "Html",
+            "Javascript",
+            "Mozilla XUL",
+            "moz.build"
+        ],
         "modules_num": 6,
         "reviewer_familiarity_last_3_releases": 15,
         "reviewer_familiarity_overall": 266,
@@ -22,6 +28,9 @@
         "code_churn_overall": 0,
         "developer_familiarity_last_3_releases": 0,
         "developer_familiarity_overall": 0,
+        "languages": [
+            "Javascript"
+        ],
         "modules_num": 0,
         "reviewer_familiarity_last_3_releases": 0,
         "reviewer_familiarity_overall": 0,

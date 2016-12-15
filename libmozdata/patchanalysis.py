@@ -177,6 +177,7 @@ def patch_analysis(patch, authors, reviewers, creation_date=utils.get_date_ymd('
     }
 
     paths = []
+    languages = set()
     for diff in whatthepatch.parse_patch(patch):
         old_path = diff.header.old_path[2:] if diff.header.old_path.startswith('a/') else diff.header.old_path
         new_path = diff.header.new_path[2:] if diff.header.new_path.startswith('b/') else diff.header.new_path
@@ -198,9 +199,11 @@ def patch_analysis(patch, authors, reviewers, creation_date=utils.get_date_ymd('
 
         if old_path != '/dev/null' and old_path != new_path:
             paths.append(old_path)
+            languages.add(utils.get_language(old_path))
 
         if new_path != '/dev/null':
             paths.append(new_path)
+            languages.add(utils.get_language(new_path))
 
     used_modules = {}
     for path in paths:
@@ -223,6 +226,11 @@ def patch_analysis(patch, authors, reviewers, creation_date=utils.get_date_ymd('
         info['reviewer_familiarity_last_3_releases'] += len(hi.get(path, authors=reviewers, utc_ts_from=utils.get_timestamp(creation_date + timedelta(-3 * 6 * 7)), utc_ts_to=utc_ts_to)['patches'])
 
     info['modules_num'] = sum(used_modules.values())
+
+    # Add languages
+    languages = list(filter(None, languages))
+    languages.sort()
+    info['languages'] = languages
 
     # TODO: Add coverage info before and after the patch.
 

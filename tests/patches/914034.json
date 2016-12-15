@@ -7,6 +7,9 @@
         "code_churn_overall": 240,
         "developer_familiarity_last_3_releases": 7,
         "developer_familiarity_overall": 7,
+        "languages": [
+            "C++"
+        ],
         "modules_num": 1,
         "reviewer_familiarity_last_3_releases": 2,
         "reviewer_familiarity_overall": 3,

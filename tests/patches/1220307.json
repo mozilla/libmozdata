@@ -7,6 +7,7 @@
         "code_churn_overall": 14,
         "developer_familiarity_last_3_releases": 4,
         "developer_familiarity_overall": 4,
+        "languages": [],
         "modules_num": 1,
         "reviewer_familiarity_last_3_releases": 1,
         "reviewer_familiarity_overall": 1,
@@ -22,6 +23,7 @@
         "code_churn_overall": 52,
         "developer_familiarity_last_3_releases": 0,
         "developer_familiarity_overall": 0,
+        "languages": [],
         "modules_num": 1,
         "reviewer_familiarity_last_3_releases": 0,
         "reviewer_familiarity_overall": 1,
@@ -37,6 +39,9 @@
         "code_churn_overall": 13,
         "developer_familiarity_last_3_releases": 1,
         "developer_familiarity_overall": 1,
+        "languages": [
+            "C++"
+        ],
         "modules_num": 1,
         "reviewer_familiarity_last_3_releases": 0,
         "reviewer_familiarity_overall": 0,
