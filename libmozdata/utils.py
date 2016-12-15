@@ -340,7 +340,9 @@ def get_language(path):
         'Windows IDL': ['idl'],
         'Mozilla XUL': ['xul'],
         'Ini': ['ini'],
-        'License': ['LICENSE']
+        'License': ['LICENSE'],
+        'Python': ['py'],
+        'moz.build': ['moz.build'],
     }
     for lang, names in langs.items():
         if name in names or extension in names:

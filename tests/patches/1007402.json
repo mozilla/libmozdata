@@ -10,7 +10,8 @@
         "languages": [
             "Html",
             "Javascript",
-            "Mozilla XUL"
+            "Mozilla XUL",
+            "moz.build"
         ],
         "modules_num": 6,
         "reviewer_familiarity_last_3_releases": 15,
