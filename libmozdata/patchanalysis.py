@@ -131,11 +131,11 @@ def author_match(author_mercurial, author_real_name, bugzilla_authors, cc_list):
         return set([])
 
     for elem in found:
-        if elem not in bugzilla_authors:
+        if elem.lower() not in [a.lower() for a in bugzilla_authors]:
             warnings.warn('Author ' + elem + ' is not in the list of authors on Bugzilla.', stacklevel=3)
 
     for elem in found:
-        if author_mercurial == elem:
+        if author_mercurial.lower() == elem.lower():
             return set([author_mercurial])
 
     assert len(found) <= 1, 'Too many matching authors (' + ', '.join(found) + ') found for ' + author_mercurial
