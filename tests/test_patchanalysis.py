@@ -475,6 +475,11 @@ class PatchAnalysisTest(MockTestCase):
         self.assertIn('9576aeb57bd4', info['patches'])
         self.assertIn('d9eab22ce37a', info['patches'])
 
+        # Author email has different upper- and lower-case letters on Mercurial and Bugzilla.
+        info = patchanalysis.bug_analysis(772679)
+        for h in ['8364cb62506e', '970496fa31dd', '7566f863512b', '1ee6a1ae6cfc', 'b2127fc9bd2b', '6424adfb7ac2', 'e63fd4fc05a0', 'b15fb3603bfe', '14d17919e235', '6efd09dda9e1', '313b5b97e7e3', 'f89ae41eed63']:
+            self.assertIn(h, info['patches'])
+
     @responses.activate
     def test_uplift_info(self):
         info = patchanalysis.uplift_info(909494, 'release')
