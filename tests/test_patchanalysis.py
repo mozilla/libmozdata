@@ -73,7 +73,7 @@ class PatchAnalysisTest(MockTestCase):
         self.assertIn(str(exc.exception), ['Too many matching authors (jwalden+bmo@mit.edu, anarchy@gentoo.org) found for jwalden@mit.edu', 'Too many matching authors (anarchy@gentoo.org, jwalden+bmo@mit.edu) found for jwalden@mit.edu'])
 
         info = patchanalysis.bug_analysis(846986, author_cache={
-          'jwalden@mit.edu': ['jwalden+bmo@mit.edu'],
+            'jwalden@mit.edu': ['jwalden+bmo@mit.edu'],
         })
 
         info = patchanalysis.bug_analysis(547914)
