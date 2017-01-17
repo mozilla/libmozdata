@@ -486,7 +486,7 @@ class PatchAnalysisTest(MockTestCase):
 
         # Bugs with patches with no changes.
         info = patchanalysis.bug_analysis(829557, author_cache={
-          'dholbert@cs.stanford.edu': ['dholbert@mozilla.com']
+            'dholbert@cs.stanford.edu': ['dholbert@mozilla.com']
         })
         info = patchanalysis.bug_analysis(1019595)
         info = patchanalysis.bug_analysis(1264786)
