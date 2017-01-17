@@ -47,7 +47,7 @@ def short_name_match(short_name, real_name, email, exact_matching=True):
 def reviewer_match(short_name, bugzilla_reviewers, cc_list):
     if short_name in reviewer_cache:
         if reviewer_cache[short_name] not in bugzilla_reviewers:
-            warnings.warn('Reviewer ' + reviewer_cache[short_name] + ' is not in the list of reviewers on Bugzilla.', stacklevel=3)
+            warnings.warn('Reviewer ' + reviewer_cache[short_name] + ' is not in the list of reviewers on Bugzilla (' + ', '.join(sorted(bugzilla_reviewers)) + ').', stacklevel=3)
 
         return reviewer_cache[short_name]
 
@@ -89,7 +89,7 @@ def reviewer_match(short_name, bugzilla_reviewers, cc_list):
 
     for elem in found:
         if elem not in bugzilla_reviewers:
-            warnings.warn('Reviewer ' + elem + ' is not in the list of reviewers on Bugzilla.', stacklevel=3)
+            warnings.warn('Reviewer ' + elem + ' is not in the list of reviewers on Bugzilla (' + ', '.join(sorted(bugzilla_reviewers)) + ').', stacklevel=3)
 
     assert len(found) <= 1, 'Too many matching reviewers (' + ', '.join(found) + ') found for ' + short_name
 
@@ -98,8 +98,16 @@ def reviewer_match(short_name, bugzilla_reviewers, cc_list):
     return reviewer_cache[short_name]
 
 
-def author_match(author_mercurial, author_real_name, bugzilla_authors, cc_list):
+def author_match(author_mercurial, author_real_name, bugzilla_authors, cc_list, author_cache={}):
+    if author_mercurial in author_cache:
+        if not any(a in bugzilla_authors for a in author_cache[author_mercurial]):
+            warnings.warn('None of ' + ', '.join(sorted(author_cache[author_mercurial])) + ' is in the list of authors on Bugzilla (' + ', '.join(sorted(bugzilla_authors)) + ').', stacklevel=3)
+
+        return set([author_mercurial] + author_cache[author_mercurial])
+
     if author_mercurial in bugzilla_authors:
+        assert author_mercurial not in author_cache
+        author_cache[author_mercurial] = [author_mercurial]
         return set([author_mercurial])
 
     found = set()
@@ -132,15 +140,20 @@ def author_match(author_mercurial, author_real_name, bugzilla_authors, cc_list):
 
     for elem in found:
         if elem.lower() not in [a.lower() for a in bugzilla_authors]:
-            warnings.warn('Author ' + elem + ' is not in the list of authors on Bugzilla.', stacklevel=3)
+            warnings.warn('Author ' + elem + ' is not in the list of authors on Bugzilla (' + ', '.join(sorted(bugzilla_authors)) + ').', stacklevel=3)
 
     for elem in found:
         if author_mercurial.lower() == elem.lower():
+            assert author_mercurial not in author_cache
+            author_cache[author_mercurial] = [author_mercurial]
             return set([author_mercurial])
 
     assert len(found) <= 1, 'Too many matching authors (' + ', '.join(found) + ') found for ' + author_mercurial
 
-    return set([author_mercurial, found.pop()])
+    assert author_mercurial not in author_cache
+    result = set([author_mercurial, found.pop()])
+    author_cache[author_mercurial] = list(result)
+    return result
 
 
 def _is_test(path):
@@ -361,7 +374,7 @@ def get_commits_for_bug(bug):
 
 
 # TODO: Consider feedback+ and feedback- as review+ and review-
-def bug_analysis(bug, uplift_channel='release'):
+def bug_analysis(bug, uplift_channel='release', author_cache={}):
     if isinstance(bug, numbers.Number):
         bug_id = bug
         bug = {}
@@ -421,7 +434,7 @@ def bug_analysis(bug, uplift_channel='release'):
         for rev, obj in revs.items():
             # Multiple names because sometimes authors use different emails on Bugzilla and Mercurial and sometimes
             # they change it.
-            author_names = author_match(obj['author_mercurial'], obj['author_real_name'], bugzilla_authors, bug['cc_detail'])
+            author_names = author_match(obj['author_mercurial'], obj['author_real_name'], bugzilla_authors, bug['cc_detail'], author_cache)
 
             reviewers = set()
 
