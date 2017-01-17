@@ -195,20 +195,23 @@ def patch_analysis(patch, authors, reviewers, creation_date=utils.get_date_ymd('
         old_path = diff.header.old_path[2:] if diff.header.old_path.startswith('a/') else diff.header.old_path
         new_path = diff.header.new_path[2:] if diff.header.new_path.startswith('b/') else diff.header.new_path
 
-        # Calc changes additions & deletions
-        counts = [(
-            old is None and new is not None,
-            new is None and old is not None
-        ) for old, new, _ in diff.changes]
-        counts = list(zip(*counts))  # inverse zip
-        info['changes_add'] += sum(counts[0])
-        info['changes_del'] += sum(counts[1])
-
-        # TODO: Split C/C++, Rust, Java, JavaScript, build system changes
-        if _is_test(new_path):
-            info['test_changes_size'] += len(diff.changes)
+        if diff.changes is None:
+            assert any(subtext in diff.text for subtext in ['new mode ', 'rename ', 'copy ']), 'Can\'t parse changes from patch: ' + str(diff)
         else:
-            info['changes_size'] += len(diff.changes)
+            # Calc changes additions & deletions
+            counts = [(
+                old is None and new is not None,
+                new is None and old is not None
+            ) for old, new, _ in diff.changes]
+            counts = list(zip(*counts))  # inverse zip
+            info['changes_add'] += sum(counts[0])
+            info['changes_del'] += sum(counts[1])
+
+            # TODO: Split C/C++, Rust, Java, JavaScript, build system changes
+            if _is_test(new_path):
+                info['test_changes_size'] += len(diff.changes)
+            else:
+                info['changes_size'] += len(diff.changes)
 
         if old_path != '/dev/null' and old_path != new_path:
             paths.append(old_path)
