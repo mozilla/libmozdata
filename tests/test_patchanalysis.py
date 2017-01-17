@@ -64,6 +64,18 @@ class PatchAnalysisTest(MockTestCase):
 
     @responses.activate
     def test_bug_analysis(self):
+        # Weird situation: the mozilla-central commit referenced in the comments is from some other
+        # bug and the actual patch from the bug never landed on mozilla-central but directly on
+        # other channels.
+        with self.assertRaises(Exception) as exc:
+            info = patchanalysis.bug_analysis(846986)
+
+        self.assertIn(str(exc.exception), ['Too many matching authors (jwalden+bmo@mit.edu, anarchy@gentoo.org) found for jwalden@mit.edu', 'Too many matching authors (anarchy@gentoo.org, jwalden+bmo@mit.edu) found for jwalden@mit.edu'])
+
+        info = patchanalysis.bug_analysis(846986, author_cache={
+          'jwalden@mit.edu': ['jwalden+bmo@mit.edu'],
+        })
+
         info = patchanalysis.bug_analysis(547914)
         self.assertEqual(info['backout_num'], 0)
         self.assertEqual(info['blocks'], 1)
@@ -237,7 +249,7 @@ class PatchAnalysisTest(MockTestCase):
         with warnings.catch_warnings(record=True) as w:
             info = patchanalysis.bug_analysis(1276850)
             if sys.version_info >= (3, 0):
-                self.assertWarnings(w, ['da10eecd0e76 looks like a backout, but we couldn\'t find which revision was backed out.', 'Author bugmail@mozilla.staktrace.com is not in the list of authors on Bugzilla.', 'Bug 1276850 doesn\'t have a uplift request date.'])
+                self.assertWarnings(w, ['da10eecd0e76 looks like a backout, but we couldn\'t find which revision was backed out.', 'Author bugmail@mozilla.staktrace.com is not in the list of authors on Bugzilla ().', 'Bug 1276850 doesn\'t have a uplift request date.'])
             self.assertEqual(info['backout_num'], 0)
             self.assertEqual(info['blocks'], 1)
             self.assertEqual(info['depends_on'], 0)
@@ -398,7 +410,7 @@ class PatchAnalysisTest(MockTestCase):
         # Bugzilla user is impossible to find from IRC handle.
         with warnings.catch_warnings(record=True) as w:
             info = patchanalysis.bug_analysis(700583)
-            self.assertWarnings(w, ['Reviewer jocheng@mozilla.com is not in the list of reviewers on Bugzilla.', 'Bug 700583 doesn\'t have a uplift request date.'])
+            self.assertWarnings(w, ['Reviewer jocheng@mozilla.com is not in the list of reviewers on Bugzilla (' + ', '.join(sorted(['lukasblakk+bugs@gmail.com', 'benjamin@smedbergs.us', 'jaas@kflag.net'])) + ').', 'Bug 700583 doesn\'t have a uplift request date.'])
 
         # IRC handle is name+surname
         info = patchanalysis.bug_analysis(701262)
@@ -419,14 +431,6 @@ class PatchAnalysisTest(MockTestCase):
 
         # IRC handle on Bugzilla is different than the one used in Mercurial.
         info = patchanalysis.bug_analysis(680802)
-
-        # Weird situation: the mozilla-central commit referenced in the comments is from some other
-        # bug and the actual patch from the bug never landed on mozilla-central but directly on
-        # other channels.
-        try:
-            info = patchanalysis.bug_analysis(846986)
-        except Exception as e:
-            self.assertTrue(str(e) in ['Too many matching authors (jwalden+bmo@mit.edu, anarchy@gentoo.org) found for jwalden@mit.edu', 'Too many matching authors (anarchy@gentoo.org, jwalden+bmo@mit.edu) found for jwalden@mit.edu'])
 
         # A comment contains a non-existing revision.
         with warnings.catch_warnings(record=True) as w:
