@@ -484,6 +484,13 @@ class PatchAnalysisTest(MockTestCase):
         for h in ['8364cb62506e', '970496fa31dd', '7566f863512b', '1ee6a1ae6cfc', 'b2127fc9bd2b', '6424adfb7ac2', 'e63fd4fc05a0', 'b15fb3603bfe', '14d17919e235', '6efd09dda9e1', '313b5b97e7e3', 'f89ae41eed63']:
             self.assertIn(h, info['patches'])
 
+        # Bugs with patches with no changes.
+        info = patchanalysis.bug_analysis(829557, author_cache={
+          'dholbert@cs.stanford.edu': ['dholbert@mozilla.com']
+        })
+        info = patchanalysis.bug_analysis(1019595)
+        info = patchanalysis.bug_analysis(1264786)
+
     @responses.activate
     def test_uplift_info(self):
         info = patchanalysis.uplift_info(909494, 'release')
