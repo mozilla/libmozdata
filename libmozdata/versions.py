@@ -34,7 +34,7 @@ def __getVersions():
     resp.close()
 
     aurora = data['FIREFOX_AURORA']
-    nightly = data['FIREFOX_NIGHTLY'] if 'FIREFOX_NIGHTLY' in data else '%d.0a1' % (__get_major(aurora) + 1)
+    nightly = data['FIREFOX_NIGHTLY']
     esr = data['FIREFOX_ESR_NEXT']
     if not esr:
         esr = data['FIREFOX_ESR']
