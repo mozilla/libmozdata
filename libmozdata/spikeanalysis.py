@@ -139,15 +139,18 @@ def generalized_esd(x, r, alpha=0.05, method='mean'):
     outliers = []
     N = len(x)
     for i in range(1, r + 1):
-        m, e = fn(x)
-        if e != 0.:
-            y = np.abs(x - m)
-            j = np.nanargmax(y)
-            R = y[j]
-            l = __get_lambda_critical(N, i, alpha)
-            if R > l * e:
-                outliers.append(j)
-                x[j] = NaN
+        if np.any(~np.isnan(x)):
+            m, e = fn(x)
+            if e != 0.:
+                y = np.abs(x - m)
+                j = np.nanargmax(y)
+                R = y[j]
+                l = __get_lambda_critical(N, i, alpha)
+                if R > l * e:
+                    outliers.append(j)
+                    x[j] = NaN
+                else:
+                    break
             else:
                 break
         else:
