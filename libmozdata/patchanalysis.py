@@ -47,7 +47,7 @@ def short_name_match(short_name, real_name, email, exact_matching=True):
 def reviewer_match(short_name, bugzilla_reviewers, cc_list):
     if short_name in reviewer_cache:
         if reviewer_cache[short_name] not in bugzilla_reviewers:
-            warnings.warn('Reviewer ' + reviewer_cache[short_name] + ' is not in the list of reviewers on Bugzilla.', stacklevel=3)
+            warnings.warn('Reviewer ' + reviewer_cache[short_name] + ' is not in the list of reviewers on Bugzilla (' + ', '.join(sorted(bugzilla_reviewers)) + ').', stacklevel=3)
 
         return reviewer_cache[short_name]
 
@@ -89,7 +89,7 @@ def reviewer_match(short_name, bugzilla_reviewers, cc_list):
 
     for elem in found:
         if elem not in bugzilla_reviewers:
-            warnings.warn('Reviewer ' + elem + ' is not in the list of reviewers on Bugzilla.', stacklevel=3)
+            warnings.warn('Reviewer ' + elem + ' is not in the list of reviewers on Bugzilla (' + ', '.join(sorted(bugzilla_reviewers)) + ').', stacklevel=3)
 
     assert len(found) <= 1, 'Too many matching reviewers (' + ', '.join(found) + ') found for ' + short_name
 
@@ -98,8 +98,16 @@ def reviewer_match(short_name, bugzilla_reviewers, cc_list):
     return reviewer_cache[short_name]
 
 
-def author_match(author_mercurial, author_real_name, bugzilla_authors, cc_list):
+def author_match(author_mercurial, author_real_name, bugzilla_authors, cc_list, author_cache={}):
+    if author_mercurial in author_cache:
+        if not any(a in bugzilla_authors for a in author_cache[author_mercurial]):
+            warnings.warn('None of ' + ', '.join(sorted(author_cache[author_mercurial])) + ' is in the list of authors on Bugzilla (' + ', '.join(sorted(bugzilla_authors)) + ').', stacklevel=3)
+
+        return set([author_mercurial] + author_cache[author_mercurial])
+
     if author_mercurial in bugzilla_authors:
+        assert author_mercurial not in author_cache
+        author_cache[author_mercurial] = [author_mercurial]
         return set([author_mercurial])
 
     found = set()
@@ -131,16 +139,21 @@ def author_match(author_mercurial, author_real_name, bugzilla_authors, cc_list):
         return set([])
 
     for elem in found:
-        if elem not in bugzilla_authors:
-            warnings.warn('Author ' + elem + ' is not in the list of authors on Bugzilla.', stacklevel=3)
+        if elem.lower() not in [a.lower() for a in bugzilla_authors]:
+            warnings.warn('Author ' + elem + ' is not in the list of authors on Bugzilla (' + ', '.join(sorted(bugzilla_authors)) + ').', stacklevel=3)
 
     for elem in found:
-        if author_mercurial == elem:
+        if author_mercurial.lower() == elem.lower():
+            assert author_mercurial not in author_cache
+            author_cache[author_mercurial] = [author_mercurial]
             return set([author_mercurial])
 
     assert len(found) <= 1, 'Too many matching authors (' + ', '.join(found) + ') found for ' + author_mercurial
 
-    return set([author_mercurial, found.pop()])
+    assert author_mercurial not in author_cache
+    result = set([author_mercurial, found.pop()])
+    author_cache[author_mercurial] = list(result)
+    return result
 
 
 def _is_test(path):
@@ -177,30 +190,36 @@ def patch_analysis(patch, authors, reviewers, creation_date=utils.get_date_ymd('
     }
 
     paths = []
+    languages = set()
     for diff in whatthepatch.parse_patch(patch):
         old_path = diff.header.old_path[2:] if diff.header.old_path.startswith('a/') else diff.header.old_path
         new_path = diff.header.new_path[2:] if diff.header.new_path.startswith('b/') else diff.header.new_path
 
-        # Calc changes additions & deletions
-        counts = [(
-            old is None and new is not None,
-            new is None and old is not None
-        ) for old, new, _ in diff.changes]
-        counts = list(zip(*counts))  # inverse zip
-        info['changes_add'] += sum(counts[0])
-        info['changes_del'] += sum(counts[1])
-
-        # TODO: Split C/C++, Rust, Java, JavaScript, build system changes
-        if _is_test(new_path):
-            info['test_changes_size'] += len(diff.changes)
+        if diff.changes is None:
+            assert any(subtext in diff.text for subtext in ['new mode ', 'rename ', 'copy ', 'new file mode ']), 'Can\'t parse changes from patch: ' + str(diff)
         else:
-            info['changes_size'] += len(diff.changes)
+            # Calc changes additions & deletions
+            counts = [(
+                old is None and new is not None,
+                new is None and old is not None
+            ) for old, new, _ in diff.changes]
+            counts = list(zip(*counts))  # inverse zip
+            info['changes_add'] += sum(counts[0])
+            info['changes_del'] += sum(counts[1])
+
+            # TODO: Split C/C++, Rust, Java, JavaScript, build system changes
+            if _is_test(new_path):
+                info['test_changes_size'] += len(diff.changes)
+            else:
+                info['changes_size'] += len(diff.changes)
 
         if old_path != '/dev/null' and old_path != new_path:
             paths.append(old_path)
+            languages.add(utils.get_language(old_path))
 
         if new_path != '/dev/null':
             paths.append(new_path)
+            languages.add(utils.get_language(new_path))
 
     used_modules = {}
     for path in paths:
@@ -223,6 +242,11 @@ def patch_analysis(patch, authors, reviewers, creation_date=utils.get_date_ymd('
         info['reviewer_familiarity_last_3_releases'] += len(hi.get(path, authors=reviewers, utc_ts_from=utils.get_timestamp(creation_date + timedelta(-3 * 6 * 7)), utc_ts_to=utc_ts_to)['patches'])
 
     info['modules_num'] = sum(used_modules.values())
+
+    # Add languages
+    languages = list(filter(None, languages))
+    languages.sort()
+    info['languages'] = languages
 
     # TODO: Add coverage info before and after the patch.
 
@@ -353,7 +377,7 @@ def get_commits_for_bug(bug):
 
 
 # TODO: Consider feedback+ and feedback- as review+ and review-
-def bug_analysis(bug, uplift_channel='release'):
+def bug_analysis(bug, uplift_channel='release', author_cache={}):
     if isinstance(bug, numbers.Number):
         bug_id = bug
         bug = {}
@@ -413,7 +437,7 @@ def bug_analysis(bug, uplift_channel='release'):
         for rev, obj in revs.items():
             # Multiple names because sometimes authors use different emails on Bugzilla and Mercurial and sometimes
             # they change it.
-            author_names = author_match(obj['author_mercurial'], obj['author_real_name'], bugzilla_authors, bug['cc_detail'])
+            author_names = author_match(obj['author_mercurial'], obj['author_real_name'], bugzilla_authors, bug['cc_detail'], author_cache)
 
             reviewers = set()
 
@@ -729,10 +753,18 @@ def parse_uplift_comment(text, bug_id=None):
     """
     headers = (
         'Feature/regressing bug #',
+        'Feature/Bug causing the regression',
         'User impact if declined',
+        'Is this code covered by automated tests\?',
+        'Has the fix been verified in Nightly\?',
         'Describe test coverage new/current, TreeHerder',
+        'Needs manual test from QE\? If yes, steps to reproduce',
+        'List of other uplifts needed for the feature/fix',
         'Risks and why',
+        'Is the change risky\?',
+        'Why is the change risky/not risky\?',
         'String/UUID change made/needed',
+        'String changes made/needed',
     )
     no_header = 'no-header'
 
@@ -761,7 +793,8 @@ def parse_uplift_comment(text, bug_id=None):
             # Build clean key from header
             parts = re.sub(r'[^\w]+', ' ', h.lower()).split(' ')[:3]
             key = '-'.join(parts)
-        if h not in out:
+
+        if key not in out:
             out[key] = {
                 'title': h,
                 'lines': [],

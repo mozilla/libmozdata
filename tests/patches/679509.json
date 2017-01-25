@@ -7,6 +7,12 @@
         "code_churn_overall": 1811,
         "developer_familiarity_last_3_releases": 40,
         "developer_familiarity_overall": 113,
+        "languages": [
+            "C",
+            "C++",
+            "Html",
+            "Makefile"
+        ],
         "modules_num": 2,
         "reviewer_familiarity_last_3_releases": 41,
         "reviewer_familiarity_overall": 50,
@@ -22,6 +28,11 @@
         "code_churn_overall": 34,
         "developer_familiarity_last_3_releases": 3,
         "developer_familiarity_overall": 3,
+        "languages": [
+            "C++",
+            "Html",
+            "Makefile"
+        ],
         "modules_num": 1,
         "reviewer_familiarity_last_3_releases": 22,
         "reviewer_familiarity_overall": 34,
@@ -37,6 +48,10 @@
         "code_churn_overall": 11,
         "developer_familiarity_last_3_releases": 0,
         "developer_familiarity_overall": 0,
+        "languages": [
+            "Html",
+            "Makefile"
+        ],
         "modules_num": 1,
         "reviewer_familiarity_last_3_releases": 0,
         "reviewer_familiarity_overall": 0,
@@ -52,6 +67,9 @@
         "code_churn_overall": 18,
         "developer_familiarity_last_3_releases": 0,
         "developer_familiarity_overall": 0,
+        "languages": [
+            "C++"
+        ],
         "modules_num": 1,
         "reviewer_familiarity_last_3_releases": 0,
         "reviewer_familiarity_overall": 0,

@@ -64,6 +64,18 @@ class PatchAnalysisTest(MockTestCase):
 
     @responses.activate
     def test_bug_analysis(self):
+        # Weird situation: the mozilla-central commit referenced in the comments is from some other
+        # bug and the actual patch from the bug never landed on mozilla-central but directly on
+        # other channels.
+        with self.assertRaises(Exception) as exc:
+            info = patchanalysis.bug_analysis(846986)
+
+        self.assertIn(str(exc.exception), ['Too many matching authors (jwalden+bmo@mit.edu, anarchy@gentoo.org) found for jwalden@mit.edu', 'Too many matching authors (anarchy@gentoo.org, jwalden+bmo@mit.edu) found for jwalden@mit.edu'])
+
+        info = patchanalysis.bug_analysis(846986, author_cache={
+            'jwalden@mit.edu': ['jwalden+bmo@mit.edu'],
+        })
+
         info = patchanalysis.bug_analysis(547914)
         self.assertEqual(info['backout_num'], 0)
         self.assertEqual(info['blocks'], 1)
@@ -79,6 +91,7 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['patches']['1584ba8c1b86']['developer_familiarity_last_3_releases'], 1)
         self.assertEqual(info['patches']['1584ba8c1b86']['reviewer_familiarity_overall'], 0)
         self.assertEqual(info['patches']['1584ba8c1b86']['reviewer_familiarity_last_3_releases'], 0)
+        self.assertEqual(info['patches']['1584ba8c1b86']['languages'], ['License', 'Makefile'])
         self.assertIn('shaver@mozilla.org', info['users']['reviewers'])
         self.assertIn('gerv@mozilla.org', info['users']['reviewers'])
         self.assertEqual(info['users']['assignee']['email'], 'philringnalda@gmail.com')
@@ -128,6 +141,7 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(len(info['patches']), 1)
         self.assertEqual(info['patches']['8641afbd20e6']['source'], 'mercurial')
         self.assertEqual(info['patches']['8641afbd20e6']['url'], 'https://hg.mozilla.org/mozilla-central/rev/8641afbd20e6')
+        self.assertEqual(info['patches']['8641afbd20e6']['languages'], ['C', 'C++', 'Makefile'])
         self.assertEqual(info['landings']['nightly'], datetime(2011, 5, 26, 6, 40, 11, tzinfo=pytz.UTC))
         self.assertIsNone(info['landings']['release'])
         self.assertIsNone(info['landings']['beta'])
@@ -154,6 +168,7 @@ class PatchAnalysisTest(MockTestCase):
             self.assertEqual(info['patches']['154b951082e3']['developer_familiarity_last_3_releases'], 2)
             self.assertEqual(info['patches']['154b951082e3']['reviewer_familiarity_overall'], 158)
             self.assertEqual(info['patches']['154b951082e3']['reviewer_familiarity_last_3_releases'], 157)
+            self.assertEqual(info['patches']['154b951082e3']['languages'], ['Makefile'])
             self.assertEqual(len(info['patches']), 1)
             self.assertEqual(info['patches']['154b951082e3']['source'], 'mercurial')
             self.assertEqual(info['patches']['154b951082e3']['url'], 'https://hg.mozilla.org/mozilla-central/rev/154b951082e3')
@@ -190,6 +205,8 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['patches']['f5578fdc50ef']['reviewer_familiarity_overall'], 9)
         self.assertEqual(info['patches']['b9d0984bdd95']['reviewer_familiarity_last_3_releases'], 1)
         self.assertEqual(info['patches']['f5578fdc50ef']['reviewer_familiarity_last_3_releases'], 2)
+        self.assertEqual(info['patches']['b9d0984bdd95']['languages'], ['C', 'C++', 'Windows IDL'])
+        self.assertEqual(info['patches']['f5578fdc50ef']['languages'], ['C', 'Makefile', 'Shell'])
         self.assertEqual(len(info['patches']), 2)
         self.assertEqual(info['patches']['b9d0984bdd95']['source'], 'mercurial')
         self.assertIn(info['patches']['b9d0984bdd95']['url'], 'https://hg.mozilla.org/mozilla-central/rev/b9d0984bdd95')
@@ -232,7 +249,7 @@ class PatchAnalysisTest(MockTestCase):
         with warnings.catch_warnings(record=True) as w:
             info = patchanalysis.bug_analysis(1276850)
             if sys.version_info >= (3, 0):
-                self.assertWarnings(w, ['da10eecd0e76 looks like a backout, but we couldn\'t find which revision was backed out.', 'Author bugmail@mozilla.staktrace.com is not in the list of authors on Bugzilla.', 'Bug 1276850 doesn\'t have a uplift request date.'])
+                self.assertWarnings(w, ['da10eecd0e76 looks like a backout, but we couldn\'t find which revision was backed out.', 'Author bugmail@mozilla.staktrace.com is not in the list of authors on Bugzilla ().', 'Bug 1276850 doesn\'t have a uplift request date.'])
             self.assertEqual(info['backout_num'], 0)
             self.assertEqual(info['blocks'], 1)
             self.assertEqual(info['depends_on'], 0)
@@ -393,7 +410,7 @@ class PatchAnalysisTest(MockTestCase):
         # Bugzilla user is impossible to find from IRC handle.
         with warnings.catch_warnings(record=True) as w:
             info = patchanalysis.bug_analysis(700583)
-            self.assertWarnings(w, ['Reviewer jocheng@mozilla.com is not in the list of reviewers on Bugzilla.', 'Bug 700583 doesn\'t have a uplift request date.'])
+            self.assertWarnings(w, ['Reviewer jocheng@mozilla.com is not in the list of reviewers on Bugzilla (' + ', '.join(sorted(['lukasblakk+bugs@gmail.com', 'benjamin@smedbergs.us', 'jaas@kflag.net'])) + ').', 'Bug 700583 doesn\'t have a uplift request date.'])
 
         # IRC handle is name+surname
         info = patchanalysis.bug_analysis(701262)
@@ -414,14 +431,6 @@ class PatchAnalysisTest(MockTestCase):
 
         # IRC handle on Bugzilla is different than the one used in Mercurial.
         info = patchanalysis.bug_analysis(680802)
-
-        # Weird situation: the mozilla-central commit referenced in the comments is from some other
-        # bug and the actual patch from the bug never landed on mozilla-central but directly on
-        # other channels.
-        try:
-            info = patchanalysis.bug_analysis(846986)
-        except Exception as e:
-            self.assertTrue(str(e) in ['Too many matching authors (jwalden+bmo@mit.edu, anarchy@gentoo.org) found for jwalden@mit.edu', 'Too many matching authors (anarchy@gentoo.org, jwalden+bmo@mit.edu) found for jwalden@mit.edu'])
 
         # A comment contains a non-existing revision.
         with warnings.catch_warnings(record=True) as w:
@@ -469,6 +478,19 @@ class PatchAnalysisTest(MockTestCase):
         self.assertIn('efae575a79e4', info['patches'])
         self.assertIn('9576aeb57bd4', info['patches'])
         self.assertIn('d9eab22ce37a', info['patches'])
+
+        # Author email has different upper- and lower-case letters on Mercurial and Bugzilla.
+        info = patchanalysis.bug_analysis(772679)
+        for h in ['8364cb62506e', '970496fa31dd', '7566f863512b', '1ee6a1ae6cfc', 'b2127fc9bd2b', '6424adfb7ac2', 'e63fd4fc05a0', 'b15fb3603bfe', '14d17919e235', '6efd09dda9e1', '313b5b97e7e3', 'f89ae41eed63']:
+            self.assertIn(h, info['patches'])
+
+        # Bugs with patches with no changes.
+        info = patchanalysis.bug_analysis(829557, author_cache={
+            'dholbert@cs.stanford.edu': ['dholbert@mozilla.com']
+        })
+        info = patchanalysis.bug_analysis(1019595)
+        info = patchanalysis.bug_analysis(1264786)
+        info = patchanalysis.bug_analysis(1114040)
 
     @responses.activate
     def test_uplift_info(self):

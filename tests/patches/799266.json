@@ -7,6 +7,10 @@
         "code_churn_overall": 355,
         "developer_familiarity_last_3_releases": 5,
         "developer_familiarity_overall": 36,
+        "languages": [
+            "Javascript",
+            "Makefile"
+        ],
         "modules_num": 1,
         "reviewer_familiarity_last_3_releases": 0,
         "reviewer_familiarity_overall": 1,
