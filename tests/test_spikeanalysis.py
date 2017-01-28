@@ -136,6 +136,23 @@ class SpikeAnalysisTest(MockTestCase):
         self.assertEqual(up, expected_up)
         self.assertEqual(down, expected_down)
 
+    def test_generalized_esd(self):
+        x = [10, 11, 9, 10, 8, 9, 12, 11, 13]
+        outliers = spikeanalysis.generalized_esd(x, 5)
+        self.assertEqual(outliers, [])
+
+        x = [10, 11, 9, 10, 21, 9, 12, 11, 13]
+        outliers = spikeanalysis.generalized_esd(x, 5)
+        self.assertEqual(outliers, [4])
+
+        x = [10, 11, 9, 10, 21, 9, 12, 11, 28]
+        outliers = spikeanalysis.generalized_esd(x, 5)
+        self.assertEqual(outliers, [8, 4])
+
+        x = []
+        outliers = spikeanalysis.generalized_esd(x, 5)
+        self.assertEqual(outliers, [])
+
 
 if __name__ == '__main__':
     unittest.main()
