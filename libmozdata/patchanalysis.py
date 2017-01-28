@@ -196,7 +196,7 @@ def patch_analysis(patch, authors, reviewers, creation_date=utils.get_date_ymd('
         new_path = diff.header.new_path[2:] if diff.header.new_path.startswith('b/') else diff.header.new_path
 
         if diff.changes is None:
-            assert any(subtext in diff.text for subtext in ['new mode ', 'rename ', 'copy ', 'new file mode ']), 'Can\'t parse changes from patch: ' + str(diff)
+            assert any(subtext in diff.text for subtext in ['new mode ', 'rename ', 'copy ', 'new file mode ', 'deleted file mode ']), 'Can\'t parse changes from patch: ' + str(diff)
         else:
             # Calc changes additions & deletions
             counts = [(
@@ -579,7 +579,7 @@ def uplift_info(bug, channel):
         if uplift_request_date == 0:
             uplift_request_date = uplift_response_date
         info['response_delta'] = uplift_response_date - uplift_request_date
-        assert info['response_delta'] >= timedelta()
+        assert info['response_delta'] >= timedelta(), "Delta between uplift request date and response should be at least 0"
 
     # Search the uplift request comment
     for comment in bug['comments']:
@@ -613,7 +613,7 @@ def uplift_info(bug, channel):
     if uplift_request_date != 0:
         release_date = versions.getCloserRelease(uplift_request_date)[1]
         info['release_delta'] = release_date - uplift_request_date
-        assert info['release_delta'] > timedelta()
+        assert info['release_delta'] > timedelta(), "Delta between uplift request date and next release should be at least 0"
 
     return info
 

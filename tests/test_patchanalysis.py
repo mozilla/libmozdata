@@ -491,6 +491,7 @@ class PatchAnalysisTest(MockTestCase):
         info = patchanalysis.bug_analysis(1019595)
         info = patchanalysis.bug_analysis(1264786)
         info = patchanalysis.bug_analysis(1114040)
+        info = patchanalysis.bug_analysis(1211871)
 
     @responses.activate
     def test_uplift_info(self):
