@@ -516,68 +516,6 @@ class ProductVersions(Socorro):
         return data
 
 
-class TCBS(Socorro):
-    """TCBS: https://crash-stats.mozilla.com/api/#TCBS
-    """
-
-    URL = Socorro.API_URL + '/TCBS'
-
-    def __init__(self, params=None, handler=None, handlerdata=None, queries=None, **kwargs):
-        """Constructor
-
-        Args:
-            params (Optional[dict]): the params for the query
-            handler (Optional[function]): handler to use with the result of the query
-            handlerdata (Optional): data used in second argument of the handler
-            queries (Optional[List[Query]]): queries to execute
-        """
-        if queries:
-            super(TCBS, self).__init__(queries, **kwargs)
-        else:
-            super(TCBS, self).__init__(Query(TCBS.URL, params, handler, handlerdata), **kwargs)
-
-    @staticmethod
-    def default_handler(json, data):
-        """Default handler
-
-        Args:
-            json (dict): json
-            data (list): list to append the platforms name
-        """
-        data.append(json)
-
-    @staticmethod
-    def get_firefox_topcrashes(version=None, channel=None, days=7, crash_type='all', limit=50, platforms=None):
-        """Get top crashes for Firefox
-
-        Args:
-            version (Optional[str]): the version
-            channel (Optional[str]): 'nightly', 'aurora', 'beta' or 'release'
-            days (Optional[int]): the duration
-            crash_type (Optional[str]): 'all' (default) or 'browser' or 'content' or 'plugin'
-            limit (Optional[int]): the number of crashes to retrieve
-            platforms (Optional[str]): 'all' or 'windows' or 'linux' or 'mac os x'
-
-        Returns:
-            dict: a json
-        """
-        if not version:
-            version = ProductVersions.get_last_version(channel)
-            if not version:
-                return None
-
-        data = []
-        TCBS(params={'product': 'Firefox',
-                     'version': version,
-                     'crash_type': crash_type,
-                     'limit': limit,
-                     'os': platforms,
-                     'duration': days * 24},  # duration is expressed in hours !!
-             handler=TCBS.default_handler, handlerdata=data).wait()
-
-        return data[0]
-
-
 class SignatureTrend(Socorro):
     """SignatureTrend: https://crash-stats.mozilla.com/api/#SignatureTrend
     """

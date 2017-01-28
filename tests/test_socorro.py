@@ -66,13 +66,6 @@ class ProductVersionsTest(unittest.TestCase):
         self.assertIsNotNone(i)
 
 
-class TCBSTest(unittest.TestCase):
-
-    def test_tcbs(self):
-        tc = socorro.TCBS.get_firefox_topcrashes(channel='nightly', limit=1)
-        self.assertIsNotNone(tc)
-
-
 class SignatureTrendTest(unittest.TestCase):
 
     def test_signature(self):
