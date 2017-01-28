@@ -66,22 +66,6 @@ class ProductVersionsTest(unittest.TestCase):
         self.assertIsNotNone(i)
 
 
-class SignatureTrendTest(unittest.TestCase):
-
-    def test_signature(self):
-        signature = []
-        socorro.SuperSearch(params={'product': 'Firefox',
-                                    'signature': '~OOM',
-                                    '_results_number': 0,
-                                    '_facets': ['signature']},
-                            handler=lambda j, d: d.extend([j['facets']['signature'][0]['term'], j['facets']['signature'][1]['term']]),
-                            handlerdata=signature).wait()
-
-        self.assertEqual(len(signature), 2)
-        trend = socorro.SignatureTrend.get_trend(signature, channel='nightly')
-        self.assertIsNotNone(trend)
-
-
 class ADITest(unittest.TestCase):
 
     def test_adi(self):
