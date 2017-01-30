@@ -266,7 +266,7 @@ def get_bugzilla_authors_reviewers(bug):
         bugzilla_authors.add(attachment['creator'])
 
         for flag in attachment['flags']:
-            if flag['name'] != 'review':
+            if flag['name'] != 'review' or flag['status'] == '-':
                 continue
 
             # If the creator of the patch is the setter of the review flag, it's probably
@@ -489,10 +489,8 @@ def bug_analysis(bug, uplift_channel='release', author_cache={}):
                 response = urlopen(mozreview_raw_diff_url)
                 data = response.read().decode('ascii', 'ignore')
 
-            reviewers = [flag['setter'] for flag in attachment['flags'] if flag['name'] == 'review' and flag['status'] == '+']
-
             if data is not None:
-                info['patches'][attachment['id']].update(patch_analysis(data, [attachment['creator']], reviewers, utils.get_date_ymd(attachment['creation_time'])))
+                info['patches'][attachment['id']].update(patch_analysis(data, [attachment['creator']], bugzilla_reviewers, utils.get_date_ymd(attachment['creation_time'])))
 
     # TODO: Add number of crashes with signatures from the bug (also before/after the patch?).
 
