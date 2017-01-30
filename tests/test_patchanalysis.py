@@ -410,7 +410,7 @@ class PatchAnalysisTest(MockTestCase):
         # Bugzilla user is impossible to find from IRC handle.
         with warnings.catch_warnings(record=True) as w:
             info = patchanalysis.bug_analysis(700583)
-            self.assertWarnings(w, ['Reviewer jocheng@mozilla.com is not in the list of reviewers on Bugzilla (' + ', '.join(sorted(['lukasblakk+bugs@gmail.com', 'benjamin@smedbergs.us', 'jaas@kflag.net'])) + ').', 'Bug 700583 doesn\'t have a uplift request date.'])
+            self.assertWarnings(w, ['Reviewer jocheng@mozilla.com is not in the list of reviewers on Bugzilla (' + ', '.join(sorted(['benjamin@smedbergs.us', 'jaas@kflag.net'])) + ').', 'Bug 700583 doesn\'t have a uplift request date.'])
 
         # IRC handle is name+surname
         info = patchanalysis.bug_analysis(701262)
