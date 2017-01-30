@@ -266,6 +266,9 @@ def get_bugzilla_authors_reviewers(bug):
         bugzilla_authors.add(attachment['creator'])
 
         for flag in attachment['flags']:
+            if flag['name'] != 'review':
+                continue
+
             # If the creator of the patch is the setter of the review flag, it's probably
             # because he/she was carrying a r+, so we don't add him/her to the reviewers list.
             if flag['setter'] == attachment['creator']:
