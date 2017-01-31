@@ -380,7 +380,7 @@ def get_commits_for_bug(bug):
 
 
 # TODO: Consider feedback+ and feedback- as review+ and review-
-def bug_analysis(bug, uplift_channel='release', author_cache={}):
+def bug_analysis(bug, uplift_channel=None, author_cache={}):
     if isinstance(bug, numbers.Number):
         bug_id = bug
         bug = {}
@@ -506,8 +506,9 @@ def bug_analysis(bug, uplift_channel='release', author_cache={}):
         'reviewers': bugzilla_reviewers,
     }
 
-    # Add uplift request
-    info.update(uplift_info(bug, uplift_channel))
+    if uplift_channel is not None:
+        # Add uplift request
+        info.update(uplift_info(bug, uplift_channel))
 
     return info
 
