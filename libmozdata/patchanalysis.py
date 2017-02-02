@@ -18,8 +18,6 @@ from . import utils
 from . import versions
 from .connection import Query
 
-reviewer_cache = {}
-
 
 def short_name_match(short_name, real_name, email, exact_matching=True):
     short_name = short_name.lower()
@@ -44,7 +42,7 @@ def short_name_match(short_name, real_name, email, exact_matching=True):
                (short_name == email[email.index('@') + 1:email.rindex('.')])
 
 
-def reviewer_match(short_name, bugzilla_reviewers, cc_list):
+def reviewer_match(short_name, bugzilla_reviewers, cc_list, reviewer_cache={}):
     if short_name in reviewer_cache:
         if reviewer_cache[short_name] not in bugzilla_reviewers:
             warnings.warn('Reviewer ' + reviewer_cache[short_name] + ' is not in the list of reviewers on Bugzilla (' + ', '.join(sorted(bugzilla_reviewers)) + ').', stacklevel=3)
@@ -380,7 +378,7 @@ def get_commits_for_bug(bug):
 
 
 # TODO: Consider feedback+ and feedback- as review+ and review-
-def bug_analysis(bug, uplift_channel=None, author_cache={}):
+def bug_analysis(bug, uplift_channel=None, author_cache={}, reviewer_cache={}):
     if isinstance(bug, numbers.Number):
         bug_id = bug
         bug = {}
@@ -449,7 +447,7 @@ def bug_analysis(bug, uplift_channel=None, author_cache={}):
             for short_reviewer in short_reviewers:
                 # This changeset was not reviewed (probably a simple fix).
                 if short_reviewer not in ['me', 'oops', 'none', 'bustage', 'backout']:
-                    reviewers.add(reviewer_match(short_reviewer, bugzilla_reviewers | bugzilla_authors, bug['cc_detail']))
+                    reviewers.add(reviewer_match(short_reviewer, bugzilla_reviewers | bugzilla_authors, bug['cc_detail'], reviewer_cache))
 
             # Human readable patch URL
             info['patches'][rev] = {
