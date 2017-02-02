@@ -493,10 +493,16 @@ class PatchAnalysisTest(MockTestCase):
         info = patchanalysis.bug_analysis(1114040)
         info = patchanalysis.bug_analysis(1211871)
 
-        # Reviewer can't be found
+        # Reviewer can't be found.
         info = patchanalysis.bug_analysis(1161913, reviewer_cache={
             'mt': 'martin.thomson@gmail.com',
         })
+
+        # Reviewer has a point in the short name.
+        info = patchanalysis.bug_analysis(1232113)
+
+        # Reviewer has an underscore in the short name.
+        info = patchanalysis.bug_analysis(1281387)
 
     @responses.activate
     def test_uplift_info(self):
