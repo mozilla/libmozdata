@@ -196,7 +196,7 @@ def patch_analysis(patch, authors, reviewers, creation_date=utils.get_date_ymd('
         new_path = diff.header.new_path[2:] if diff.header.new_path.startswith('b/') else diff.header.new_path
 
         if diff.changes is None:
-            assert any(subtext in diff.text for subtext in ['new mode ', 'rename ', 'copy ', 'new file mode ', 'deleted file mode ']), 'Can\'t parse changes from patch: ' + str(diff)
+            assert any(subtext in diff.text for subtext in ['new mode ', 'rename ', 'copy ', 'new file mode ', 'deleted file mode ']) or any(subtext1 in diff.text and subtext2 in diff.text for (subtext1, subtext2) in [('Binary file ', ' has changed')]), 'Can\'t parse changes from patch: ' + str(diff)
         else:
             # Calc changes additions & deletions
             counts = [(
