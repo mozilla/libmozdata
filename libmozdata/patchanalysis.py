@@ -579,7 +579,8 @@ def uplift_info(bug, channel):
         if uplift_request_date == 0:
             uplift_request_date = uplift_response_date
         info['response_delta'] = uplift_response_date - uplift_request_date
-        assert info['response_delta'] >= timedelta(), "Delta between uplift request date and response should be at least 0"
+        # Sometimes a patch is approved for uplift without a request.
+        # assert info['response_delta'] >= timedelta(), "Delta between uplift request date and response should be at least 0"
 
     # Search the uplift request comment
     for comment in bug['comments']:
