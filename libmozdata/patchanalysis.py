@@ -278,7 +278,7 @@ def get_bugzilla_authors_reviewers(bug):
 
 
 def get_commits_for_bug(bug):
-    reviewer_pattern = re.compile('r=([a-zA-Z0-9]+)')
+    reviewer_pattern = re.compile('r=([a-zA-Z0-9._]+)')
     author_pattern = re.compile('<([^>]+)>')
     email_pattern = re.compile('<?([\w\-\._\+%]+@[\w\-\._\+%]+)>?')
     backout_pattern = re.compile('(?:backout|back out|backed out|backedout) (?:changeset )?([a-z0-9]{12,})')
