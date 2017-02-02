@@ -486,12 +486,17 @@ class PatchAnalysisTest(MockTestCase):
 
         # Bugs with patches with no changes.
         info = patchanalysis.bug_analysis(829557, author_cache={
-            'dholbert@cs.stanford.edu': ['dholbert@mozilla.com']
+            'dholbert@cs.stanford.edu': ['dholbert@mozilla.com'],
         })
         info = patchanalysis.bug_analysis(1019595)
         info = patchanalysis.bug_analysis(1264786)
         info = patchanalysis.bug_analysis(1114040)
         info = patchanalysis.bug_analysis(1211871)
+
+        # Reviewer can't be found
+        info = patchanalysis.bug_analysis(1161913, reviewer_cache={
+            'mt': 'martin.thomson@gmail.com',
+        })
 
     @responses.activate
     def test_uplift_info(self):
