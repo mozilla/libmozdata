@@ -11,6 +11,7 @@ from datetime import timedelta
 from libmozdata.bugzilla import Bugzilla
 from libmozdata.socorro import Socorro
 from libmozdata.hgmozilla import Mercurial
+from libmozdata import versions
 from libmozdata import patchanalysis
 from libmozdata import utils
 from datetime import datetime
@@ -24,6 +25,10 @@ class PatchAnalysisTest(MockTestCase):
         Bugzilla.URL,
         Socorro.CRASH_STATS_URL,
         Mercurial.HG_URL,
+        versions.URL_VERSIONS,
+        versions.URL_HISTORY,
+        versions.URL_CALENDAR,
+        versions.URL_STABILITY,
     ]
 
     def assertWarnings(self, warnings, expected_warnings):
@@ -64,6 +69,9 @@ class PatchAnalysisTest(MockTestCase):
 
     @responses.activate
     def test_bug_analysis(self):
+        # remove previous versions to avoid conflicts from responses
+        versions.__dict__['__versions'] = None
+
         # Weird situation: the mozilla-central commit referenced in the comments is from some other
         # bug and the actual patch from the bug never landed on mozilla-central but directly on
         # other channels.
@@ -442,6 +450,7 @@ class PatchAnalysisTest(MockTestCase):
 
         # Author in mercurial doesn't have email
         # ESR landing too
+
         info = patchanalysis.bug_analysis(1254980, uplift_channel='release')
         self.assertEqual(info['landings']['nightly'], datetime(2016, 3, 26, 2, 12, 27, tzinfo=pytz.UTC))
         self.assertEqual(info['landings']['aurora'], datetime(2016, 3, 28, 23, 24, 6, tzinfo=pytz.UTC))

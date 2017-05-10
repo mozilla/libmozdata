@@ -2,16 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-try:
-    from urllib.request import urlopen
-except ImportError:
-    from urllib import urlopen
-
 from os.path import commonprefix
-import json
 import re
 from datetime import timedelta
 from icalendar import Calendar
+import requests
 from . import utils
 
 __versions = None
@@ -19,7 +14,15 @@ __version_dates = None
 __stability_version_dates = None
 
 
+URL_VERSIONS = 'https://product-details.mozilla.org/1.0/firefox_versions.json'
+URL_HISTORY = 'https://product-details.mozilla.org/1.0/firefox_history_major_releases.json'
+URL_CALENDAR = 'https://www.google.com/calendar/ical/mozilla.com_2d37383433353432352d3939%40resource.calendar.google.com/public/basic.ics'
+URL_STABILITY = 'https://product-details.mozilla.org/1.0/firefox_history_stability_releases.json'
+
+
 def __get_major(v):
+    if v is None:
+        return
     return int(v.split('.')[0])
 
 
@@ -29,35 +32,35 @@ def __getVersions():
     Returns:
         dict: versions for each channel
     """
-    resp = urlopen('https://product-details.mozilla.org/1.0/firefox_versions.json')
-    data = json.loads(resp.read().decode('utf-8'))
-    resp.close()
+    def _clean_esr(esr):
+        if esr is None:
+            return
+        return esr.endswith('esr') and esr[:-3] or esr
+
+    resp = requests.get(URL_VERSIONS)
+    data = resp.json()
 
     aurora = data['FIREFOX_AURORA']
     nightly = data['FIREFOX_NIGHTLY']
-    esr = data['FIREFOX_ESR_NEXT']
-    if not esr:
-        esr = data['FIREFOX_ESR']
-    if esr.endswith('esr'):
-        esr = esr[:-3]
+    esr_next = _clean_esr(data['FIREFOX_ESR_NEXT'])
+    esr = _clean_esr(data['FIREFOX_ESR'])
 
     return {'release': data['LATEST_FIREFOX_VERSION'],
             'beta': data['LATEST_FIREFOX_RELEASED_DEVEL_VERSION'],
             'aurora': str(aurora),
             'nightly': nightly,
-            'esr': esr}
+            'esr': esr_next or esr,
+            'esr_previous': esr_next is not None and esr or None}
 
 
 def __getVersionDates():
-    resp = urlopen('https://product-details.mozilla.org/1.0/firefox_history_major_releases.json')
-    data = json.loads(resp.read().decode('utf-8'))
-    resp.close()
+    resp = requests.get(URL_HISTORY)
+    data = resp.json()
 
     data = dict([(v, utils.get_moz_date(d)) for v, d in data.items()])
 
-    resp = urlopen('https://www.google.com/calendar/ical/mozilla.com_2d37383433353432352d3939%40resource.calendar.google.com/public/basic.ics')
-    calendar = Calendar.from_ical(resp.read().decode('utf-8'))
-    resp.close()
+    resp = requests.get(URL_CALENDAR)
+    calendar = Calendar.from_ical(resp.content)
 
     for component in calendar.walk():
         if component.name == 'VEVENT':
@@ -71,11 +74,9 @@ def __getVersionDates():
 
 
 def __getStabilityVersionDates():
-    resp = urlopen('https://product-details.mozilla.org/1.0/firefox_history_stability_releases.json')
-    data = json.loads(resp.read().decode('utf-8'))
-    resp.close()
+    resp = requests.get(URL_STABILITY)
 
-    return dict([(v, utils.get_moz_date(d)) for v, d in data.items()])
+    return dict([(v, utils.get_moz_date(d)) for v, d in resp.json().items()])
 
 
 def get(base=False):
