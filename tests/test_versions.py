@@ -7,9 +7,43 @@ import datetime
 from dateutil.tz import tzutc
 import libmozdata.utils as utils
 import libmozdata.versions as versions
+from contextlib import contextmanager
+import responses
 
 
 class VersionsTest(unittest.TestCase):
+
+    def cleanup(self):
+        """
+        Restore versions from cache after this test
+        Otherwise other tests will use the last loaded version
+        """
+        versions.__dict__['__versions'] = None
+
+    def tearDown(self):
+        self.cleanup()
+
+    @contextmanager
+    def setup_versions(self, stable, devel, nightly, aurora, esr, esr_next=None):
+        """
+        Add a mock response for official versions
+        """
+        self.cleanup()
+        body = {
+            "FIREFOX_NIGHTLY": nightly,
+            "FIREFOX_AURORA": aurora,
+            "FIREFOX_ESR": esr,
+            "FIREFOX_ESR_NEXT": esr_next,
+            "LATEST_FIREFOX_DEVEL_VERSION": devel,
+            "LATEST_FIREFOX_OLDER_VERSION": "3.6.28",
+            "LATEST_FIREFOX_RELEASED_DEVEL_VERSION": devel,
+            "LATEST_FIREFOX_VERSION": stable,
+        }
+        local_mock = responses.RequestsMock()
+        local_mock.add(responses.GET, versions.URL_VERSIONS, json=body)
+        local_mock.start()
+        yield local_mock
+        local_mock.stop()
 
     def test_versions(self):
         v = versions.get(base=True)
@@ -41,7 +75,7 @@ class VersionsTest(unittest.TestCase):
             self.assertTrue(versions.getMajorDate(v['release']) <= versions.getMajorDate(v['beta']) <= versions.getMajorDate(v['aurora']) <= versions.getMajorDate(v['nightly']))
         elif versions.getMajorDate(v['aurora']) is not None:
             self.assertTrue(versions.getMajorDate(v['release']) <= versions.getMajorDate(v['beta']) <= versions.getMajorDate(v['aurora']))
-        else:
+        elif versions.getMajorDate(v['beta']) is not None:
             self.assertTrue(versions.getMajorDate(v['release']) <= versions.getMajorDate(v['beta']))
 
         date = utils.get_date_ymd('2011-08-24T14:52:52Z')
@@ -55,6 +89,45 @@ class VersionsTest(unittest.TestCase):
         self.assertEqual(versions.getCloserRelease(date), ('48.0.2', datetime.datetime(2016, 8, 24, 7, 0, tzinfo=tzutc())))
         self.assertEqual(versions.getCloserRelease(date, negative=True), ('48.0.1', datetime.datetime(2016, 8, 18, 7, 0, tzinfo=tzutc())))
         self.assertEqual(versions.getCloserRelease(date, negative=False), ('48.0.2', datetime.datetime(2016, 8, 24, 7, 0, tzinfo=tzutc())))
+
+    def test_dual_esr(self):
+
+        # Check esr & esr previous
+        with self.setup_versions(
+                nightly="55.0a1",
+                aurora="54.0a2",
+                devel="54.0b6",
+                stable="53.0.2",
+                esr="45.9.0esr",
+                esr_next="52.1.1esr"):
+            v = versions.get(base=True)
+        self.assertDictEqual(v, {
+            'nightly': 55,
+            'beta': 54,
+            'release': 53,
+            'aurora': 54,
+            'esr': 52,
+            'esr_previous': 45,
+        })
+
+    def test_unique_esr(self):
+
+        # Check no esr previous is present
+        with self.setup_versions(
+                nightly="55.0a1",
+                aurora="54.0a2",
+                devel="54.0b6",
+                stable="53.0.2",
+                esr="52.1.1esr"):
+            v = versions.get(base=True)
+        self.assertDictEqual(v, {
+            'nightly': 55,
+            'beta': 54,
+            'release': 53,
+            'aurora': 54,
+            'esr': 52,
+            'esr_previous': None,
+        })
 
 
 if __name__ == '__main__':
