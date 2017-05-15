@@ -65,14 +65,20 @@ class Redash(Connection):
         _rows = []
         for row in rows:
             if row['channel'] == channel:
+                if 'build_version' not in row:
+                    continue
+
                 v = row['build_version']
-                if v:
-                    if v in _versions:
+
+                if not v:
+                    continue
+
+                if v in _versions:
+                    _rows.append(row)
+                elif majors:
+                    m = pat_major.match(v)
+                    if m and m.group(1) in majors:
                         _rows.append(row)
-                    elif majors:
-                        m = pat_major.match(v)
-                        if m and m.group(1) in majors:
-                            _rows.append(row)
 
         return _rows
 
