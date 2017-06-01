@@ -6,7 +6,10 @@ from oauth2client import client
 from oauth2client import tools
 import argparse
 import base64
+from os.path import basename
 from email.mime.text import MIMEText
+from email.mime.application import MIMEApplication
+from email.MIMEMultipart import MIMEMultipart
 from . import config
 
 
@@ -14,15 +17,23 @@ SCOPES = ['https://www.googleapis.com/auth/gmail.send']
 CREDENTIALS_PATH = os.path.expanduser(config.get('Gmail', 'credentials', ''))
 
 
-def send(To, Subject, Body, Cc=[], Bcc=[], html=False):
+def send(To, Subject, Body, Cc=[], Bcc=[], html=False, files=[]):
     """Send an email
     """
     subtype = 'html' if html else 'plain'
-    message = MIMEText(Body, subtype)
+    message = MIMEMultipart()
     message['To'] = ', '.join(To)
     message['Subject'] = Subject
     message['Cc'] = ', '.join(Cc)
     message['Bcc'] = ', '.join(Bcc)
+
+    message.attach(MIMEText(Body, subtype))
+
+    for f in files:
+        with open(f, "rb") as In:
+            part = MIMEApplication(In.read(), Name=basename(f))
+            part['Content-Disposition'] = 'attachment; filename="%s"' % basename(f)
+            message.attach(part)
 
     message = {'raw': base64.urlsafe_b64encode(message.as_string())}
 
