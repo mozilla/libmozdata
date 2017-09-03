@@ -21,7 +21,7 @@ URL_STABILITY = 'https://product-details.mozilla.org/1.0/firefox_history_stabili
 
 
 def __get_major(v):
-    if v is None:
+    if not v:
         return
     return int(v.split('.')[0])
 
@@ -40,14 +40,12 @@ def __getVersions():
     resp = requests.get(URL_VERSIONS)
     data = resp.json()
 
-    aurora = data['FIREFOX_AURORA']
     nightly = data['FIREFOX_NIGHTLY']
     esr_next = _clean_esr(data['FIREFOX_ESR_NEXT'])
     esr = _clean_esr(data['FIREFOX_ESR'])
 
     return {'release': data['LATEST_FIREFOX_VERSION'],
             'beta': data['LATEST_FIREFOX_RELEASED_DEVEL_VERSION'],
-            'aurora': str(aurora),
             'nightly': nightly,
             'esr': esr_next or esr,
             'esr_previous': esr_next is not None and esr or None}

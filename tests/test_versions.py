@@ -24,14 +24,13 @@ class VersionsTest(unittest.TestCase):
         self.cleanup()
 
     @contextmanager
-    def setup_versions(self, stable, devel, nightly, aurora, esr, esr_next=None):
+    def setup_versions(self, stable, devel, nightly, esr, esr_next=None):
         """
         Add a mock response for official versions
         """
         self.cleanup()
         body = {
             "FIREFOX_NIGHTLY": nightly,
-            "FIREFOX_AURORA": aurora,
             "FIREFOX_ESR": esr,
             "FIREFOX_ESR_NEXT": esr_next,
             "LATEST_FIREFOX_DEVEL_VERSION": devel,
@@ -47,7 +46,7 @@ class VersionsTest(unittest.TestCase):
 
     def test_versions(self):
         v = versions.get(base=True)
-        self.assertTrue(v['esr'] <= v['release'] <= v['beta'] <= v['aurora'] <= v['nightly'])
+        self.assertTrue(v['esr'] <= v['release'] <= v['beta'] <= v['nightly'])
 
     def test_version_dates(self):
         self.assertEqual(versions.getMajorDate(46), datetime.datetime(2016, 4, 26, 7, 0, tzinfo=tzutc()))
@@ -72,9 +71,7 @@ class VersionsTest(unittest.TestCase):
 
         v = versions.get(base=True)
         if versions.getMajorDate(v['nightly']) is not None:
-            self.assertTrue(versions.getMajorDate(v['release']) <= versions.getMajorDate(v['beta']) <= versions.getMajorDate(v['aurora']) <= versions.getMajorDate(v['nightly']))
-        elif versions.getMajorDate(v['aurora']) is not None:
-            self.assertTrue(versions.getMajorDate(v['release']) <= versions.getMajorDate(v['beta']) <= versions.getMajorDate(v['aurora']))
+            self.assertTrue(versions.getMajorDate(v['release']) <= versions.getMajorDate(v['beta']) <= versions.getMajorDate(v['nightly']))
         elif versions.getMajorDate(v['beta']) is not None:
             self.assertTrue(versions.getMajorDate(v['release']) <= versions.getMajorDate(v['beta']))
 
@@ -95,7 +92,6 @@ class VersionsTest(unittest.TestCase):
         # Check esr & esr previous
         with self.setup_versions(
                 nightly="55.0a1",
-                aurora="54.0a2",
                 devel="54.0b6",
                 stable="53.0.2",
                 esr="45.9.0esr",
@@ -105,7 +101,6 @@ class VersionsTest(unittest.TestCase):
             'nightly': 55,
             'beta': 54,
             'release': 53,
-            'aurora': 54,
             'esr': 52,
             'esr_previous': 45,
         })
@@ -115,7 +110,6 @@ class VersionsTest(unittest.TestCase):
         # Check no esr previous is present
         with self.setup_versions(
                 nightly="55.0a1",
-                aurora="54.0a2",
                 devel="54.0b6",
                 stable="53.0.2",
                 esr="52.1.1esr"):
@@ -124,7 +118,6 @@ class VersionsTest(unittest.TestCase):
             'nightly': 55,
             'beta': 54,
             'release': 53,
-            'aurora': 54,
             'esr': 52,
             'esr_previous': None,
         })
