@@ -21,7 +21,7 @@ URL_STABILITY = 'https://product-details.mozilla.org/1.0/firefox_history_stabili
 
 
 def __get_major(v):
-    if v is None:
+    if not v:
         return
     return int(v.split('.')[0])
 
