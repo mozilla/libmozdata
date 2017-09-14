@@ -343,6 +343,7 @@ def get_language(path):
         'License': ['LICENSE'],
         'Python': ['py'],
         'moz.build': ['moz.build'],
+        'Rust': ['rs'],
     }
     for lang, names in langs.items():
         if name in names or extension in names:
