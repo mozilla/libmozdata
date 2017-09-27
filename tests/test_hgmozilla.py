@@ -180,5 +180,30 @@ class FileInfoTest(unittest.TestCase):
         self.assertIsNotNone(info['netwerk/protocol/http/nsHttpConnectionMgr.cpp'])
 
 
+class AnnotateTest(unittest.TestCase):
+
+    def test_annotate(self):
+        path = 'netwerk/protocol/http/nsHttpConnectionMgr.cpp'
+        info = hgmozilla.Annotate.get(path)
+
+        self.assertIsNotNone(info)
+        self.assertIsNotNone(info['netwerk/protocol/http/nsHttpConnectionMgr.cpp'])
+
+    def test_annotate_multiple_files(self):
+        paths = ['netwerk/protocol/http/nsHttpConnectionMgr.cpp', 'netwerk/protocol/http/nsHttpConnectionMgr.h']
+        info = hgmozilla.Annotate.get(paths)
+
+        self.assertIsNotNone(info)
+        self.assertIsNotNone(info['netwerk/protocol/http/nsHttpConnectionMgr.cpp'])
+        self.assertIsNotNone(info['netwerk/protocol/http/nsHttpConnectionMgr.h'])
+
+    def test_annotate_release_channel(self):
+        path = 'netwerk/protocol/http/nsHttpConnectionMgr.cpp'
+        info = hgmozilla.Annotate.get(path, 'release')
+
+        self.assertIsNotNone(info)
+        self.assertIsNotNone(info['netwerk/protocol/http/nsHttpConnectionMgr.cpp'])
+
+
 if __name__ == '__main__':
     unittest.main()
