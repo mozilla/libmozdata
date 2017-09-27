@@ -248,6 +248,83 @@ class FileInfo(Mercurial):
         return data
 
 
+class Annotate(Mercurial):
+    """Connection to get file annotation (blame)
+    """
+
+    def __init__(self, channel='nightly', params=None, handler=None, handlerdata=None, queries=None, **kwargs):
+        """Constructor
+
+        Args:
+            channel (Optional[str]): the channel, by default 'nightly'
+            params (Optional[dict]): the params for the query
+            handler (Optional[function]): handler to use with the result of the query
+            handlerdata (Optional): data used in second argument of the handler
+            queries (List[Query]): queries to pass to mercurial server
+        """
+        if queries:
+            super(Annotate, self).__init__(queries, **kwargs)
+        else:
+            super(Annotate, self).__init__(Query(Annotate.get_url(channel), params, handler, handlerdata), **kwargs)
+
+    @staticmethod
+    def get_url(channel):
+        """Get the api url
+
+        Args:
+            channel (str): channel version of firefox
+
+        Returns:
+            str: the api url
+        """
+        return Mercurial.get_repo_url(channel) + '/json-annotate'
+
+    @staticmethod
+    def default_handler(json, data):
+        """Default handler
+
+        Args:
+            json (dict): json
+            data (dict): dictionary to update with data
+        """
+        data.update(json)
+
+    @staticmethod
+    def get(paths, channel='nightly', node='tip'):
+        """Get the annotated files for several paths
+
+        Args:
+            paths (List[str]): the paths
+            channel (str): channel version of firefox
+            node (Optional[str]): the node, by default 'tip'
+
+        Returns:
+            dict: the files info
+        """
+        data = {}
+
+        __base = {'node': node,
+                  'file': None}
+
+        if isinstance(paths, six.string_types):
+            __base['file'] = paths
+            _dict = {}
+            data[paths] = _dict
+            Annotate(channel=channel, params=__base, handler=Annotate.default_handler, handlerdata=_dict).wait()
+        else:
+            url = Annotate.get_url(channel)
+            queries = []
+            for path in paths:
+                cparams = __base.copy()
+                cparams['file'] = path
+                _dict = {}
+                data[path] = _dict
+                queries.append(Query(url, cparams, Annotate.default_handler, _dict))
+            Annotate(queries=queries).wait()
+
+        return data
+
+
 class HGMozilla(object):
 
     def __init__(self, path, ui=None):

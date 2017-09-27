@@ -180,5 +180,47 @@ class FileInfoTest(unittest.TestCase):
         self.assertIsNotNone(info['netwerk/protocol/http/nsHttpConnectionMgr.cpp'])
 
 
+class AnnotateTest(unittest.TestCase):
+
+    def test_annotate(self):
+        path = 'netwerk/protocol/http/nsHttpConnectionMgr.cpp'
+        info = hgmozilla.Annotate.get(path)
+
+        self.assertIsNotNone(info)
+        self.assertTrue(path in info)
+        annotations = info[path]
+        self.assertIsNotNone(annotations)
+        self.assertTrue('abspath' in annotations)
+        self.assertEqual(annotations['abspath'], path)
+        self.assertTrue('annotate' in annotations)
+
+    def test_annotate_multiple_files(self):
+        paths = ['netwerk/protocol/http/nsHttpConnectionMgr.cpp',
+                 'netwerk/protocol/http/nsHttpConnectionMgr.h']
+        info = hgmozilla.Annotate.get(paths)
+
+        self.assertIsNotNone(info)
+
+        for path in paths:
+            self.assertTrue(path in info)
+            annotations = info[path]
+            self.assertIsNotNone(annotations)
+            self.assertTrue('abspath' in annotations)
+            self.assertEqual(annotations['abspath'], path)
+            self.assertTrue('annotate' in annotations)
+
+    def test_annotate_release_channel(self):
+        path = 'netwerk/protocol/http/nsHttpConnectionMgr.cpp'
+        info = hgmozilla.Annotate.get(path, 'release')
+
+        self.assertIsNotNone(info)
+        self.assertTrue(path in info)
+        annotations = info[path]
+        self.assertIsNotNone(annotations)
+        self.assertTrue('abspath' in annotations)
+        self.assertEqual(annotations['abspath'], path)
+        self.assertTrue('annotate' in annotations)
+
+
 if __name__ == '__main__':
     unittest.main()
