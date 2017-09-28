@@ -3,13 +3,8 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import six
-import sys
 from .connection import (Connection, Query)
 from . import config
-
-if sys.version_info < (3, 0):  # NOQA
-    import mercurial  # NOQA
-    from mercurial import hg  # NOQA
 
 
 class Mercurial(Connection):
@@ -321,43 +316,5 @@ class Annotate(Mercurial):
                 data[path] = _dict
                 queries.append(Query(url, cparams, Annotate.default_handler, _dict))
             Annotate(queries=queries).wait()
-
-        return data
-
-
-class HGMozilla(object):
-
-    def __init__(self, path, ui=None):
-        self.root = path
-        self.ui = ui if ui else mercurial.ui.ui()
-        self.repo = hg.repository(self.ui, path)
-        self.haspushlog = hasattr(self.repo, 'pushlog')
-
-    def get_filelog(self, paths, rev='tip'):
-        rev = rev.encode('ascii')
-        ctx = self.repo[rev]
-        data = {}
-        for path in paths:
-            path = path.encode('ascii')
-            if path in ctx:
-                fctx = ctx[path]
-                entry = {'user': '', 'pushdate': '', 'date': '', 'desc': '', 'node': ''}
-                entries = []
-                for rev in fctx.filelog().revs(0, fctx.filerev()):
-                    _fctx = fctx.filectx(rev)
-                    _entry = entry.copy()
-                    entries.append(_entry)
-                    _entry['user'] = _fctx.user()
-                    _entry['date'] = list(_fctx.date())
-                    _entry['desc'] = _fctx.description()
-                    _entry['node'] = mercurial.node.hex(_fctx.node())
-                    if self.haspushlog:
-                        pushinfo = self.repo.pushlog.pushfromchangeset(_fctx)
-                        if pushinfo:
-                            # pushdate is a 2-uple with timestamp (UTC) and the timezone of the pusher.
-                            pushdate = mercurial.util.makedate(pushinfo.when)
-                            _entry['pushdate'] = list(pushdate)
-                entries.reverse()
-                data[path] = entries
 
         return data
