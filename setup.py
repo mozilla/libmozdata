@@ -28,9 +28,6 @@ setup(
     author_email='release-mgmt@mozilla.com',
     url='https://github.com/mozilla/libmozdata',
     install_requires=load_requirements('requirements.txt'),
-    extras_require={
-        'spikes': load_requirements('requirements-spikes.txt'),
-    },
     packages=find_packages(exclude=['*.tests', '*.tests.*', 'tests.*', 'tests']),
     include_package_data=True,
     zip_safe=False,

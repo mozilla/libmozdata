@@ -1,6 +1,5 @@
 include VERSION
 include requirements.txt
-include requirements-spikes.txt
 include libmozdata/*.json
 
 recursive-exclude * __pycache__
