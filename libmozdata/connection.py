@@ -98,7 +98,7 @@ class Connection(object):
             if res.status_code == 200:
                 try:
                     response = res.json()
-                except:
+                except ValueError:
                     response = res.text
 
                 if query.handlerdata is not None:

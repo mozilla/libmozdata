@@ -22,38 +22,38 @@ class ConfigTest(unittest.TestCase):
 
         try:
             os.remove('config.ini')
-        except:
+        except OSError:
             pass
 
         try:
             os.remove('mozdata.ini')
-        except:
+        except OSError:
             pass
 
         try:
             os.remove(os.path.expanduser('~/.mozdata.ini'))
-        except:
+        except OSError:
             pass
 
         try:
             os.rename('mozdata.ini.bak', 'mozdata.ini')
-        except:
+        except OSError:
             pass
 
         try:
             os.rename(os.path.expanduser('~/.mozdata.ini.bak'), os.path.expanduser('~/.mozdata.ini'))
-        except:
+        except OSError:
             pass
 
     def setUp(self):
         try:
             os.rename('mozdata.ini', 'mozdata.ini.bak')
-        except:
+        except OSError:
             pass
 
         try:
             os.rename(os.path.expanduser('~/.mozdata.ini'), os.path.expanduser('~/.mozdata.ini.bak'))
-        except:
+        except OSError:
             pass
 
     def test_config_doesnt_exist(self):
