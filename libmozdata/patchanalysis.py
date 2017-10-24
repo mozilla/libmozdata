@@ -619,8 +619,8 @@ def uplift_info(bug, channel):
     return info
 
 
-def get_patch_info(bugs, base_versions=None, extra=None):
-    channels = ['release', 'beta', 'aurora', 'nightly']
+def get_patch_info(bugs, base_versions=None, extra=None,
+                   channels=['release', 'aurora', 'beta', 'nightly']):
     landing_patterns = Bugzilla.get_landing_patterns(channels=channels)
     approval_pattern = re.compile('approval-mozilla-([a-zA-Z0-9]+)\+')
 
