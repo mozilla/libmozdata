@@ -71,10 +71,10 @@ class MultipleHandler(Handler):
         return False
 
     def clone(self):
-        l = []
+        hdlers = []
         for h in self.handler:
-            l.append(h.clone())
+            hdlers.append(h.clone())
         mh = MultipleHandler()
-        mh.handler = l
+        mh.handler = hdlers
 
         return mh
