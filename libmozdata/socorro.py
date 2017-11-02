@@ -38,9 +38,9 @@ class SuperSearch(Socorro):
     """SuperSearch: https://crash-stats.mozilla.com/search/?product=&_dont_run=1
     """
 
-    URL = Socorro.API_URL + '/SuperSearch'
-    URL_UNREDACTED = URL + 'Unredacted'
-    WEB_URL = Socorro.CRASH_STATS_URL + '/search'
+    URL = Socorro.API_URL + '/SuperSearch/'
+    URL_UNREDACTED = Socorro.API_URL + '/SuperSearchUnredacted/'
+    WEB_URL = Socorro.CRASH_STATS_URL + '/search/'
 
     def __init__(self, params=None, handler=None, handlerdata=None, queries=None, **kwargs):
         """Constructor
@@ -108,7 +108,7 @@ class ProcessedCrash(Socorro):
     """ProcessedCrash: https://crash-stats.mozilla.com/api/#ProcessedCrash
     """
 
-    URL = Socorro.API_URL + '/ProcessedCrash'
+    URL = Socorro.API_URL + '/ProcessedCrash/'
 
     def __init__(self, params=None, handler=None, handlerdata=None, queries=None, **kwargs):
         """Constructor
@@ -171,7 +171,7 @@ class Platforms(Socorro):
     """Platforms: https://crash-stats.mozilla.com/api/#Platforms
     """
 
-    URL = Socorro.API_URL + '/Platforms'
+    URL = Socorro.API_URL + '/Platforms/'
     __cached_platforms = None
 
     def __init__(self, params=None, handler=None, handlerdata=None, **kwargs):
@@ -224,7 +224,7 @@ class ProductVersions(Socorro):
     """ProductVersions: https://crash-stats.mozilla.com/api/#ProductVersions
     """
 
-    URL = Socorro.API_URL + '/ProductVersions'
+    URL = Socorro.API_URL + '/ProductVersions/'
     __cached_versions = {}
 
     def __init__(self, params=None, handler=None, handlerdata=None, **kwargs):
@@ -520,7 +520,7 @@ class ADI(Socorro):
     """ADI: https://crash-stats.mozilla.com/api/#ADI
     """
 
-    URL = Socorro.API_URL + '/ADI'
+    URL = Socorro.API_URL + '/ADI/'
 
     def __init__(self, params=None, handler=None, handlerdata=None, queries=None, **kwargs):
         """Constructor
@@ -593,7 +593,7 @@ class Bugs(Socorro):
     """Bugs: https://crash-stats.mozilla.com/api/#Bugs
     """
 
-    URL = Socorro.API_URL + '/Bugs'
+    URL = Socorro.API_URL + '/Bugs/'
 
     def __init__(self, params=None, handler=None, handlerdata=None, queries=None, **kwargs):
         """Constructor
