@@ -38,8 +38,8 @@ class SuperSearch(Socorro):
     """SuperSearch: https://crash-stats.mozilla.com/search/?product=&_dont_run=1
     """
 
-    URL = Socorro.API_URL + '/SuperSearch'
-    URL_UNREDACTED = URL + 'Unredacted'
+    URL = Socorro.API_URL + '/SuperSearch/'
+    URL_UNREDACTED = Socorro.API_URL + '/SuperSearchUnredacted/'
     WEB_URL = Socorro.CRASH_STATS_URL + '/search'
 
     def __init__(self, params=None, handler=None, handlerdata=None, queries=None, **kwargs):
