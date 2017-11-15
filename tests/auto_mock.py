@@ -1,6 +1,5 @@
 import unittest
 import os
-import requests
 import responses
 import gzip
 import pickle
@@ -30,8 +29,6 @@ class MockTestCase(unittest.TestCase):
     mock_urls = []
 
     def setUp(self):
-        # Real requests session
-        self.real_session = requests.Session()
 
         # Setup mock callbacks
         for mock_url in self.mock_urls:
