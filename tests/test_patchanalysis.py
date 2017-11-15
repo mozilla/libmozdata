@@ -456,7 +456,7 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['landings']['aurora'], datetime(2016, 3, 28, 23, 24, 6, tzinfo=pytz.UTC))
         self.assertEqual(info['landings']['beta'], datetime(2016, 3, 31, 19, 48, 30, tzinfo=pytz.UTC))
         self.assertEqual(info['landings']['release'], datetime(2016, 4, 6, 19, 35, 18, tzinfo=pytz.UTC))
-        self.assertIsNone(info['landings']['esr'])
+        self.assertEqual(info['landings']['esr'], datetime(2016, 4, 7, 18, 41, 3, tzinfo=pytz.UTC))
 
         # Check uplift request
         info = patchanalysis.bug_analysis(1230065, uplift_channel='release')
