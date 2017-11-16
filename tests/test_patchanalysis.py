@@ -466,6 +466,7 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['uplift_comment']['id'], 11222288)
         self.assertIsNotNone(info['uplift_author'])
         self.assertEqual(info['uplift_author']['email'], 'karlt@mozbugz.karlt.net')
+        self.assertIsNone(info['uplift_reviewer'])
 
         # in-testsuite?
         info = patchanalysis.bug_analysis(1190)
@@ -523,6 +524,8 @@ class PatchAnalysisTest(MockTestCase):
         self.assertEqual(info['uplift_author']['email'], 'sunfish@mozilla.com')
         self.assertEqual(info['uplift_comment']['id'], 7810070)
         self.assertEqual(len(info['uplift_comment']['text'].split('\n')), 14)
+        self.assertIsNotNone(info['uplift_reviewer'])
+        self.assertEqual(info['uplift_reviewer']['name'], 'abillings@mozilla.com')
 
         # Approved without request.
         with warnings.catch_warnings(record=True) as w:
@@ -535,6 +538,8 @@ class PatchAnalysisTest(MockTestCase):
             self.assertEqual(info['uplift_author']['email'], 'mark.finkle@gmail.com')
             self.assertEqual(info['uplift_comment']['id'], 7292379)
             self.assertEqual(len(info['uplift_comment']['text'].split('\n')), 9)
+            self.assertIsNotNone(info['uplift_reviewer'])
+            self.assertEqual(info['uplift_reviewer']['name'], 'lukasblakk+bugs@gmail.com')
 
         # Pending request.
         with warnings.catch_warnings(record=True) as w:
@@ -545,12 +550,22 @@ class PatchAnalysisTest(MockTestCase):
             self.assertEqual(info['uplift_author']['email'], 'cyu@mozilla.com')
             self.assertEqual(info['uplift_comment']['id'], 11516158)
             self.assertEqual(len(info['uplift_comment']['text'].split('\n')), 9)
+            self.assertIsNotNone(info['uplift_reviewer'])
+            self.assertEqual(info['uplift_reviewer']['name'], 'lhenry@mozilla.com')
 
         # Multiple requests in the same bug, one accepted, one rejected.
         try:
             info = patchanalysis.uplift_info(1229760, 'release')
         except Exception as e:
             self.assertEqual(str(e), 'Uplift either accepted or rejected.')
+
+        # Different uplift Reviewers between channels
+        info = patchanalysis.uplift_info(1404105, 'release')
+        self.assertIsNotNone(info['uplift_reviewer'])
+        self.assertEqual(info['uplift_reviewer']['name'], 'lhenry@mozilla.com')
+        info = patchanalysis.uplift_info(1404105, 'beta')
+        self.assertIsNotNone(info['uplift_reviewer'])
+        self.assertEqual(info['uplift_reviewer']['name'], 'rkothari@mozilla.com')
 
     @responses.activate
     def test_patch_info(self):

@@ -547,20 +547,31 @@ def uplift_info(bug, channel):
         'uplift_accepted': False,
         'uplift_comment': None,
         'uplift_author': None,
+        'uplift_reviewer': None,
         'landing_delta': timedelta(),
         'response_delta': timedelta(),
         'release_delta': timedelta(),
     }
     approval_flag = 'approval-mozilla-' + channel
 
-    app_flags = filter(lambda f: f['name'] == approval_flag, [flag for a in bug['attachments'] for flag in a['flags']])
+    app_flags = [
+        flag
+        for a in bug['attachments']
+        for flag in a['flags']
+        if flag['name'] == approval_flag
+    ]
     status = [flag['status'] for flag in app_flags]
+    uplift_reviewers = [flag['setter'] for flag in app_flags]
     uplift_accepted = any(filter(lambda s: s == '+', status))
     uplift_rejected = any(filter(lambda s: s == '-', status))
 
     assert not (uplift_accepted and uplift_rejected), 'Uplift either accepted or rejected.'
 
     info['uplift_accepted'] = uplift_accepted
+
+    # Add reviewer from last flag set
+    if len(uplift_reviewers):
+        info['uplift_reviewer'] = get_user_details(uplift_reviewers[-1])
 
     # Delta between uplift request and uplift acceptation/rejection.
     uplift_request = Bugzilla.get_history_matches(bug['history'], {'added': approval_flag + '?', 'field_name': 'flagtypes.name'})
