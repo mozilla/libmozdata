@@ -567,6 +567,10 @@ class PatchAnalysisTest(MockTestCase):
         self.assertIsNotNone(info['uplift_reviewer'])
         self.assertEqual(info['uplift_reviewer']['name'], 'rkothari@mozilla.com')
 
+        # Future release date
+        info = patchanalysis.uplift_info(1416872, 'beta')
+        self.assertEqual(info['release_delta'], timedelta(56, 54694))
+
     @responses.activate
     def test_patch_info(self):
         base_versions = {'nightly': 52, 'aurora': 51, 'beta': 50, 'release': 49, 'esr': 45}

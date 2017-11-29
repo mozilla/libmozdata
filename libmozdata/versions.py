@@ -19,6 +19,8 @@ URL_HISTORY = 'https://product-details.mozilla.org/1.0/firefox_history_major_rel
 URL_CALENDAR = 'https://www.google.com/calendar/ical/mozilla.com_2d37383433353432352d3939%40resource.calendar.google.com/public/basic.ics'
 URL_STABILITY = 'https://product-details.mozilla.org/1.0/firefox_history_stability_releases.json'
 
+REGEX_EVENT = re.compile('Firefox ([0-9]+) Release', re.IGNORECASE)
+
 
 def __get_major(v):
     if not v:
@@ -62,7 +64,7 @@ def __getVersionDates():
 
     for component in calendar.walk():
         if component.name == 'VEVENT':
-            match = re.search('Firefox ([0-9]+) Release', component.get('summary'))
+            match = REGEX_EVENT.search(component.get('summary'))
             if match:
                 version = match.group(1) + '.0'
                 if version not in data:
@@ -132,7 +134,14 @@ def __getCloserDate(date, versions_dates, negative=False):
     def diff(d):
         return d - date
 
-    return min([(v, d) for v, d in versions_dates if negative or diff(d) > timedelta(0)], key=lambda i: abs(diff(i[1])))
+    future_dates = [
+        (v, d)
+        for v, d in versions_dates
+        if negative or diff(d) > timedelta(0)
+    ]
+    if not future_dates:
+        raise Exception('No future release found')
+    return min(future_dates, key=lambda i: abs(diff(i[1])))
 
 
 def getCloserMajorRelease(date, negative=False):
