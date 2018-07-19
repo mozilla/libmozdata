@@ -18,13 +18,13 @@ class HGFileInfo(object):
 
     MAX_REV_COUNT = 4095
 
-    def __init__(self, paths, channel='nightly', node='tip', date_type='push'):
+    def __init__(self, paths, channel='nightly', node='default', date_type='push'):
         """Constructor
 
         Args:
             paths (List[str]): the paths
             channel (str): channel version of firefox
-            node (Optional[str]): the node, by default 'tip'
+            node (Optional[str]): the node, by default 'default'
         """
         self.channel = channel
         self.node = node

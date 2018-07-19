@@ -569,7 +569,7 @@ class PatchAnalysisTest(MockTestCase):
 
         # Future release date
         info = patchanalysis.uplift_info(1416872, 'beta')
-        self.assertEqual(info['release_delta'], timedelta(56, 54694))
+        self.assertEqual(info['release_delta'], timedelta(9, 54694))
 
     @responses.activate
     def test_patch_info(self):
