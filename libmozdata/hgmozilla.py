@@ -99,12 +99,12 @@ class Revision(Mercurial):
         data.update(json)
 
     @staticmethod
-    def get_revision(channel='nightly', node='tip'):
+    def get_revision(channel='nightly', node='default'):
         """Get the revision for a node
 
         Args:
             channel (str): channel version of firefox
-            node (Optional[str]): the node, by default 'tip'
+            node (Optional[str]): the node, by default 'default'
 
         Returns:
             dict: the revision corresponding to the node
@@ -146,12 +146,12 @@ class RawRevision(Mercurial):
         return Mercurial.get_repo_url(channel) + '/raw-rev'
 
     @staticmethod
-    def get_revision(channel='nightly', node='tip'):
+    def get_revision(channel='nightly', node='default'):
         """Get the revision for a node
 
         Args:
             channel (str): channel version of firefox
-            node (Optional[str]): the node, by default 'tip'
+            node (Optional[str]): the node, by default 'default'
 
         Returns:
             dict: the revision corresponding to the node
@@ -208,13 +208,13 @@ class FileInfo(Mercurial):
         data.update(json)
 
     @staticmethod
-    def get(paths, channel='nightly', node='tip'):
+    def get(paths, channel='nightly', node='default'):
         """Get the file info for several paths
 
         Args:
             paths (List[str]): the paths
             channel (str): channel version of firefox
-            node (Optional[str]): the node, by default 'tip'
+            node (Optional[str]): the node, by default 'default'
 
         Returns:
             dict: the files info
@@ -285,13 +285,13 @@ class Annotate(Mercurial):
         data.update(json)
 
     @staticmethod
-    def get(paths, channel='nightly', node='tip'):
+    def get(paths, channel='nightly', node='default'):
         """Get the annotated files for several paths
 
         Args:
             paths (List[str]): the paths
             channel (str): channel version of firefox
-            node (Optional[str]): the node, by default 'tip'
+            node (Optional[str]): the node, by default 'default'
 
         Returns:
             dict: the files info

@@ -35,8 +35,8 @@ class RevisionTest(unittest.TestCase):
             data.update(json)
 
         hgmozilla.Revision(queries=[
-            Query(hgmozilla.Revision.get_url('nightly'), [{'node': 'tip'}, {'node': '1584ba8c1b86'}], handler1, data1),
-            Query(hgmozilla.Revision.get_url('nightly'), {'node': 'tip'}, handler2, data2),
+            Query(hgmozilla.Revision.get_url('nightly'), [{'node': 'default'}, {'node': '1584ba8c1b86'}], handler1, data1),
+            Query(hgmozilla.Revision.get_url('nightly'), {'node': 'default'}, handler2, data2),
         ]).wait()
 
         for rev in [data1['first'], data1['second'], data2]:

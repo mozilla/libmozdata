@@ -18,13 +18,13 @@ class FileStats(object):
     """Stats about a file in the repo.
     """
 
-    def __init__(self, path, channel='nightly', node='tip', utc_ts=None, max_days=None):
+    def __init__(self, path, channel='nightly', node='default', utc_ts=None, max_days=None):
         """Constructor
 
         Args:
             path (str): file path
             channel (str): channel version of firefox
-            node (Optional[str]): the node, by default 'tip'
+            node (Optional[str]): the node, by default 'default'
             utc_ts (Optional[int]): UTC timestamp, file pushdate <= utc_ts
         """
         self.utc_ts = utc_ts if isinstance(utc_ts, numbers.Number) and utc_ts > 0 else None
@@ -98,7 +98,7 @@ class FileStats(object):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='File Stats')
     parser.add_argument('-p', '--path', action='store', help='file path')
-    parser.add_argument('-n', '--node', action='store', default='tip', help='Mercurial node, by default \'tip\'')
+    parser.add_argument('-n', '--node', action='store', default='default', help='Mercurial node, by default \'default\'')
     parser.add_argument('-c', '--channel', action='store', default='nightly', help='release channel')
     parser.add_argument('-d', '--date', action='store', default='today', help='max date for pushdate, format YYYY-mm-dd')
 
