@@ -200,9 +200,9 @@ class Bugzilla(Connection):
     @staticmethod
     def get_links(bugids):
         if isinstance(bugids, six.string_types) or isinstance(bugids, int):
-            return 'https://bugzil.la/' + str(bugids)
+            return 'https://bugzilla.mozilla.org/' + str(bugids)
         else:
-            return ['https://bugzil.la/' + str(bugid) for bugid in bugids]
+            return ['https://bugzilla.mozilla.org/' + str(bugid) for bugid in bugids]
 
     @staticmethod
     def follow_dup(bugids, only_final=True):
