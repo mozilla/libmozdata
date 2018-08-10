@@ -687,10 +687,10 @@ class User(MockTestCase):
 class BugLinksTest(unittest.TestCase):
 
     def test_bugid(self):
-        self.assertEqual(bugzilla.Bugzilla.get_links('12345'), 'https://bugzil.la/12345')
-        self.assertEqual(bugzilla.Bugzilla.get_links(12345), 'https://bugzil.la/12345')
-        self.assertEqual(bugzilla.Bugzilla.get_links(['12345', '123456']), ['https://bugzil.la/12345', 'https://bugzil.la/123456'])
-        self.assertEqual(bugzilla.Bugzilla.get_links([12345, 123456]), ['https://bugzil.la/12345', 'https://bugzil.la/123456'])
+        self.assertEqual(bugzilla.Bugzilla.get_links('12345'), 'https://bugzilla.mozilla.org/12345')
+        self.assertEqual(bugzilla.Bugzilla.get_links(12345), 'https://bugzilla.mozilla.org/12345')
+        self.assertEqual(bugzilla.Bugzilla.get_links(['12345', '123456']), ['https://bugzilla.mozilla.org/12345', 'https://bugzilla.mozilla.org/123456'])
+        self.assertEqual(bugzilla.Bugzilla.get_links([12345, 123456]), ['https://bugzilla.mozilla.org/12345', 'https://bugzilla.mozilla.org/123456'])
 
 
 if __name__ == '__main__':
