@@ -32,4 +32,10 @@ setup(
     include_package_data=True,
     zip_safe=False,
     license='MPL2',
+    classifiers=[
+        'Operating System :: OS Independent',
+        'License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 3',
+    ],
 )
