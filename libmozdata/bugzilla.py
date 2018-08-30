@@ -19,6 +19,7 @@ class Bugzilla(Connection):
     URL = config.get('Bugzilla', 'URL', 'https://bugzilla.mozilla.org')
     # URL = config.get('Allizgub', 'URL', 'https://bugzilla-dev.allizom.org')
     API_URL = URL + '/rest/bug'
+    ATTACHMENT_API_URL = API_URL + '/attachment'
     TOKEN = config.get('Bugzilla', 'token', '')
     # TOKEN = config.get('Allizgub', 'token', '')
 
@@ -69,7 +70,7 @@ class Bugzilla(Connection):
         header['X-Bugzilla-API-Key'] = self.get_apikey()
         return header
 
-    def put(self, data):
+    def put(self, data, attachment=False):
         """Put some data in bugs
 
         Args:
@@ -81,7 +82,8 @@ class Bugzilla(Connection):
             else:
                 ids = self.__get_bugs_list()
 
-            url = Bugzilla.API_URL + '/'
+            url = Bugzilla.ATTACHMENT_API_URL if attachment else Bugzilla.API_URL
+            url += '/'
             failed = ids
             header = self.get_header()
 
