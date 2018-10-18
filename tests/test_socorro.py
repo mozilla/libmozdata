@@ -66,13 +66,6 @@ class ProductVersionsTest(unittest.TestCase):
         self.assertIsNotNone(i)
 
 
-class ADITest(unittest.TestCase):
-
-    def test_adi(self):
-        adis = socorro.ADI.get(channel='nightly')
-        self.assertIsNotNone(adis)
-
-
 class BugsTest(unittest.TestCase):
 
     def test_bugs(self):
