@@ -166,59 +166,6 @@ class ProcessedCrash(Socorro):
         return data
 
 
-class Platforms(Socorro):
-    """Platforms: https://crash-stats.mozilla.com/api/#Platforms
-    """
-
-    URL = Socorro.API_URL + '/Platforms/'
-    __cached_platforms = None
-
-    def __init__(self, params=None, handler=None, handlerdata=None, **kwargs):
-        """Constructor
-
-        Args:
-            params (Optional[dict]): the params for the query
-            handler (Optional[function]): handler to use with the result of the query
-            handlerdata (Optional): data used in second argument of the handler
-            queries (Optional[List[Query]]): queries to execute
-        """
-        super(Platforms, self).__init__(Query(Platforms.URL, params, handler, handlerdata), **kwargs)
-
-    @staticmethod
-    def get_cached_all():
-        """Get all the platforms
-
-        Returns:
-            List[str]: the different platforms
-        """
-        if not Platforms.__cached_platforms:
-            Platforms.__cached_platforms = Platforms.get_all()
-
-        return Platforms.__cached_platforms
-
-    @staticmethod
-    def default_handler(json, data):
-        """Default handler
-
-        Args:
-            json (dict): json
-            data (list): list to append the platforms name
-        """
-        for code in json:
-            data.append(code['name'])
-
-    @staticmethod
-    def get_all():
-        """Get all the platforms
-
-        Returns:
-            List[str]: the different platforms
-        """
-        platforms = []
-        Platforms(handler=Platforms.default_handler, handlerdata=platforms).wait()
-        return platforms
-
-
 class ProductVersions(Socorro):
     """ProductVersions: https://crash-stats.mozilla.com/api/#ProductVersions
     """
