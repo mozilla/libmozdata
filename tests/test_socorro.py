@@ -39,17 +39,6 @@ class ProcessedCrashTest(unittest.TestCase):
         self.assertIsNotNone(processed)
 
 
-class PlatformsTest(unittest.TestCase):
-
-    def test_platforms(self):
-        platforms = socorro.Platforms.get_all()
-        self.assertIsNotNone(platforms)
-
-    def test_cached_platforms(self):
-        platforms = socorro.Platforms.get_cached_all()
-        self.assertIsNotNone(platforms)
-
-
 class ProductVersionsTest(unittest.TestCase):
 
     def test_versions(self):
