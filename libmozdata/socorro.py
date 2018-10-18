@@ -7,7 +7,6 @@ import functools
 from operator import itemgetter
 from .connection import (Connection, Query)
 from . import utils
-from datetime import timedelta
 from dateutil.relativedelta import relativedelta
 from . import config
 
