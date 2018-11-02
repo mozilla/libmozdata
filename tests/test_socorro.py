@@ -39,22 +39,6 @@ class ProcessedCrashTest(unittest.TestCase):
         self.assertIsNotNone(processed)
 
 
-class ProductVersionsTest(unittest.TestCase):
-
-    def test_versions(self):
-        versions = socorro.ProductVersions.get_active()
-        self.assertIsNotNone(versions)
-
-    def test_cached_versions(self):
-        cached_versions = socorro.ProductVersions.get_cached_versions()
-        self.assertIsNotNone(cached_versions)
-
-    def test_info_from_major(self):
-        v = versions.get(base=True)
-        i = socorro.ProductVersions.get_info_from_major(v)
-        self.assertIsNotNone(i)
-
-
 class BugsTest(unittest.TestCase):
 
     def test_bugs(self):
