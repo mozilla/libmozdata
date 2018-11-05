@@ -15,17 +15,13 @@ class RedashTest(unittest.TestCase):
         if not Redash.TOKEN:
             return
 
-        v = libmozdata.versions.get(base=True)
+        versions = libmozdata.versions.get()
 
         end_date = utils.get_date_ymd('yesterday')
         start_date = utils.get_date_ymd(end_date - timedelta(10))
 
         for channel in ['release', 'beta', 'nightly']:
-            version = v[channel]
-            versions_info = socorro.ProductVersions.get_version_info(version, channel=channel, product='Firefox')
-            versions = versions_info.keys()
-
-            khours = Redash.get_khours(start_date, end_date, channel, versions, 'Firefox')
+            khours = Redash.get_khours(start_date, end_date, channel, [versions[channel]], 'Firefox')
             self.assertEqual(len(khours), 11)
             for i in range(11):
                 self.assertIn(start_date + timedelta(i), khours)
