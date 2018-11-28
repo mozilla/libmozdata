@@ -1,0 +1,27 @@
+Comment on attachment 9027925 [details]
+Bug 1510281 - Use a private and isolated context for search suggestions. r=mkaply!
+
+[Beta/Release Uplift Approval Request]
+
+Feature/Bug causing the regression: None
+
+User impact if declined: Fetching search suggestions may store/share unexpected cookies. This is an old defect but being privacy-related we want it sooner than later.
+
+Is this code covered by automated tests?: Yes
+
+Has the fix been verified in Nightly?: No
+
+Needs manual test from QE?: Yes
+
+If yes, steps to reproduce: In a new profile:
+1. Type about:preferences#privacy in the address bar, wait for search suggestions to appear, confirm with Enter
+2. Open Manage Data
+3. Check there's no Google cookie
+
+List of other uplifts needed: None
+
+Risk to taking this patch: Low
+
+Why is the change risky/not risky? (and alternatives if risky): The code changes are simple
+
+String changes made/needed: none

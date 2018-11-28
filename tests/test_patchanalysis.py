@@ -571,6 +571,10 @@ class PatchAnalysisTest(MockTestCase):
         info = patchanalysis.uplift_info(1416872, 'beta')
         self.assertEqual(info['release_delta'], timedelta(9, 54694))
 
+        # New uplift request comment format
+        info = patchanalysis.uplift_info(1510281, 'beta')
+        self.assertIsNotNone(info['uplift_comment'])
+
     @responses.activate
     def test_patch_info(self):
         base_versions = {'nightly': 52, 'aurora': 51, 'beta': 50, 'release': 49, 'esr': 45}
