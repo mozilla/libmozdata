@@ -575,7 +575,7 @@ def uplift_info(bug, channel):
 
     # Delta between uplift request and uplift acceptation/rejection.
     uplift_request = Bugzilla.get_history_matches(bug['history'], {'added': approval_flag + '?', 'field_name': 'flagtypes.name'})
-    uplift_pattern = re.compile('Approval Request Comment')
+    uplift_pattern = re.compile('Approval Request')
     if len(uplift_request):
         uplift_request_date = utils.get_date_ymd(uplift_request[-1]['when'])
     else:
