@@ -1,15 +1,16 @@
 import unittest
 
-import requests_mock
+import responses
 
 from libmozdata import buildhub
 
 
 class BuidlhubTest(unittest.TestCase):
 
-    @requests_mock.Mocker()
-    def test_get_distinct_versions(self, requestsmock):
-        requestsmock.post(
+    @responses.activate
+    def test_get_distinct_versions(self):
+        responses.add(
+            responses.POST,
             buildhub.SEARCH_URL,
             json={
                 "aggregations": {
@@ -24,9 +25,10 @@ class BuidlhubTest(unittest.TestCase):
         versions = buildhub.get_distinct_versions()
         self.assertEqual(versions, ["65.1", "64.2"])
 
-    @requests_mock.Mocker()
-    def test_get_distinct_versions_majors(self, requestsmock):
-        requestsmock.post(
+    @responses.activate
+    def test_get_distinct_versions_majors(self):
+        responses.add(
+            responses.POST,
             buildhub.SEARCH_URL,
             json={
                 "aggregations": {
@@ -37,9 +39,10 @@ class BuidlhubTest(unittest.TestCase):
         versions = buildhub.get_distinct_versions(major="65")
         self.assertEqual(versions, ["65.1"])
 
-    @requests_mock.Mocker()
-    def test_get_distinct_buildids(self, requestsmock):
-        requestsmock.post(
+    @responses.activate
+    def test_get_distinct_buildids(self):
+        responses.add(
+            responses.POST,
             buildhub.SEARCH_URL,
             json={
                 "aggregations": {
@@ -58,9 +61,10 @@ class BuidlhubTest(unittest.TestCase):
         versions = buildhub.get_distinct_buildids()
         self.assertEqual(versions, ["20181130102244", "20181029104433"])
 
-    @requests_mock.Mocker()
-    def test_get_distinct_buildids_startswith(self, requestsmock):
-        requestsmock.post(
+    @responses.activate
+    def test_get_distinct_buildids_startswith(self):
+        responses.add(
+            responses.POST,
             buildhub.SEARCH_URL,
             json={
                 "aggregations": {
