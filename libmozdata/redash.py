@@ -46,7 +46,7 @@ class Redash(Connection):
     @staticmethod
     def __get_rows(channel, versions, rows):
         if channel == 'beta':
-            pat = re.compile('([0-9]+\.0)b[0-9]+')
+            pat = re.compile(r'([0-9]+\.0)b[0-9]+')
             _versions = set()
             for v in versions:
                 m = pat.match(v)
@@ -56,7 +56,7 @@ class Redash(Connection):
             _versions = set(versions)
 
         majors = set()
-        pat_major = re.compile('([0-9]+)')
+        pat_major = re.compile(r'([0-9]+)')
         for v in versions:
             m = pat_major.match(v)
             if m:

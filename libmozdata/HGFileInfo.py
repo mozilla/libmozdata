@@ -33,8 +33,8 @@ class HGFileInfo(object):
         self.paths = [paths] if isinstance(paths, six.string_types) else paths
         for p in self.paths:
             self.data[p] = []
-        self.bug_pattern = re.compile('[\t ]*[Bb][Uu][Gg][\t ]*([0-9]+)')
-        self.rev_pattern = re.compile('r=([a-zA-Z0-9]+)')
+        self.bug_pattern = re.compile(r'[\t ]*[Bb][Uu][Gg][\t ]*([0-9]+)')
+        self.rev_pattern = re.compile(r'r=([a-zA-Z0-9]+)')
         self.results = []
         self.__get_info(self.paths, self.node)
 
@@ -48,8 +48,8 @@ class HGFileInfo(object):
         for result in self.results:
             result.wait()
 
-        author_pattern = re.compile('<([^>]+)>')
-        email_pattern = re.compile('<?([\w\-\._\+%]+@[\w\-\._\+%]+)>?')
+        author_pattern = re.compile(r'<([^>]+)>')
+        email_pattern = re.compile(r'<?([\w\-\._\+%]+@[\w\-\._\+%]+)>?')
 
         entries = self.data[path]
 

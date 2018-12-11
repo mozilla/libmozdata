@@ -5,7 +5,6 @@
 import unittest
 from datetime import timedelta
 from libmozdata.redash import Redash
-import libmozdata.socorro as socorro
 import libmozdata.utils as utils
 import libmozdata.versions
 

@@ -28,11 +28,11 @@ class BZInfo(Bugzilla):
                                 'reviewers': set(),
                                 'commenters': {},
                                 'authorized': False}
-        self.reply_pattern = re.compile('^\(In reply to .* comment #([0-9]+)\)')
-        self.dupbug_pattern = re.compile('\*\*\* Bug [0-9]+ has been marked as a duplicate of this bug. \*\*\*')
-        self.review_pattern = re.compile('review\?\(([^\)]+)\)')
-        self.needinfo_pattern = re.compile('needinfo\?\(([^\)]+)\)')
-        self.feedback_pattern = re.compile('feedback\?\(([^\)]+)\)')
+        self.reply_pattern = re.compile(r'^\(In reply to .* comment #([0-9]+)\)')
+        self.dupbug_pattern = re.compile(r'\*\*\* Bug [0-9]+ has been marked as a duplicate of this bug. \*\*\*')
+        self.review_pattern = re.compile(r'review\?\(([^\)]+)\)')
+        self.needinfo_pattern = re.compile(r'needinfo\?\(([^\)]+)\)')
+        self.feedback_pattern = re.compile(r'feedback\?\(([^\)]+)\)')
         self.get_data()
 
     def get(self):
