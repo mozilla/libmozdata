@@ -278,11 +278,11 @@ def get_bugzilla_authors_reviewers(bug):
 
 
 def get_commits_for_bug(bug):
-    reviewer_pattern = re.compile('r=([a-zA-Z0-9._]+)')
-    author_pattern = re.compile('<([^>]+)>')
-    email_pattern = re.compile('<?([\w\-\._\+%]+@[\w\-\._\+%]+)>?')
-    backout_pattern = re.compile('(?:backout|back out|backed out|backedout) (?:changeset )?([a-z0-9]{12,})')
-    bug_pattern = re.compile('[\t ]*bug[\t ]*([0-9]+)')
+    reviewer_pattern = re.compile(r'r=([a-zA-Z0-9._]+)')
+    author_pattern = re.compile(r'<([^>]+)>')
+    email_pattern = re.compile(r'<?([\w\-\._\+%]+@[\w\-\._\+%]+)>?')
+    backout_pattern = re.compile(r'(?:backout|back out|backed out|backedout) (?:changeset )?([a-z0-9]{12,})')
+    bug_pattern = re.compile(r'[\t ]*bug[\t ]*([0-9]+)')
     landings = Bugzilla.get_landing_comments(bug['comments'], ['inbound', 'central', 'fx-team'])
     revs = {}
     backed_out_revs = set()
@@ -310,7 +310,7 @@ def get_commits_for_bug(bug):
         if not backout_revisions:
             match = re.search('(?:backout|back out|backed out|backedout) changesets', meta['desc'])
             if match:
-                pattern = re.compile('([a-z0-9]{12,})')
+                pattern = re.compile(r'([a-z0-9]{12,})')
                 for match in pattern.finditer(meta['desc']):
                     backout_revisions.add(match.group(1)[:12])
 
@@ -575,7 +575,7 @@ def uplift_info(bug, channel):
 
     # Delta between uplift request and uplift acceptation/rejection.
     uplift_request = Bugzilla.get_history_matches(bug['history'], {'added': approval_flag + '?', 'field_name': 'flagtypes.name'})
-    uplift_pattern = re.compile('Approval Request')
+    uplift_pattern = re.compile(r'Approval Request')
     if len(uplift_request):
         uplift_request_date = utils.get_date_ymd(uplift_request[-1]['when'])
     else:
@@ -633,7 +633,7 @@ def uplift_info(bug, channel):
 def get_patch_info(bugs, base_versions=None, extra=None,
                    channels=['release', 'aurora', 'beta', 'nightly']):
     landing_patterns = Bugzilla.get_landing_patterns(channels=channels)
-    approval_pattern = re.compile('approval-mozilla-([a-zA-Z0-9]+)\+')
+    approval_pattern = re.compile(r'approval-mozilla-([a-zA-Z0-9]+)\+')
 
     def comment_handler(bug, bugid, data):
         r = Bugzilla.get_landing_comments(bug['comments'], [], landing_patterns)
@@ -699,7 +699,7 @@ def get_patch_info(bugs, base_versions=None, extra=None,
     toremove.clear()
     queries = []
 
-    bug_pattern = re.compile('[\t ]*[Bb][Uu][Gg][\t ]*([0-9]+)')
+    bug_pattern = re.compile(r'[\t ]*[Bb][Uu][Gg][\t ]*([0-9]+)')
 
     def handler_revision(json, data):
         data['date'] = utils.as_utc(datetime.utcfromtimestamp(json['pushdate'][0]))
@@ -764,19 +764,19 @@ def parse_uplift_comment(text, bug_id=None):
     links and headers as HTML
     """
     headers = (
-        'Feature/regressing bug #',
-        'Feature/Bug causing the regression',
-        'User impact if declined',
-        'Is this code covered by automated tests\?',
-        'Has the fix been verified in Nightly\?',
-        'Describe test coverage new/current, TreeHerder',
-        'Needs manual test from QE\? If yes, steps to reproduce',
-        'List of other uplifts needed for the feature/fix',
-        'Risks and why',
-        'Is the change risky\?',
-        'Why is the change risky/not risky\?',
-        'String/UUID change made/needed',
-        'String changes made/needed',
+        r'Feature/regressing bug #',
+        r'Feature/Bug causing the regression',
+        r'User impact if declined',
+        r'Is this code covered by automated tests\?',
+        r'Has the fix been verified in Nightly\?',
+        r'Describe test coverage new/current, TreeHerder',
+        r'Needs manual test from QE\? If yes, steps to reproduce',
+        r'List of other uplifts needed for the feature/fix',
+        r'Risks and why',
+        r'Is the change risky\?',
+        r'Why is the change risky/not risky\?',
+        r'String/UUID change made/needed',
+        r'String changes made/needed',
     )
     no_header = 'no-header'
 
@@ -827,7 +827,7 @@ def parse_uplift_comment(text, bug_id=None):
     lines = text.split('\n')
 
     # Build headers
-    header_regex = '^\[({})\]:?\s*(.*)'.format('|'.join(headers))
+    header_regex = r'^\[({})\]:?\s*(.*)'.format('|'.join(headers))
     header_regex = re.compile(header_regex, re.IGNORECASE)
 
     out = collections.OrderedDict()
@@ -845,7 +845,7 @@ def parse_uplift_comment(text, bug_id=None):
             _parse_line(header, line)
 
     def _cleanup_lines(lines):
-        text = re.sub('[^\w]+', ' ', ''.join(lines))
+        text = re.sub(r'[^\w]+', ' ', ''.join(lines))
         return text.lower().strip()
 
     # Detect risks on specific items

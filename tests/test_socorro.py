@@ -4,7 +4,6 @@
 
 import unittest
 from libmozdata import socorro
-from libmozdata import versions
 
 
 class SuperSearchTest(unittest.TestCase):
