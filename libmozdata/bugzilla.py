@@ -2,9 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import six
+import dateutil.parser
 import re
-import functools
+import requests
+import six
 from .connection import (Connection, Query)
 from . import config
 from . import utils
@@ -70,44 +71,109 @@ class Bugzilla(Connection):
         header['X-Bugzilla-API-Key'] = self.get_apikey()
         return header
 
-    def put(self, data, attachment=False):
+    def put(self, data, attachment=False, max_retry=1024):
         """Put some data in bugs
 
         Args:
             data (dict): a dictionnary
         """
         if self.bugids:
+            # When used with several bugids, some updates can fail even
+            # if some bugs in the chunk have been correctly updated.
+            # So we just update the first bug and get the time of the modification
+            # (via history) and when there is a failure, we get the history for all bugs in
+            # the chunk and we verify that the email associated to the token is in the history
+            # and the date of modification is greater than the one for first bug.
             if self.__is_bugid():
                 ids = self.bugids
             else:
                 ids = self.__get_bugs_list()
 
-            url = Bugzilla.ATTACHMENT_API_URL if attachment else Bugzilla.API_URL
-            url += '/'
-            failed = ids
+            base_url = Bugzilla.ATTACHMENT_API_URL if attachment else Bugzilla.API_URL
+            base_url += '/'
+            ids = list(ids)
+            first_id, ids = ids[0], ids[1:]
             header = self.get_header()
+            user = BugzillaUser().get_whoami()
+            if not user:
+                raise BugzillaException('Not a valid user is associated to the given token')
+            bzmail = user['name']
 
-            def cb(data, sess, res):
-                if res.status_code == 200:
-                    json = res.json()
-                    if json.get('error', False):
-                        failed.extend(data)
+            def get_last(bzmail, history):
+                for h in reversed(history):
+                    if h['who'] == bzmail:
+                        return h
+                return {}
 
-            while failed:
-                _failed = list(failed)
+            def get_failures(bzmail, last_time, histories):
+                failures = []
+                for history in histories['bugs']:
+                    last = get_last(bzmail, history['history'])
+                    if not last or dateutil.parser.parse(last['when']) < last_time:
+                        # no change has been made with this bzmail after last_time
+                        failures.append(str(history['id']))
+                return failures
+
+            success = False
+            for _ in range(max_retry):
+                r = requests.put(base_url + first_id,
+                                 json=data,
+                                 headers=header,
+                                 verify=True,
+                                 timeout=self.TIMEOUT)
+                if r.status_code == 200:
+                    json = r.json()
+                    if not json.get('error', False):
+                        success = True
+                        break
+
+            if not success:
+                raise BugzillaException('Cannot set data for bug {}'.format(first_id))
+
+            # get the last_time
+            r = requests.get('{}/{}/history'.format(Bugzilla.API_URL, first_id),
+                             params={'ids': first_id},
+                             headers=header,
+                             verify=True,
+                             timeout=self.TIMEOUT)
+            json = r.json()
+            history = json['bugs'][0]['history']
+            last = get_last(bzmail, history)
+
+            if not last:
+                raise BugzillaException('Impossible to get update the bug {}'.format(first_id))
+
+            last_time = dateutil.parser.parse(last['when'])
+
+            success = False
+            for _ in range(max_retry):
+                if not ids:
+                    success = True
+                    break
+
                 failed = []
-                for _ids in Connection.chunks(_failed):
-                    first_id = _ids[0]
-                    if len(_ids) >= 2:
+                for _ids in Connection.chunks(ids):
+                    if _ids:
+                        first_id = _ids[0]
                         data['ids'] = _ids
-                    elif 'ids' in data:
-                        del data['ids']
-                    self.session.put(url + first_id,
-                                     json=data,
-                                     headers=header,
-                                     verify=True,
-                                     timeout=self.TIMEOUT,
-                                     background_callback=functools.partial(cb, _ids)).result()
+                        r = requests.put(base_url + first_id,
+                                         json=data,
+                                         headers=header,
+                                         verify=True,
+                                         timeout=self.TIMEOUT)
+                        if r.status_code != 200 or r.json().get('error', False):
+                            # some updates failed, so get them
+                            r = requests.get('{}/{}/history'.format(Bugzilla.API_URL, first_id),
+                                             params={'ids': _ids},
+                                             headers=header,
+                                             verify=True,
+                                             timeout=self.TIMEOUT)
+                            histories = r.json()
+                            failed += get_failures(bzmail, last_time, histories)
+                ids = failed
+
+            if not success:
+                raise BugzillaException('Cannot set data for bugs {}'.format(ids))
 
     def get_data(self):
         """Collect the data
@@ -645,3 +711,21 @@ class BugzillaUser(Connection):
 
         for user in res['users']:
             self.user_handler.handle(user)
+
+    def get_whoami(self):
+        r = requests.get(BugzillaUser.URL + '/rest/whoami',
+                         headers=self.get_header(),
+                         verify=True,
+                         timeout=self.TIMEOUT)
+        if r.status_code == 200:
+            return r.json()
+        return {}
+
+
+class BugzillaException(Exception):
+    def __init__(self, value):
+        super(Exception, self).__init__()
+        self.value = value
+
+    def __str__(self):
+        return repr(self.value)
