@@ -2,9 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import functools
 import six
 import re
-import functools
+import requests
+import time
 from .connection import (Connection, Query)
 from . import config
 from . import utils
@@ -453,20 +455,39 @@ class Bugzilla(Connection):
         """
         url = Bugzilla.API_URL + '?'
         header = self.get_header()
+        specials = {'count_only', 'limit', 'order', 'offset'}
         for query in self.bugids:
             if isinstance(query, six.string_types):
                 url = Bugzilla.API_URL + '?' + query
-                params = None
-            else:
+                self.bugs_results.append(self.session.get(url,
+                                                          headers=header,
+                                                          verify=True,
+                                                          timeout=self.TIMEOUT,
+                                                          background_callback=self.__bugs_cb))
+            elif not (specials & set(query.keys())):
                 url = Bugzilla.API_URL
-                params = query
-
-            self.bugs_results.append(self.session.get(url,
-                                                      params=params,
-                                                      headers=header,
-                                                      verify=True,
-                                                      timeout=self.TIMEOUT,
-                                                      background_callback=self.__bugs_cb))
+                params = query.copy()
+                params['count_only'] = 1
+                r = requests.get(url,
+                                 params=params,
+                                 headers=header,
+                                 verify=True,
+                                 timeout=self.TIMEOUT)
+                if r.status_code == 200:
+                    count = r.json()['bug_count']
+                    del params['count_only']
+                    params['limit'] = 100
+                    params['order'] = 'bug_id'
+                    for i in range(0, count, 100):
+                        params = params.copy()
+                        params['offset'] = i
+                        self.bugs_results.append(self.session.get(url,
+                                                                  params=params,
+                                                                  headers=header,
+                                                                  verify=True,
+                                                                  timeout=self.TIMEOUT,
+                                                                  background_callback=self.__bugs_cb))
+                        time.sleep(0.5)
 
     def __get_bugs_list(self):
         """Get the bugs list corresponding to the search query
