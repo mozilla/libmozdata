@@ -6,6 +6,7 @@ import dateutil.parser
 import re
 import requests
 import six
+import time
 from .connection import (Connection, Query)
 from . import config
 from . import utils
@@ -96,7 +97,7 @@ class Bugzilla(Connection):
             header = self.get_header()
             user = BugzillaUser().get_whoami()
             if not user:
-                raise BugzillaException('Not a valid user is associated to the given token')
+                raise BugzillaException('There is no valid user associated to the given token')
             bzmail = user['name']
 
             def get_last(bzmail, history):
@@ -126,6 +127,7 @@ class Bugzilla(Connection):
                     if not json.get('error', False):
                         success = True
                         break
+                time.sleep(0.5)
 
             if not success:
                 raise BugzillaException('Cannot set data for bug {}'.format(first_id))
@@ -141,15 +143,17 @@ class Bugzilla(Connection):
             last = get_last(bzmail, history)
 
             if not last:
-                raise BugzillaException('Impossible to get update the bug {}'.format(first_id))
+                raise BugzillaException('Impossible to get last update to the bug {}'.format(first_id))
 
             last_time = dateutil.parser.parse(last['when'])
 
             success = False
-            for _ in range(max_retry):
+            for i in range(max_retry):
                 if not ids:
                     success = True
                     break
+                if i != 0:
+                    time.sleep(1)
 
                 failed = []
                 for _ids in Connection.chunks(ids):
