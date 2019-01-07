@@ -110,7 +110,7 @@ class Connection(object):
                 else:
                     query.handler(response)
             elif self.RAISE_ERROR:
-                raise res.raise_for_status()
+                res.raise_for_status()
             else:
                 print('Connection error:')
                 print('   url: ', res.url)
