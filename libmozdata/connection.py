@@ -82,6 +82,10 @@ class Connection(object):
                 self.USER_AGENT = kwargs['user_agent']
             if 'x_forwarded_for' in kwargs:
                 self.X_FORWARDED_FOR = utils.get_x_fwded_for_str(kwargs['x_forwarded_for'])
+            if 'raise_error' in kwargs:
+                self.RAISE_ERROR = kwargs['raise_error']
+        else:
+            self.RAISE_ERROR = False
 
         self.exec_queries()
 
@@ -105,6 +109,8 @@ class Connection(object):
                     query.handler(response, query.handlerdata)
                 else:
                     query.handler(response)
+            elif self.RAISE_ERROR:
+                res.raise_for_status()
             else:
                 print('Connection error:')
                 print('   url: ', res.url)
