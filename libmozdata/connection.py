@@ -10,12 +10,6 @@ from . import config
 from . import utils
 
 
-class ConnectionError(Exception):
-
-    def __init__(self, url, text):
-        super(ConnectionError, self).__init__('url: {}\ntext: {}'.format(url, text))
-
-
 class Query(object):
     """To use with a Connection
 
@@ -116,7 +110,7 @@ class Connection(object):
                 else:
                     query.handler(response)
             elif self.RAISE_ERROR:
-                raise ConnectionError(res.url, res.text)
+                raise res.raise_for_status()
             else:
                 print('Connection error:')
                 print('   url: ', res.url)
