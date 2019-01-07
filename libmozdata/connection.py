@@ -10,6 +10,12 @@ from . import config
 from . import utils
 
 
+class ConnectionError(Exception):
+
+    def __init__(self, url, text):
+        super(ConnectionError, self).__init__('url: {}\ntext: {}'.format(url, text))
+
+
 class Query(object):
     """To use with a Connection
 
@@ -82,6 +88,10 @@ class Connection(object):
                 self.USER_AGENT = kwargs['user_agent']
             if 'x_forwarded_for' in kwargs:
                 self.X_FORWARDED_FOR = utils.get_x_fwded_for_str(kwargs['x_forwarded_for'])
+            if 'raise_error' in kwargs:
+                self.RAISE_ERROR = kwargs['raise_error']
+        else:
+            self.RAISE_ERROR = False
 
         self.exec_queries()
 
@@ -105,6 +115,8 @@ class Connection(object):
                     query.handler(response, query.handlerdata)
                 else:
                     query.handler(response)
+            elif self.RAISE_ERROR:
+                raise ConnectionError(res.url, res.text)
             else:
                 print('Connection error:')
                 print('   url: ', res.url)
