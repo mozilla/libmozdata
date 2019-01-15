@@ -13,7 +13,7 @@ _CALENDAR = None
 
 def _get_sub_versions(s):
     s = s.split('.')
-    return list(map(int, s))
+    return [int(v) for v in s]
 
 
 def _get_versions(s):
@@ -22,8 +22,7 @@ def _get_versions(s):
         raise InvalidWiki('Invalid version format, expect: \"Firefox ...\"')
     version = s[len(fx):]
     versions = version.split(';')
-    versions = list(map(_get_sub_versions, versions))
-    return versions
+    return [_get_sub_versions(v) for v in versions]
 
 
 def get_calendar():
@@ -51,6 +50,9 @@ def get_calendar():
 
         _CALENDAR = []
         for row in table[1:]:
+            # some row headers are spanning on several rows
+            # and then the first raw has a 'Q...' (for the quarter)
+            # but not the next ones. So just remove it since it's useless.
             if row[0].startswith('Q'):
                 row = row[1:]
             _CALENDAR.append(
@@ -74,3 +76,7 @@ def get_next_release_date():
         if now < c['release date']:
             return c['release date']
     return None
+
+from pprint import pprint
+x = get_calendar()
+pprint(x)
