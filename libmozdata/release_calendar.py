@@ -76,7 +76,3 @@ def get_next_release_date():
         if now < c['release date']:
             return c['release date']
     return None
-
-from pprint import pprint
-x = get_calendar()
-pprint(x)
