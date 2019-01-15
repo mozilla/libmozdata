@@ -23,6 +23,11 @@ class WikiParser(HTMLParser):
         self.table_counter = -1
         self.tables_number = set(tables)
 
+    def feed(self, data):
+        if not isinstance(data, str):
+            data = str(data, 'ascii')
+        HTMLParser.feed(self, data)
+
     def handle_starttag(self, tag, attrs):
         if tag == 'table':
             self.table_counter += 1
@@ -51,7 +56,6 @@ class WikiParser(HTMLParser):
                 self.th = None
 
     def handle_data(self, data):
-        data = data.replace('\\n', '\n')
         data = data.strip()
         if self.td is not None:
             self.td += data

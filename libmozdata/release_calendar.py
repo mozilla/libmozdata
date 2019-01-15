@@ -12,11 +12,12 @@ _CALENDAR = None
 
 
 def _get_sub_versions(s):
+    s = s.strip()
     s = s.split('.')
-    return [int(v) for v in s]
+    return [int(v.split(' ')[0]) for v in s]
 
 
-def _get_versions(s):
+def get_versions(s):
     fx = 'Firefox '
     if not s.startswith(fx):
         raise InvalidWiki('Invalid version format, expect: \"Firefox ...\"')
@@ -30,7 +31,7 @@ def get_calendar():
     if _CALENDAR is not None:
         return _CALENDAR
 
-    html = str(requests.get(CALENDAR_URL).text.encode('utf-8'))
+    html = requests.get(CALENDAR_URL).text.encode('ascii', errors='ignore')
     parser = WikiParser(tables=[0])
     try:
         parser.feed(html)
@@ -59,11 +60,11 @@ def get_calendar():
                 {
                     'soft freeze': utils.get_date_ymd(row[0]),
                     'merge': utils.get_date_ymd(row[1]),
-                    'central': _get_versions(row[2])[0][0],
-                    'beta': _get_versions(row[3])[0][0],
+                    'central': get_versions(row[2])[0][0],
+                    'beta': get_versions(row[3])[0][0],
                     'release date': utils.get_date_ymd(row[4]),
-                    'release': _get_versions(row[5])[0][0],
-                    'esr': _get_versions(row[6]),
+                    'release': get_versions(row[5])[0][0],
+                    'esr': get_versions(row[6]),
                 }
             )
         return _CALENDAR
