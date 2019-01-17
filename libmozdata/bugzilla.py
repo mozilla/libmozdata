@@ -6,7 +6,6 @@ import functools
 import six
 import re
 import requests
-import time
 from .connection import (Connection, Query)
 from . import config
 from . import utils
@@ -476,9 +475,9 @@ class Bugzilla(Connection):
                 if r.status_code == 200:
                     count = r.json()['bug_count']
                     del params['count_only']
-                    params['limit'] = 100
+                    params['limit'] = 250
                     params['order'] = 'bug_id'
-                    for i in range(0, count, 100):
+                    for i in range(0, count, 250):
                         params = params.copy()
                         params['offset'] = i
                         self.bugs_results.append(self.session.get(url,
@@ -487,7 +486,13 @@ class Bugzilla(Connection):
                                                                   verify=True,
                                                                   timeout=self.TIMEOUT,
                                                                   background_callback=self.__bugs_cb))
-                        time.sleep(0.5)
+            else:
+                self.bugs_results.append(self.session.get(url,
+                                                          params=params,
+                                                          headers=header,
+                                                          verify=True,
+                                                          timeout=self.TIMEOUT,
+                                                          background_callback=self.__bugs_cb))
 
     def __get_bugs_list(self):
         """Get the bugs list corresponding to the search query
