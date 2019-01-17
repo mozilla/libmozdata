@@ -2,9 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import functools
 import six
 import re
-import functools
+import requests
 from .connection import (Connection, Query)
 from . import config
 from . import utils
@@ -22,6 +23,7 @@ class Bugzilla(Connection):
     ATTACHMENT_API_URL = API_URL + '/attachment'
     TOKEN = config.get('Bugzilla', 'token', '')
     # TOKEN = config.get('Allizgub', 'token', '')
+    BUGZILLA_CHUNK_SIZE = 100
 
     def __init__(self, bugids=None, include_fields='_default', bughandler=None, bugdata=None, historyhandler=None, historydata=None, commenthandler=None, commentdata=None, comment_include_fields=None, attachmenthandler=None, attachmentdata=None, attachment_include_fields=None, queries=None, **kwargs):
         """Constructor
@@ -453,20 +455,46 @@ class Bugzilla(Connection):
         """
         url = Bugzilla.API_URL + '?'
         header = self.get_header()
+        specials = {'count_only', 'limit', 'order', 'offset'}
         for query in self.bugids:
             if isinstance(query, six.string_types):
                 url = Bugzilla.API_URL + '?' + query
-                params = None
-            else:
+                self.bugs_results.append(self.session.get(url,
+                                                          headers=header,
+                                                          verify=True,
+                                                          timeout=self.TIMEOUT,
+                                                          background_callback=self.__bugs_cb))
+            elif specials.isdisjoint(query.keys()):
                 url = Bugzilla.API_URL
-                params = query
-
-            self.bugs_results.append(self.session.get(url,
-                                                      params=params,
-                                                      headers=header,
-                                                      verify=True,
-                                                      timeout=self.TIMEOUT,
-                                                      background_callback=self.__bugs_cb))
+                params = query.copy()
+                params['count_only'] = 1
+                r = requests.get(url,
+                                 params=params,
+                                 headers=header,
+                                 verify=True,
+                                 timeout=self.TIMEOUT)
+                if r.ok:
+                    count = r.json()['bug_count']
+                    del params['count_only']
+                    params['limit'] = Bugzilla.BUGZILLA_CHUNK_SIZE
+                    params['order'] = 'bug_id'
+                    for i in range(0, count, Bugzilla.BUGZILLA_CHUNK_SIZE):
+                        # Batch the execution to avoid timeouts
+                        params = params.copy()
+                        params['offset'] = i
+                        self.bugs_results.append(self.session.get(url,
+                                                                  params=params,
+                                                                  headers=header,
+                                                                  verify=True,
+                                                                  timeout=self.TIMEOUT,
+                                                                  background_callback=self.__bugs_cb))
+            else:
+                self.bugs_results.append(self.session.get(url,
+                                                          params=params,
+                                                          headers=header,
+                                                          verify=True,
+                                                          timeout=self.TIMEOUT,
+                                                          background_callback=self.__bugs_cb))
 
     def __get_bugs_list(self):
         """Get the bugs list corresponding to the search query
