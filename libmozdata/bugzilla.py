@@ -478,6 +478,7 @@ class Bugzilla(Connection):
                     params['limit'] = 250
                     params['order'] = 'bug_id'
                     for i in range(0, count, 250):
+                    # Batch the execution to avoid timeouts
                         params = params.copy()
                         params['offset'] = i
                         self.bugs_results.append(self.session.get(url,
