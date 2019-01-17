@@ -23,6 +23,7 @@ class Bugzilla(Connection):
     ATTACHMENT_API_URL = API_URL + '/attachment'
     TOKEN = config.get('Bugzilla', 'token', '')
     # TOKEN = config.get('Allizgub', 'token', '')
+    BUGZILLA_CHUNK_SIZE = 250
 
     def __init__(self, bugids=None, include_fields='_default', bughandler=None, bugdata=None, historyhandler=None, historydata=None, commenthandler=None, commentdata=None, comment_include_fields=None, attachmenthandler=None, attachmentdata=None, attachment_include_fields=None, queries=None, **kwargs):
         """Constructor
@@ -475,10 +476,10 @@ class Bugzilla(Connection):
                 if r.status_code == 200:
                     count = r.json()['bug_count']
                     del params['count_only']
-                    params['limit'] = 250
+                    params['limit'] = Bugzilla.BUGZILLA_CHUNK_SIZE
                     params['order'] = 'bug_id'
-                    for i in range(0, count, 250):
-                    # Batch the execution to avoid timeouts
+                    for i in range(0, count, Bugzilla.BUGZILLA_CHUNK_SIZE):
+                        # Batch the execution to avoid timeouts
                         params = params.copy()
                         params['offset'] = i
                         self.bugs_results.append(self.session.get(url,
