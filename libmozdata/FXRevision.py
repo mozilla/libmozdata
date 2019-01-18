@@ -31,7 +31,7 @@ class FXRevision(Connection):
     def __make_url(self, l):
         return '%s%s/%s/%s-mozilla-central/firefox-%s.en-US.%s.json' % (self.NIGHTLY_URL, l[0], l[1], '-'.join(l), self.fx_version, self.os)
 
-    def __info_cb(self, sess, res):
+    def __info_cb(self, res, *args, **kwargs):
         json = res.json()
         self.info[json['buildid']] = json['moz_source_stamp']
 
@@ -39,7 +39,7 @@ class FXRevision(Connection):
         for date in self.dates.values():
             self.results.append(self.session.get(self.__make_url(date),
                                                  timeout=self.TIMEOUT,
-                                                 background_callback=self.__info_cb))
+                                                 hooks={'response': self.__info_cb}))
 
 # fxr = FXRevision(['20160223030304'], '47.0a1', 'linux-i686')
 # pprint(fxr.get())
