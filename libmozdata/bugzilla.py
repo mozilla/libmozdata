@@ -89,7 +89,7 @@ class Bugzilla(Connection):
             failed = ids
             header = self.get_header()
 
-            def cb(data, sess, res):
+            def cb(data, res, *args, **kwargs):
                 if res.status_code == 200:
                     json = res.json()
                     if json.get('error', False):
@@ -109,7 +109,7 @@ class Bugzilla(Connection):
                                      headers=header,
                                      verify=True,
                                      timeout=self.TIMEOUT,
-                                     background_callback=functools.partial(cb, _ids)).result()
+                                     hooks={'response': functools.partial(cb, _ids)}).result()
 
     def get_data(self):
         """Collect the data
@@ -426,7 +426,7 @@ class Bugzilla(Connection):
         else:
             self.__get_bugs_by_search()
 
-    def __bugs_cb(self, sess, res):
+    def __bugs_cb(self, res, *args, **kwargs):
         """Callback for bug query
 
         Args:
@@ -448,7 +448,7 @@ class Bugzilla(Connection):
                                                       headers=header,
                                                       verify=True,
                                                       timeout=self.TIMEOUT,
-                                                      background_callback=self.__bugs_cb))
+                                                      hooks={'response': self.__bugs_cb}))
 
     def __get_bugs_by_search(self):
         """Get the bugs in making a search query
@@ -463,7 +463,7 @@ class Bugzilla(Connection):
                                                           headers=header,
                                                           verify=True,
                                                           timeout=self.TIMEOUT,
-                                                          background_callback=self.__bugs_cb))
+                                                          hooks={'response': self.__bugs_cb}))
             elif specials.isdisjoint(query.keys()):
                 url = Bugzilla.API_URL
                 params = query.copy()
@@ -487,21 +487,21 @@ class Bugzilla(Connection):
                                                                   headers=header,
                                                                   verify=True,
                                                                   timeout=self.TIMEOUT,
-                                                                  background_callback=self.__bugs_cb))
+                                                                  hooks={'response': self.__bugs_cb}))
             else:
                 self.bugs_results.append(self.session.get(url,
                                                           params=params,
                                                           headers=header,
                                                           verify=True,
                                                           timeout=self.TIMEOUT,
-                                                          background_callback=self.__bugs_cb))
+                                                          hooks={'response': self.__bugs_cb}))
 
     def __get_bugs_list(self):
         """Get the bugs list corresponding to the search query
         """
         _list = set()
 
-        def cb(sess, res):
+        def cb(res, *args, **kwargs):
             if res.status_code == 200:
                 for bug in res.json()['bugs']:
                     _list.add(bug['id'])
@@ -514,14 +514,14 @@ class Bugzilla(Connection):
                                             headers=header,
                                             verify=True,
                                             timeout=self.TIMEOUT,
-                                            background_callback=cb))
+                                            hooks={'response': cb}))
 
         for r in results():
             r.result()
 
         return list(_list)
 
-    def __history_cb(self, sess, res):
+    def __history_cb(self, res, *args, **kwargs):
         """Callback for bug history
 
         Args:
@@ -549,9 +549,9 @@ class Bugzilla(Connection):
                                                          params={'ids': remainder},
                                                          verify=True,
                                                          timeout=self.TIMEOUT,
-                                                         background_callback=self.__history_cb))
+                                                         hooks={'response': self.__history_cb}))
 
-    def __comment_cb(self, sess, res):
+    def __comment_cb(self, res, *args, **kwargs):
         """Callback for bug comment
 
         Args:
@@ -586,9 +586,9 @@ class Bugzilla(Connection):
                                                          },
                                                          verify=True,
                                                          timeout=self.TIMEOUT,
-                                                         background_callback=self.__comment_cb))
+                                                         hooks={'response': self.__comment_cb}))
 
-    def __attachment_cb(self, sess, res):
+    def __attachment_cb(self, res, *args, **kwargs):
         """Callback for bug attachment
 
         Args:
@@ -618,7 +618,7 @@ class Bugzilla(Connection):
                                                             params=req_params,
                                                             verify=True,
                                                             timeout=self.TIMEOUT,
-                                                            background_callback=self.__attachment_cb))
+                                                            hooks={'response': self.__attachment_cb}))
 
 
 class BugzillaUser(Connection):

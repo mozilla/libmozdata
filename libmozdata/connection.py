@@ -98,7 +98,7 @@ class Connection(object):
         Returns:
             function: the callback for the query
         """
-        def cb(sess, res):
+        def cb(res, *args, **kwargs):
             if res.status_code == 200:
                 try:
                     response = res.json()
@@ -177,7 +177,7 @@ class Connection(object):
                                                              auth=auth,
                                                              verify=True,
                                                              timeout=self.TIMEOUT,
-                                                             background_callback=cb))
+                                                             hooks={'response': cb}))
                     else:
                         for p in query.params:
                             self.results.append(self.session.get(query.url,
@@ -186,14 +186,14 @@ class Connection(object):
                                                                  auth=auth,
                                                                  verify=True,
                                                                  timeout=self.TIMEOUT,
-                                                                 background_callback=cb))
+                                                                 hooks={'response': cb}))
                 else:
                     self.results.append(self.session.get(query.url,
                                                          headers=header,
                                                          auth=auth,
                                                          verify=True,
                                                          timeout=self.TIMEOUT,
-                                                         background_callback=cb))
+                                                         hooks={'response': cb}))
 
     @staticmethod
     def chunks(l, chunk_size=CHUNK_SIZE):
