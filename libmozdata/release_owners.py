@@ -40,6 +40,12 @@ def get_owners():
 
         _OWNERS = []
         for row in table[1:]:
+            try:
+                # sometimes the date is 2019-XX-XX (when the date is not known)
+                release_date = utils.get_date_ymd(row[6])
+            except ValueError:
+                continue
+
             _OWNERS.append(
                 {
                     'version': get_versions(row[0])[0][0],
@@ -48,7 +54,7 @@ def get_owners():
                     'engineering reo': row[3],
                     'release duty': _get_list_people(row[4]),
                     'corresponding esr': row[5],
-                    'release date': utils.get_date_ymd(row[6]),
+                    'release date': release_date,
                 }
             )
         return _OWNERS
