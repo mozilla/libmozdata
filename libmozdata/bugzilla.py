@@ -490,7 +490,7 @@ class Bugzilla(Connection):
                                                                   hooks={'response': self.__bugs_cb}))
             else:
                 self.bugs_results.append(self.session.get(url,
-                                                          params=params,
+                                                          params=query,
                                                           headers=header,
                                                           verify=True,
                                                           timeout=self.TIMEOUT,
