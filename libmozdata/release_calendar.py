@@ -9,6 +9,7 @@ from .wiki_parser import InvalidWiki, WikiParser
 
 CALENDAR_URL = 'https://wiki.mozilla.org/Release_Management/Calendar'
 _CALENDAR = None
+_ALL = None
 
 
 def _get_sub_versions(s):
@@ -21,7 +22,8 @@ def get_versions(s):
     fx = 'Firefox '
     if not s.startswith(fx):
         raise InvalidWiki('Invalid version format, expect: \"Firefox ...\"')
-    version = s[len(fx):]
+    N = len(fx)
+    version = s[N:]
     versions = version.split(';')
     return [_get_sub_versions(v) for v in versions]
 
@@ -51,11 +53,7 @@ def get_calendar():
 
         _CALENDAR = []
         for row in table[1:]:
-            # some row headers are spanning on several rows
-            # and then the first raw has a 'Q...' (for the quarter)
-            # but not the next ones. So just remove it since it's useless.
-            if row[0].startswith('Q'):
-                row = row[1:]
+            row = row[1:]
             _CALENDAR.append(
                 {
                     'soft freeze': utils.get_date_ymd(row[0]),
@@ -76,4 +74,20 @@ def get_next_release_date():
     for c in cal:
         if now < c['release date']:
             return c['release date']
+    return None
+
+
+def get_all():
+    global _ALL
+    if _ALL is not None:
+        return _ALL
+
+    html = requests.get(CALENDAR_URL).text.encode('ascii', errors='ignore')
+    parser = WikiParser(tables=list(range(0, 10)))
+    try:
+        parser.feed(html)
+    except StopIteration:
+        _ALL = parser.get_tables()
+        return _ALL
+
     return None
