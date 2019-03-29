@@ -604,18 +604,21 @@ class Bugzilla(Connection):
                         if isinstance(key, six.string_types) and key.isdigit():
                             attachments = bugs[key]
                             self.attachmenthandler.handle(attachments, key)
-                            break
 
     def __get_attachment(self):
         """Get the bug attachment
         """
         url = Bugzilla.API_URL + '/%s/attachment'
         header = self.get_header()
-        req_params = {'include_fields': self.attachment_include_fields}
-        for bugid in self.bugids:
-            self.attachment_results.append(self.session.get(url % bugid,
+        for _bugids in Connection.chunks(sorted(self.bugids, key=lambda k: int(k))):
+            first = _bugids[0]
+            remainder = _bugids[1:] if len(_bugids) >= 2 else []
+            self.attachment_results.append(self.session.get(url % first,
                                                             headers=header,
-                                                            params=req_params,
+                                                            params={
+                                                                'ids': remainder,
+                                                                'include_fields': self.attachment_include_fields
+                                                            },
                                                             verify=True,
                                                             timeout=self.TIMEOUT,
                                                             hooks={'response': self.__attachment_cb}))
