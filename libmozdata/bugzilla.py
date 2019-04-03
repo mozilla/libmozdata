@@ -610,7 +610,9 @@ class Bugzilla(Connection):
         """
         url = Bugzilla.API_URL + '/%s/attachment'
         header = self.get_header()
-        for _bugids in Connection.chunks(sorted(self.bugids, key=lambda k: int(k))):
+        # TODO: remove next line after the fix of bug 1283392
+        bugids = self.__get_no_private_ids()
+        for _bugids in Connection.chunks(sorted(bugids, key=lambda k: int(k))):
             first = _bugids[0]
             remainder = _bugids[1:] if len(_bugids) >= 2 else []
             self.attachment_results.append(self.session.get(url % first,
