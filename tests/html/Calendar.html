@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" class="client-nojs">
+<head>
+<meta charset="UTF-8"/><script type="text/javascript">window.NREUM||(NREUM={}),__nr_require=function(e,n,t){function r(t){if(!n[t]){var o=n[t]={exports:{}};e[t][0].call(o.exports,function(n){var o=e[t][1][n];return r(o||n)},o,o.exports)}return n[t].exports}if("function"==typeof __nr_require)return __nr_require;for(var o=0;o<t.length;o++)r(t[o]);return r}({1:[function(e,n,t){function r(){}function o(e,n,t){return function(){return i(e,[c.now()].concat(u(arguments)),n?null:this,t),n?void 0:this}}var i=e("handle"),a=e(3),u=e(4),f=e("ee").get("tracer"),c=e("loader"),s=NREUM;"undefined"==typeof window.newrelic&&(newrelic=s);var p=["setPageViewName","setCustomAttribute","setErrorHandler","finished","addToTrace","inlineHit","addRelease"],d="api-",l=d+"ixn-";a(p,function(e,n){s[n]=o(d+n,!0,"api")}),s.addPageAction=o(d+"addPageAction",!0),s.setCurrentRouteName=o(d+"routeName",!0),n.exports=newrelic,s.interaction=function(){return(new r).get()};var m=r.prototype={createTracer:function(e,n){var t={},r=this,o="function"==typeof n;return i(l+"tracer",[c.now(),e,t],r),function(){if(f.emit((o?"":"no-")+"fn-start",[c.now(),r,o],t),o)try{return n.apply(this,arguments)}catch(e){throw f.emit("fn-err",[arguments,this,e],t),e}finally{f.emit("fn-end",[c.now()],t)}}}};a("actionText,setName,setAttribute,save,ignore,onEnd,getContext,end,get".split(","),function(e,n){m[n]=o(l+n)}),newrelic.noticeError=function(e,n){"string"==typeof e&&(e=new Error(e)),i("err",[e,c.now(),!1,n])}},{}],2:[function(e,n,t){function r(e,n){if(!o)return!1;if(e!==o)return!1;if(!n)return!0;if(!i)return!1;for(var t=i.split("."),r=n.split("."),a=0;a<r.length;a++)if(r[a]!==t[a])return!1;return!0}var o=null,i=null,a=/Version\/(\S+)\s+Safari/;if(navigator.userAgent){var u=navigator.userAgent,f=u.match(a);f&&u.indexOf("Chrome")===-1&&u.indexOf("Chromium")===-1&&(o="Safari",i=f[1])}n.exports={agent:o,version:i,match:r}},{}],3:[function(e,n,t){function r(e,n){var t=[],r="",i=0;for(r in e)o.call(e,r)&&(t[i]=n(r,e[r]),i+=1);return t}var o=Object.prototype.hasOwnProperty;n.exports=r},{}],4:[function(e,n,t){function r(e,n,t){n||(n=0),"undefined"==typeof t&&(t=e?e.length:0);for(var r=-1,o=t-n||0,i=Array(o<0?0:o);++r<o;)i[r]=e[n+r];return i}n.exports=r},{}],5:[function(e,n,t){n.exports={exists:"undefined"!=typeof window.performance&&window.performance.timing&&"undefined"!=typeof window.performance.timing.navigationStart}},{}],ee:[function(e,n,t){function r(){}function o(e){function n(e){return e&&e instanceof r?e:e?f(e,u,i):i()}function t(t,r,o,i){if(!d.aborted||i){e&&e(t,r,o);for(var a=n(o),u=v(t),f=u.length,c=0;c<f;c++)u[c].apply(a,r);var p=s[y[t]];return p&&p.push([b,t,r,a]),a}}function l(e,n){h[e]=v(e).concat(n)}function m(e,n){var t=h[e];if(t)for(var r=0;r<t.length;r++)t[r]===n&&t.splice(r,1)}function v(e){return h[e]||[]}function g(e){return p[e]=p[e]||o(t)}function w(e,n){c(e,function(e,t){n=n||"feature",y[t]=n,n in s||(s[n]=[])})}var h={},y={},b={on:l,addEventListener:l,removeEventListener:m,emit:t,get:g,listeners:v,context:n,buffer:w,abort:a,aborted:!1};return b}function i(){return new r}function a(){(s.api||s.feature)&&(d.aborted=!0,s=d.backlog={})}var u="nr@context",f=e("gos"),c=e(3),s={},p={},d=n.exports=o();d.backlog=s},{}],gos:[function(e,n,t){function r(e,n,t){if(o.call(e,n))return e[n];var r=t();if(Object.defineProperty&&Object.keys)try{return Object.defineProperty(e,n,{value:r,writable:!0,enumerable:!1}),r}catch(i){}return e[n]=r,r}var o=Object.prototype.hasOwnProperty;n.exports=r},{}],handle:[function(e,n,t){function r(e,n,t,r){o.buffer([e],r),o.emit(e,n,t)}var o=e("ee").get("handle");n.exports=r,r.ee=o},{}],id:[function(e,n,t){function r(e){var n=typeof e;return!e||"object"!==n&&"function"!==n?-1:e===window?0:a(e,i,function(){return o++})}var o=1,i="nr@id",a=e("gos");n.exports=r},{}],loader:[function(e,n,t){function r(){if(!E++){var e=x.info=NREUM.info,n=l.getElementsByTagName("script")[0];if(setTimeout(s.abort,3e4),!(e&&e.licenseKey&&e.applicationID&&n))return s.abort();c(y,function(n,t){e[n]||(e[n]=t)}),f("mark",["onload",a()+x.offset],null,"api");var t=l.createElement("script");t.src="https://"+e.agent,n.parentNode.insertBefore(t,n)}}function o(){"complete"===l.readyState&&i()}function i(){f("mark",["domContent",a()+x.offset],null,"api")}function a(){return O.exists&&performance.now?Math.round(performance.now()):(u=Math.max((new Date).getTime(),u))-x.offset}var u=(new Date).getTime(),f=e("handle"),c=e(3),s=e("ee"),p=e(2),d=window,l=d.document,m="addEventListener",v="attachEvent",g=d.XMLHttpRequest,w=g&&g.prototype;NREUM.o={ST:setTimeout,SI:d.setImmediate,CT:clearTimeout,XHR:g,REQ:d.Request,EV:d.Event,PR:d.Promise,MO:d.MutationObserver};var h=""+location,y={beacon:"bam.nr-data.net",errorBeacon:"bam.nr-data.net",agent:"js-agent.newrelic.com/nr-1118.min.js"},b=g&&w&&w[m]&&!/CriOS/.test(navigator.userAgent),x=n.exports={offset:u,now:a,origin:h,features:{},xhrWrappable:b,userAgent:p};e(1),l[m]?(l[m]("DOMContentLoaded",i,!1),d[m]("load",r,!1)):(l[v]("onreadystatechange",o),d[v]("onload",r)),f("mark",["firstbyte",u],null,"api");var E=0,O=e(5)},{}]},{},["loader"]);</script>
+<title>Firefox Release Calendar - MozillaWiki</title>
+<script>document.documentElement.className = document.documentElement.className.replace( /(^|\s)client-nojs(\s|$)/, "$1client-js$2" );</script>
+<script>(window.RLQ=window.RLQ||[]).push(function(){mw.config.set({"wgCanonicalNamespace":"","wgCanonicalSpecialPageName":false,"wgNamespaceNumber":0,"wgPageName":"Release_Management/Calendar","wgTitle":"Release Management/Calendar","wgCurRevisionId":1207772,"wgRevisionId":1207772,"wgArticleId":44236,"wgIsArticle":true,"wgIsRedirect":false,"wgAction":"view","wgUserName":null,"wgUserGroups":["*"],"wgCategories":["Release Management"],"wgBreakFrames":false,"wgPageContentLanguage":"en","wgPageContentModel":"wikitext","wgSeparatorTransformTable":["",""],"wgDigitTransformTable":["",""],"wgDefaultDateFormat":"dmy","wgMonthNames":["","January","February","March","April","May","June","July","August","September","October","November","December"],"wgMonthNamesShort":["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"wgRelevantPageName":"Release_Management/Calendar","wgRelevantArticleId":44236,"wgRequestId":"1e0e494a6af74652de046dc0","wgIsProbablyEditable":false,"wgRestrictionEdit":[],"wgRestrictionMove":[],"srfFilteredConfig":null,"wgWikiEditorEnabledModules":{"toolbar":true,"dialogs":true,"preview":true,"publish":false},"wgPageFormsAutocompleteValues":[],"wgPageFormsAutocompleteOnAllChars":false,"wgPageFormsFieldProperties":[],"wgPageFormsCargoFields":[],"wgPageFormsDependentFields":[],"wgPageFormsGridValues":[],"wgPageFormsGridParams":[],"wgPageFormsShowOnSelect":[],"wgPageFormsScriptPath":"/extensions/PageForms","edgValues":null,"wgPageFormsEDSettings":null,"wgPreferredVariant":"en"});mw.loader.implement("user.options",function($,jQuery,require,module){mw.user.options.set({"variant":"en"});});mw.loader.implement("user.tokens",function ( $, jQuery, require, module ) {
+mw.user.tokens.set({"editToken":"+\\","patrolToken":"+\\","watchToken":"+\\","csrfToken":"+\\"});/*@nomin*/;
+
+});mw.loader.load(["ext.smw.style","mediawiki.page.startup","ext.Bugzilla","skins.vector.js"]);});</script>
+<link rel="stylesheet" href="/load.php?debug=false&amp;lang=en&amp;modules=ext.Sandstone.main%7Cmediawiki.legacy.commonPrint%2Cshared%7Cmediawiki.sectionAnchor%7Cmediawiki.skinning.interface%7Cskins.vector.styles&amp;only=styles&amp;skin=vector"/>
+<link rel="stylesheet" href="/load.php?debug=false&amp;lang=en&amp;modules=ext.smw.style%7Cext.smw.tooltip.styles&amp;only=styles&amp;skin=vector"/>
+<meta name="ResourceLoaderDynamicStyles" content=""/>
+<link rel="stylesheet" href="/load.php?debug=false&amp;lang=en&amp;modules=site&amp;only=styles&amp;skin=vector"/>
+<script async="" src="/load.php?debug=false&amp;lang=en&amp;modules=startup&amp;only=scripts&amp;skin=vector"></script>
+<meta name="generator" content="MediaWiki 1.27.4"/>
+<link rel="alternate" media="only screen and (max-width: 720px)" href="https://m.wiki.mozilla.org/Release_Management/Calendar"/>
+<link rel="alternate" type="application/rdf+xml" title="Release Management/Calendar" href="/index.php?title=Special:ExportRDF/Release_Management/Calendar&amp;xmlmime=rdf"/>
+<link rel="shortcut icon" href="/skins/common/favicon.ico"/>
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="MozillaWiki (en)"/>
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.mozilla.org/api.php?action=rsd"/>
+</head>
+<body class="mediawiki ltr sitedir-ltr ns-0 ns-subject page-Release_Management_Calendar rootpage-Release_Management skin-vector action-view">
+		<div id="mw-page-base" class="noprint"></div>
+		<div id="mw-head-base" class="noprint"></div>
+		<div id="content" class="mw-body" role="main">
+			<a id="top"></a>
+
+						<div class="mw-indicators">
+</div>
+			<h1 id="firstHeading" class="firstHeading" lang="en">Firefox Release Calendar</h1>
+									<div id="bodyContent" class="mw-body-content">
+									<div id="siteSub">From MozillaWiki</div>
+								<div id="contentSub"><span class="subpages">&lt; <a href="/Release_Management" title="Release Management">Release Management</a></span></div>
+												<div id="jump-to-nav" class="mw-jump">
+					Jump to:					<a href="#mw-head">navigation</a>, 					<a href="#p-search">search</a>
+				</div>
+				<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr"><p>This schedule is based on the current <a href="/RapidRelease" title="RapidRelease" class="mw-redirect">RapidRelease</a> plan. Future dates may change if the process changes.  Code is not always released to users on the same day as the branch migration.  The release to users may be a few days later, to allow for manual testing and sign-off. Thunderbird tracks the <a rel="nofollow" class="external text" href="https://www.mozilla.org/en-US/firefox/organizations/">ESR schedule</a> column per <a href="/Thunderbird:Home#Releases" title="Thunderbird:Home">Thunderbird release info</a>.
+</p>
+<h2><span class="mw-headline" id="Calendars">Calendars</span></h2>
+<p>This wiki page may not always have the most current information. Please refer to one of the following calendars for up-to-date scheduling:
+</p>
+<ul><li> <a rel="nofollow" class="external text" href="https://www.google.com/calendar/embed?src=mozilla.com_2d37383433353432352d3939%40resource.calendar.google.com">Firefox Merge/Release Dates</a> (<a rel="nofollow" class="external text" href="https://www.google.com/calendar/ical/mozilla.com_2d37383433353432352d3939%40resource.calendar.google.com/public/basic.ics">ICS for Thunderbird/Lightning or your calendar app</a>) (low noise)</li>
+<li> <a rel="nofollow" class="external text" href="https://www.google.com/calendar/embed?src=bW96aWxsYS5jb21fZGJxODRhbnI5aTh0Y25taGFiYXRzdHY1Y29AZ3JvdXAuY2FsZW5kYXIuZ29vZ2xlLmNvbQ">Firefox Merge/Release Full Scheduling Calendar</a> (<a rel="nofollow" class="external text" href="https://calendar.google.com/calendar/ical/mozilla.com_dbq84anr9i8tcnmhabatstv5co%40group.calendar.google.com/public/basic.ics">ICS</a>) (highly detailed - 99.99% up to date)</li></ul>
+<h2><span class="mw-headline" id="Future_branch_dates">Future branch dates</span></h2>
+<p><big><a href="/Release_Management/Release_owners" title="Release Management/Release owners">Release Owners</a></big>
+</p>
+<table class="wikitable">
+
+<tr>
+<th>Quarter </th>
+<th>Soft Freeze </th>
+<th>Merge Date </th>
+<th>Central </th>
+<th>Beta </th>
+<th>Release Date </th>
+<th>Release </th>
+<th>ESR
+</th></tr>
+<tr>
+<td rowspan="1">Q1
+</td>
+<th>2019-03-11
+</th>
+<th>2019-03-18
+</th>
+<td>Firefox 68</td>
+<td><a rel="nofollow" class="external text" href="https://docs.google.com/document/d/1feDkXleRXMJJS9lxP_vbyBApIDoEr44KchAZoYHkS54/edit">Firefox 67</a>
+</td>
+<th>2019-03-19
+</th>
+<td>Firefox 66
+</td>
+<td>Firefox 60.6
+</td></tr>
+<tr>
+<td rowspan="1">Q2
+</td>
+<th>2019-05-06
+</th>
+<th>2019-05-13
+</th>
+<td>Firefox 69</td>
+<td>Firefox 68
+</td>
+<th>2019-05-14
+</th>
+<td>Firefox 67
+</td>
+<td>Firefox 60.7
+</td></tr>
+<tr>
+<td rowspan="2">Q3
+</td>
+<th>2019-07-01
+</th>
+<th>2019-07-08
+</th>
+<td>Firefox 70</td>
+<td>Firefox 69
+</td>
+<th>2019-07-09
+</th>
+<td>Firefox 68
+</td>
+<td>Firefox 60.8; 68.0
+</td></tr>
+<tr>
+<th>2019-08-26
+</th>
+<th>2019-09-02
+</th>
+<td>Firefox 71</td>
+<td>Firefox 70
+</td>
+<th>2019-09-03
+</th>
+<td>Firefox 69
+</td>
+<td>Firefox 60.9; 68.1
+</td></tr>
+<tr>
+<td rowspan="2">Q4
+</td>
+<th>2019-10-14
+</th>
+<th>2019-10-21
+</th>
+<td>Firefox 72</td>
+<td>Firefox 71
+</td>
+<th>2019-10-22
+</th>
+<td>Firefox 70
+</td>
+<td>Firefox 68.2
+</td></tr>
+<tr>
+<th>2019-12-02
+</th>
+<th>2019-12-09
+</th>
+<td>Firefox 73</td>
+<td>Firefox 72
+</td>
+<th>2019-12-10
+</th>
+<td>Firefox 71
+</td>
+<td>Firefox 68.3
+</td></tr>
+
+</table>
+<p>The Nightly soft freeze is typically during the week prior to merge day. During this period, high-risk patches should avoid landing until after the Nightly version bump lands on mozilla-central on merge day.</p>
+<h2><span class="mw-headline" id="Past_branch_dates">Past branch dates</span></h2>
+<p>More details on contents of releases can be found in the <a rel="nofollow" class="external text" href="https://www.mozilla.org/firefox/releases/">release notes archive</a> or <a rel="nofollow" class="external text" href="https://en.wikipedia.org/wiki/Firefox_release_history">Wikipedia: Firefox release history</a> (the page seems to be merged and then removed, if it's not reverted, you can find the removed content in <a rel="nofollow" class="external text" href="https://en.wikipedia.org/w/index.php?title=Firefox_version_history&amp;oldid=881652551">history</a>) ).
+</p>
+<table class="wikitable">
+
+<tr>
+<th>Soft Freeze</th>
+<th>Merge Date</th>
+<th>Central</th>
+<th>Beta
+</th>
+<th>Release Date</th>
+<th>Release</th>
+<th>ESR
+</th></tr>
+<tr>
+<th>2019-01-21
+</th>
+<th>2019-01-28
+</th>
+<td><a rel="nofollow" class="external text" href="https://docs.google.com/document/d/1feDkXleRXMJJS9lxP_vbyBApIDoEr44KchAZoYHkS54/edit">Firefox 67</a></td>
+<td>Firefox 66
+</td>
+<th>2019-01-29
+</th>
+<td>Firefox 65
+</td>
+<td>Firefox 60.5
+</td></tr>
+<tr>
+<th>2018-12-03
+</th>
+<th>2018-12-10
+</th>
+<td><a rel="nofollow" class="external text" href="https://docs.google.com/document/d/1KnDiM3UmLbCPrc3UVZq6Z5Tdb2jnTfjpdyahSqgSGNE/edit">Firefox 66</a></td>
+<td>Firefox 65
+</td>
+<th>2018-12-11
+</th>
+<td>Firefox 64
+</td>
+<td>Firefox 60.4
+</td></tr>
+<tr>
+<th>2018-10-15
+</th>
+<th>2018-10-22
+</th>
+<td><a rel="nofollow" class="external text" href="https://docs.google.com/document/d/1vI9KWvSMQ50R9YgdMX7nG7CSuOnTeRGN9sOH_D6_v_c/edit">Firefox 65</a></td>
+<td>Firefox 64
+</td>
+<th>2018-10-23
+</th>
+<td>Firefox 63
+</td>
+<td>Firefox 60.3
+</td></tr>
+</table>
+<table class="wikitable">
+
+<tr>
+<th>Merge Date</th>
+<th>Central</th>
+<th>Beta
+</th>
+<th>Release Date</th>
+<th>Release</th>
+<th>ESR
+</th></tr>
+<tr>
+<th>2018-09-04
+</th>
+<td><a rel="nofollow" class="external text" href="https://docs.google.com/document/d/1MQa4J9OSTc1i60sFcVNyoFNLK8TLBXJlL9W12VoEUAc/edit">Firefox 64</a></td>
+<td>Firefox 63
+</td>
+<th>2018-09-05
+</th>
+<td>Firefox 62
+</td>
+<td>Firefox 60.2
+</td></tr>
+<tr>
+<th>2018-06-25
+</th>
+<td><a rel="nofollow" class="external text" href="https://docs.google.com/document/d/185O88wIwV-fRwqOKJaCCPVXjxhm70h8J4ApsJt1H9Rk/edit">Firefox 63</a></td>
+<td>Firefox 62
+</td>
+<th>2018-06-26
+</th>
+<td>Firefox 61
+</td>
+<td>Firefox 52.9; 60.1
+</td></tr>
+<tr>
+<th>2018-05-07
+</th>
+<td><a rel="nofollow" class="external text" href="https://docs.google.com/document/d/17FvsBOudLr15DgN-E82UamLhnweDHmGzQu4wIEi1QUg/edit">Firefox 62</a></td>
+<td>Firefox 61
+</td>
+<th>2018-05-09
+</th>
+<td>Firefox 60
+</td>
+<td>Firefox 52.8; 60.0
+</td></tr>
+<tr>
+<th>2018-03-12
+</th>
+<td><a rel="nofollow" class="external text" href="https://docs.google.com/document/d/1cLYXPrlEES90PSKQHFLf3j0tiOUfUth2ye9Kfg9xLYY/edit">Firefox 61</a></td>
+<td>Firefox 60
+</td>
+<th>2018-03-13
+</th>
+<td>Firefox 59
+</td>
+<td>Firefox 52.7
+</td></tr>
+<tr>
+<th>2018-01-22
+</th>
+<td><a rel="nofollow" class="external text" href="https://docs.google.com/document/d/14D5Au23znkkqeLZu22cI7kSM0EowkC0cq0ppiZR2lg4/edit">Firefox 60</a></td>
+<td>Firefox 59
+</td>
+<th>2018-01-23
+</th>
+<td>Firefox 58
+</td>
+<td>Firefox 52.6
+</td></tr>
+<tr>
+<th>2017-11-13
+</th>
+<td><a rel="nofollow" class="external text" href="https://docs.google.com/document/d/1ZOs9Ingbz0e-mWDu8yXGiMM-SnpBXThkLdXnplG4e2w/edit">Firefox 59</a></td>
+<td>Firefox 58
+</td>
+<th>2017-11-14
+</th>
+<td>Firefox 57
+</td>
+<td>Firefox 52.5
+</td></tr>
+<tr>
+<th>2017-09-21
+</th>
+<td><a rel="nofollow" class="external text" href="https://docs.google.com/document/d/1jPyeW14MyHyQX7kXBU8KN9jsxO2VQjP3GN_VpLiG9YM/edit">Firefox 58</a></td>
+<td>Firefox 57
+</td>
+<th>2017-09-28
+</th>
+<td>Firefox 56
+</td>
+<td>Firefox 52.4
+</td></tr>
+<tr>
+<th>2017-08-02
+</th>
+<td><a rel="nofollow" class="external text" href="https://docs.google.com/document/d/1jeypuqBqEyIh-4qxXT0UnE2aVjetN7uVD8W7L7TbWKg/edit">Firefox 57</a></td>
+<td>Firefox 56
+</td>
+<th>2017-08-08
+</th>
+<td>Firefox 55
+</td>
+<td>Firefox 52.3
+</td></tr>
+<tr>
+<th>2017-06-12
+</th>
+<td>Firefox 56</td>
+<td>Firefox 55
+</td>
+<th>2017-06-13
+</th>
+<td>Firefox 54
+</td>
+<td>Firefox 52.2
+</td></tr>
+<tr>
+<th>2017-04-18
+</th>
+<td>Firefox 55</td>
+<td>Firefox 54
+</td>
+<th>2017-04-19
+</th>
+<td>Firefox 53
+</td>
+<td>Firefox 45.9; 52.1
+</td></tr>
+</table>
+<table class="wikitable">
+
+<tr>
+<th>Merge Date</th>
+<th>Central</th>
+<th>Aurora</th>
+<th>Beta
+</th>
+<th>Release Date</th>
+<th>Release</th>
+<th>ESR
+</th></tr>
+<tr>
+<th>2017-03-06
+</th>
+<td>Firefox 55</td>
+<td>Firefox 54</td>
+<td>Firefox 53
+</td>
+<th>2017-03-07
+</th>
+<td>Firefox 52
+</td>
+<td>Firefox 45.8; 52.0
+</td></tr>
+<tr>
+<th>2017-01-23
+</th>
+<td>Firefox 54</td>
+<td>Firefox 53</td>
+<td>Firefox 52
+</td>
+<th>2017-01-24
+</th>
+<td>Firefox 51
+</td>
+<td>Firefox 45.7
+</td></tr>
+<tr>
+<td>
+</td>
+<td>
+</td>
+<td>
+</td>
+<td>
+</td>
+<th>2016-12-13
+</th>
+<td>Firefox 50.1.0
+</td>
+<td>Firefox 45.6
+</td></tr>
+<tr>
+<th>2016-11-14
+</th>
+<td>Firefox 53</td>
+<td>Firefox 52</td>
+<td>Firefox 51
+</td>
+<th>2016-11-15
+</th>
+<td>Firefox 50
+</td>
+<td>Firefox 45.5
+</td></tr>
+<tr>
+<th>2016-09-19
+</th>
+<td>Firefox 52</td>
+<td>Firefox 51</td>
+<td>Firefox 50
+</td>
+<th>2016-09-20
+</th>
+<td>Firefox 49
+</td>
+<td>Firefox 45.4
+</td></tr>
+<tr>
+<th>2016-08-01
+</th>
+<td>Firefox 51</td>
+<td>Firefox 50</td>
+<td>Firefox 49
+</td>
+<th>2016-08-02
+</th>
+<td>Firefox 48
+</td>
+<td>Firefox 45.3
+</td></tr>
+<tr>
+<th>2016-06-06
+</th>
+<td>Firefox 50</td>
+<td>Firefox 49</td>
+<td>Firefox 48
+</td>
+<th>2016-06-07
+</th>
+<td>Firefox 47
+</td>
+<td>Firefox 45.2
+</td></tr>
+<tr>
+<th>2016-04-25
+</th>
+<td>Firefox 49</td>
+<td>Firefox 48</td>
+<td>Firefox 47
+</td>
+<th>2016-04-26
+</th>
+<td>Firefox 46
+</td>
+<td>Firefox 38.8; 45.1
+</td></tr>
+<tr>
+<th>2016-03-07
+</th>
+<td>Firefox 48</td>
+<td>Firefox 47</td>
+<td>Firefox 46
+</td>
+<th>2016-03-08
+</th>
+<td>Firefox 45
+</td>
+<td>Firefox 38.7; 45.0
+</td></tr>
+<tr>
+<th>2016-01-25
+</th>
+<td>Firefox 47</td>
+<td>Firefox 46</td>
+<td>Firefox 45
+</td>
+<th>2016-01-26
+</th>
+<td>Firefox 44
+</td>
+<td>Firefox 38.6
+</td></tr>
+<tr>
+<th>2015-12-14
+</th>
+<td>Firefox 46</td>
+<td>Firefox 45</td>
+<td>Firefox 44
+</td>
+<th>2015-12-15
+</th>
+<td>Firefox 43
+</td>
+<td>Firefox 38.5
+</td></tr>
+<tr>
+<th>2015-10-29
+</th>
+<td>Firefox 45</td>
+<td>Firefox 44</td>
+<td>Firefox 43
+</td>
+<th>2015-11-03
+</th>
+<td>Firefox 42
+</td>
+<td>Firefox 38.4
+</td></tr>
+<tr>
+<th>2015-09-21
+</th>
+<td>Firefox 44</td>
+<td>Firefox 43</td>
+<td>Firefox 42
+</td>
+<th>2015-09-22
+</th>
+<td>Firefox 41
+</td>
+<td>Firefox 38.3
+</td></tr>
+<tr>
+<th>2015-08-10
+</th>
+<td>Firefox 43</td>
+<td>Firefox 42</td>
+<td>Firefox 41
+</td>
+<th>2015-08-11
+</th>
+<td>Firefox 40
+</td>
+<td>Firefox 38.2
+</td></tr>
+<tr>
+<th>2015-06-29
+</th>
+<td>Firefox 42</td>
+<td>Firefox 41</td>
+<td>Firefox 40
+</td>
+<th>2015-06-30
+</th>
+<td>Firefox 39
+</td>
+<td>Firefox 31.8; 38.1
+</td></tr>
+<tr>
+<th>
+</th>
+<td> </td>
+<td> </td>
+<td>
+</td>
+<th>2015-06-02
+</th>
+<td>Firefox 38.0.5
+</td></tr>
+<tr>
+<th>2015-05-11*
+</th>
+<td>Firefox 41</td>
+<td>Firefox 40</td>
+<td>Firefox 39
+</td>
+<th>2015-05-12*
+</th>
+<td>Firefox 38
+</td>
+<td>Firefox 31.7; 38.0
+</td></tr>
+<tr>
+<th>2015-03-30*
+</th>
+<td>Firefox 40</td>
+<td>Firefox 39</td>
+<td>Firefox 38
+</td>
+<th>2015-03-31*
+</th>
+<td>Firefox 37
+</td>
+<td>Firefox 31.6
+</td></tr>
+<tr>
+<th>2015-02-23
+</th>
+<td>Firefox 39</td>
+<td>Firefox 38</td>
+<td>Firefox 37
+</td>
+<th>2015-02-24
+</th>
+<td>Firefox 36
+</td>
+<td>Firefox 31.5
+</td></tr>
+<tr>
+<th>2015-01-12*
+</th>
+<td>Firefox 38</td>
+<td>Firefox 37</td>
+<td>Firefox 36
+</td>
+<th>2015-01-13*
+</th>
+<td>Firefox 35
+</td>
+<td>Firefox 31.4
+</td></tr>
+<tr>
+<th>2014-11-28*
+</th>
+<td>Firefox 37</td>
+<td>Firefox 36</td>
+<td>Firefox 35
+</td>
+<th>2014-12-01*
+</th>
+<td>Firefox 34
+</td>
+<td>Firefox 31.3
+</td></tr>
+<tr>
+<th>2014-10-13
+</th>
+<td>Firefox 36</td>
+<td>Firefox 35</td>
+<td>Firefox 34
+</td>
+<th>2014-10-14
+</th>
+<td>Firefox 33
+</td>
+<td>Firefox 31.2
+</td></tr>
+<tr>
+<th>2014-09-02*
+</th>
+<td>Firefox 35</td>
+<td>Firefox 34</td>
+<td>Firefox 33
+</td>
+<th>2014-09-02
+</th>
+<td>Firefox 32
+</td>
+<td>Firefox 24.8; 31.1
+</td></tr>
+<tr>
+<th>2014-07-21
+</th>
+<td>Firefox 34</td>
+<td>Firefox 33</td>
+<td>Firefox 32
+</td>
+<th>2014-07-22
+</th>
+<td>Firefox 31
+</td>
+<td>Firefox 24.7; 31.0
+</td></tr>
+<tr>
+<th>2014-06-09
+</th>
+<td>Firefox 33</td>
+<td>Firefox 32</td>
+<td>Firefox 31
+</td>
+<th>2014-06-10
+</th>
+<td>Firefox 30
+</td>
+<td>Firefox 24.6
+</td></tr>
+<tr>
+<th>2014-04-28
+</th>
+<td>Firefox 32</td>
+<td>Firefox 31</td>
+<td>Firefox 30
+</td>
+<th>2014-04-29
+</th>
+<td>Firefox 29
+</td>
+<td>Firefox 24.5
+</td></tr>
+<tr>
+<th>2014-03-17
+</th>
+<td>Firefox 31</td>
+<td>Firefox 30</td>
+<td>Firefox 29
+</td>
+<th>2014-03-18
+</th>
+<td>Firefox 28
+</td>
+<td>Firefox 24.4
+</td></tr>
+<tr>
+<th>2014-02-03*
+</th>
+<td>Firefox 30</td>
+<td>Firefox 29</td>
+<td>Firefox 28
+</td>
+<th>2014-02-04*
+</th>
+<td>Firefox 27
+</td>
+<td>Firefox 24.3
+</td></tr>
+<tr>
+<th>2013-12-09
+</th>
+<td>Firefox 29</td>
+<td>Firefox 28</td>
+<td>Firefox 27
+</td>
+<th>2013-12-10
+</th>
+<td>Firefox 26
+</td>
+<td>Firefox 24.2
+</td></tr>
+<tr>
+<th>2013-10-28
+</th>
+<td>Firefox 28</td>
+<td>Firefox 27</td>
+<td>Firefox 26
+</td>
+<th>2013-10-29
+</th>
+<td>Firefox 25
+</td>
+<td>Firefox 17.0.10; 24.1
+</td></tr>
+<tr>
+<th>2013-09-16
+</th>
+<td>Firefox 27</td>
+<td>Firefox 26</td>
+<td>Firefox 25
+</td>
+<th>2013-09-17
+</th>
+<td>Firefox 24
+</td>
+<td>Firefox 17.0.9; 24.0
+</td></tr>
+<tr>
+<th>2013-08-05
+</th>
+<td>Firefox 26</td>
+<td>Firefox 25</td>
+<td>Firefox 24
+</td>
+<th>2013-08-06
+</th>
+<td>Firefox 23
+</td>
+<td>Firefox 17.0.8
+</td></tr>
+<tr>
+<th>2013-06-24
+</th>
+<td>Firefox 25</td>
+<td>Firefox 24</td>
+<td>Firefox 23
+</td>
+<th>2013-06-25
+</th>
+<td>Firefox 22
+</td>
+<td>Firefox 17.0.7
+</td></tr>
+<tr>
+<th>2013-05-13
+</th>
+<td>Firefox 24</td>
+<td>Firefox 23</td>
+<td>Firefox 22
+</td>
+<th>2013-05-14
+</th>
+<td>Firefox 21
+</td>
+<td>Firefox 17.0.6
+</td></tr>
+<tr>
+<th>2013-04-01
+</th>
+<td>Firefox 23</td>
+<td>Firefox 22</td>
+<td>Firefox 21
+</td>
+<th>2013-04-02
+</th>
+<td>Firefox 20
+</td>
+<td>Firefox 17.0.5
+</td></tr>
+<tr>
+<th>2013-02-19*
+</th>
+<td>Firefox 22</td>
+<td>Firefox 21</td>
+<td>Firefox 20
+</td>
+<th>2013-02-19
+</th>
+<td>Firefox 19
+</td>
+<td>Firefox 17.0.3
+</td></tr>
+<tr>
+<th>2013-01-07*
+</th>
+<td>Firefox 21</td>
+<td>Firefox 20</td>
+<td>Firefox 19
+</td>
+<th>2013-01-08*
+</th>
+<td>Firefox 18
+</td>
+<td>Firefox 10.0.12; 17.0.2
+</td></tr>
+<tr>
+<th>2012-11-19
+</th>
+<td>Firefox 20</td>
+<td>Firefox 19</td>
+<td>Firefox 18
+</td>
+<th>2012-11-20
+</th>
+<td>Firefox 17
+</td>
+<td>Firefox 10.0.11; 17.0
+</td></tr>
+<tr>
+<th>2012-10-08
+</th>
+<td>Firefox 19
+</td>
+<td>Firefox 18
+</td>
+<td>Firefox 17
+</td>
+<th>2012-10-09
+</th>
+<td>Firefox 16
+</td>
+<td>Firefox 10.0.8
+</td></tr>
+<tr>
+<th>2012-08-27
+</th>
+<td>Firefox 18
+</td>
+<td>Firefox 17
+</td>
+<td>Firefox 16
+</td>
+<th>2012-08-28
+</th>
+<td>Firefox 15
+</td>
+<td>Firefox 10.0.7
+</td></tr>
+<tr>
+<th>2012-07-16
+</th>
+<td>Firefox 17
+</td>
+<td>Firefox 16
+</td>
+<td>Firefox 15
+</td>
+<th>2012-07-17
+</th>
+<td>Firefox 14
+</td>
+<td>Firefox 10.0.6
+</td></tr>
+<tr>
+<th>2012-06-05
+</th>
+<td>Firefox 16
+</td>
+<td>Firefox 15
+</td>
+<td>Firefox 14
+</td>
+<th>2012-06-05
+</th>
+<td>Firefox 13
+</td>
+<td>Firefox 10.0.5
+</td></tr>
+<tr>
+<th>2012-04-24
+</th>
+<td>Firefox 15
+</td>
+<td>Firefox 14
+</td>
+<td>Firefox 13
+</td>
+<th>2012-04-24
+</th>
+<td>Firefox 12
+</td>
+<td>Firefox 10.0.4
+</td></tr>
+<tr>
+<th>2012-03-13
+</th>
+<td>Firefox 14
+</td>
+<td>Firefox 13
+</td>
+<td>Firefox 12
+</td>
+<th>2012-03-13
+</th>
+<td>Firefox 11
+</td>
+<td>Firefox 10.0.3
+</td></tr>
+<tr>
+<th>2012-01-31
+</th>
+<td>Firefox 13
+</td>
+<td>Firefox 12
+</td>
+<td>Firefox 11
+</td>
+<th>2012-01-31
+</th>
+<td>Firefox 10
+</td>
+<td>Firefox 10.0
+</td></tr>
+<tr>
+<th>2011-12-20
+</th>
+<td>Firefox 12
+</td>
+<td>Firefox 11
+</td>
+<td>Firefox 10
+</td>
+<th>2011-12-20
+</th>
+<td>Firefox 9
+</td></tr>
+<tr>
+<th>2011-11-08
+</th>
+<td>Firefox 11
+</td>
+<td>Firefox 10
+</td>
+<td>Firefox 9
+</td>
+<th>2011-11-08
+</th>
+<td>Firefox 8
+</td></tr>
+<tr>
+<th>2011-09-27
+</th>
+<td>Firefox 10
+</td>
+<td>Firefox 9
+</td>
+<td>Firefox 8
+</td>
+<th>2011-09-27
+</th>
+<td>Firefox 7
+</td></tr>
+<tr>
+<th>2011-08-16
+</th>
+<td>Firefox 9
+</td>
+<td>Firefox 8
+</td>
+<td>Firefox 7
+</td>
+<th>2011-08-16
+</th>
+<td>Firefox 6
+</td></tr>
+<tr>
+<th>2011-07-05
+</th>
+<td>Firefox 8</td>
+<td>Firefox 7</td>
+<td>Firefox 6
+</td>
+<th>
+</th>
+<td>
+</td></tr>
+<tr>
+<th>
+</th>
+<td> </td>
+<td> </td>
+<td>
+</td>
+<th>2011-06-21
+</th>
+<td>Firefox 5
+</td></tr>
+<tr>
+<th>2011-05-24
+</th>
+<td>Firefox 7</td>
+<td>Firefox 6</td>
+<td>
+</td></tr>
+<tr>
+<th>2011-05-17
+</th>
+<td> </td>
+<td> </td>
+<td>Firefox 5
+</td></tr>
+<tr>
+<th>2011-04-12
+</th>
+<td>Firefox 6</td>
+<td>Firefox 5
+</td></tr>
+</table>
+<p>*Some release dates and merge dates are rescheduled to avoid conflicts with holidays.
+</p><p>Notes:
+</p>
+<ul><li> Irregular scheduling starting 2016.</li>
+<li> Six week schedule from 2011 to 2015 (with some dates delayed to avoid conflicts with holidays).</li>
+<li> Firefox 5 was on a slightly different schedule. It spent five weeks each on Aurora and Beta while later releases spent six weeks on each branch.</li></ul>
+
+<!-- 
+NewPP limit report
+Cached time: 20190313060308
+Cache expiry: 86400
+Dynamic content: false
+[SMW] In‐text annotation parser time: 0.001 seconds
+CPU time usage: 0.080 seconds
+Real time usage: 0.153 seconds
+Preprocessor visited node count: 22/1000000
+Preprocessor generated node count: 84/1000000
+Post‐expand include size: 0/2097152 bytes
+Template argument size: 0/2097152 bytes
+Highest expansion depth: 2/40
+Expensive parser function count: 0/100
+-->
+
+<!-- 
+Transclusion expansion time report (%,ms,calls,template)
+100.00%    0.000      1 - -total
+-->
+
+<!-- Saved in parser cache with key wiki:pcache:idhash:44236-0!*!0!!en!*!* and timestamp 20190313060308 and revision id 1207772
+ -->
+</div>					<div class="printfooter">
+						Retrieved from "<a dir="ltr" href="https://wiki.mozilla.org/index.php?title=Release_Management/Calendar&amp;oldid=1207772">https://wiki.mozilla.org/index.php?title=Release_Management/Calendar&amp;oldid=1207772</a>"					</div>
+				<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks"><a href="/Special:Categories" title="Special:Categories">Category</a>: <ul><li><a href="/Category:Release_Management" title="Category:Release Management">Release Management</a></li></ul></div></div>				<div class="visualClear"></div>
+							</div>
+		</div>
+		<div id="mw-navigation">
+			<h2>Navigation menu</h2>
+
+			<div id="mw-head">
+									<div id="p-personal" role="navigation" class="" aria-labelledby="p-personal-label">
+						<h3 id="p-personal-label">Personal tools</h3>
+						<ul>
+							<li id="pt-login"><a href="/index.php?title=Special:UserLogin&amp;returnto=Release+Management%2FCalendar" title="You are encouraged to log in; however, it is not mandatory [o]" accesskey="o">Log in</a></li><li id="pt-createaccount"><a href="/Special:RequestAccount" title="You are encouraged to create an account and log in; however, it is not mandatory">Request account</a></li>						</ul>
+					</div>
+									<div id="left-navigation">
+										<div id="p-namespaces" role="navigation" class="vectorTabs" aria-labelledby="p-namespaces-label">
+						<h3 id="p-namespaces-label">Namespaces</h3>
+						<ul>
+															<li  id="ca-nstab-main" class="selected"><span><a href="/Release_Management/Calendar"  title="View the content page [c]" accesskey="c">Page</a></span></li>
+															<li  id="ca-talk" class="new"><span><a href="/index.php?title=Talk:Release_Management/Calendar&amp;action=edit&amp;redlink=1"  title="Discussion about the content page [t]" accesskey="t" rel="discussion">Discussion</a></span></li>
+													</ul>
+					</div>
+										<div id="p-variants" role="navigation" class="vectorMenu emptyPortlet" aria-labelledby="p-variants-label">
+												<h3 id="p-variants-label">
+							<span>Variants</span><a href="#"></a>
+						</h3>
+
+						<div class="menu">
+							<ul>
+															</ul>
+						</div>
+					</div>
+									</div>
+				<div id="right-navigation">
+										<div id="p-views" role="navigation" class="vectorTabs" aria-labelledby="p-views-label">
+						<h3 id="p-views-label">Views</h3>
+						<ul>
+															<li id="ca-view" class="selected"><span><a href="/Release_Management/Calendar" >Read</a></span></li>
+															<li id="ca-viewsource"><span><a href="/index.php?title=Release_Management/Calendar&amp;action=edit"  title="This page is protected.&#10;You can view its source [e]" accesskey="e">View source</a></span></li>
+															<li id="ca-history" class="collapsible"><span><a href="/index.php?title=Release_Management/Calendar&amp;action=history"  title="Past revisions of this page [h]" accesskey="h">View history</a></span></li>
+													</ul>
+					</div>
+										<div id="p-cactions" role="navigation" class="vectorMenu emptyPortlet" aria-labelledby="p-cactions-label">
+						<h3 id="p-cactions-label"><span>More</span><a href="#"></a></h3>
+
+						<div class="menu">
+							<ul>
+															</ul>
+						</div>
+					</div>
+										<div id="p-search" role="search">
+						<h3>
+							<label for="searchInput">Search</label>
+						</h3>
+
+						<form action="/index.php" id="searchform">
+							<div id="simpleSearch">
+							<input type="search" name="search" placeholder="Search" title="Search MozillaWiki [f]" accesskey="f" id="searchInput"/><input type="hidden" value="Special:Search" name="title"/><input type="submit" name="fulltext" value="Search" title="Search the pages for this text" id="mw-searchButton" class="searchButton mw-fallbackSearchButton"/><input type="submit" name="go" value="Go" title="Go to a page with this exact name if it exists" id="searchButton" class="searchButton"/>							</div>
+						</form>
+					</div>
+									</div>
+			</div>
+			<div id="mw-panel">
+				<div id="p-logo" role="banner"><a class="mw-wiki-logo" href="/Main_Page"  title="Visit the main page"></a></div>
+						<div class="portal" role="navigation" id='p-navigation' aria-labelledby='p-navigation-label'>
+			<h3 id='p-navigation-label'>Navigation</h3>
+
+			<div class="body">
+									<ul>
+						<li id="n-mainpage-description"><a href="/Main_Page" title="Visit the main page [z]" accesskey="z">Main page</a></li><li id="n-Product-releases"><a href="/Releases">Product releases</a></li><li id="n-newpages"><a href="/Special:NewPages">New pages</a></li><li id="n-recentchanges"><a href="/Special:RecentChanges" title="A list of recent changes in the wiki [r]" accesskey="r">Recent changes</a></li><li id="n-Recent-uploads"><a href="/Special:NewFiles">Recent uploads</a></li><li id="n-randompage"><a href="/Special:Random" title="Load a random page [x]" accesskey="x">Random page</a></li><li id="n-Help"><a href="/MozillaWiki:Help">Help</a></li>					</ul>
+							</div>
+		</div>
+			<div class="portal" role="navigation" id='p-How_to_Contribute' aria-labelledby='p-How_to_Contribute-label'>
+			<h3 id='p-How_to_Contribute-label'>How to Contribute</h3>
+
+			<div class="body">
+									<ul>
+						<li id="n-All-hands-meeting"><a href="/WeeklyUpdates">All-hands meeting</a></li><li id="n-Other-meetings"><a href="/Community_Calendar">Other meetings</a></li><li id="n-Contribute-to-Mozilla"><a href="/Contribute">Contribute to Mozilla</a></li><li id="n-Mozilla-Reps"><a href="/ReMo">Mozilla Reps</a></li><li id="n-Student-Ambassadors"><a href="/StudentAmbassadors">Student Ambassadors</a></li>					</ul>
+							</div>
+		</div>
+			<div class="portal" role="navigation" id='p-MozillaWiki' aria-labelledby='p-MozillaWiki-label'>
+			<h3 id='p-MozillaWiki-label'>MozillaWiki</h3>
+
+			<div class="body">
+									<ul>
+						<li id="n-About"><a href="/MozillaWiki:About">About</a></li><li id="n-Team"><a href="/MozillaWiki:Team">Team</a></li><li id="n-Policies"><a href="/MozillaWiki:Policies">Policies</a></li><li id="n-.40MozillaWiki"><a href="//twitter.com/MozillaWiki" rel="nofollow">@MozillaWiki</a></li><li id="n-Report-a-wiki-bug"><a href="//bugzilla.mozilla.org/enter_bug.cgi?product=Websites&amp;component=wiki.mozilla.org" rel="nofollow">Report a wiki bug</a></li>					</ul>
+							</div>
+		</div>
+			<div class="portal" role="navigation" id='p-Around_Mozilla' aria-labelledby='p-Around_Mozilla-label'>
+			<h3 id='p-Around_Mozilla-label'>Around Mozilla</h3>
+
+			<div class="body">
+									<ul>
+						<li id="n-Mozilla-Support"><a href="//support.mozilla.org/" rel="nofollow">Mozilla Support</a></li><li id="n-Mozilla-Developer-Network"><a href="//developer.mozilla.org/" rel="nofollow">Mozilla Developer Network</a></li><li id="n-Planet-Mozilla"><a href="//planet.mozilla.org/" rel="nofollow">Planet Mozilla</a></li><li id="n-Mozilla-Blog"><a href="//blog.mozilla.org/" rel="nofollow">Mozilla Blog</a></li><li id="n-Research"><a href="//www.mozilla.org/research/" rel="nofollow">Research</a></li>					</ul>
+							</div>
+		</div>
+			<div class="portal" role="navigation" id='p-tb' aria-labelledby='p-tb-label'>
+			<h3 id='p-tb-label'>Tools</h3>
+
+			<div class="body">
+									<ul>
+						<li id="t-whatlinkshere"><a href="/Special:WhatLinksHere/Release_Management/Calendar" title="A list of all wiki pages that link here [j]" accesskey="j">What links here</a></li><li id="t-recentchangeslinked"><a href="/Special:RecentChangesLinked/Release_Management/Calendar" title="Recent changes in pages linked from this page [k]" accesskey="k">Related changes</a></li><li id="t-specialpages"><a href="/Special:SpecialPages" title="A list of all special pages [q]" accesskey="q">Special pages</a></li><li id="t-print"><a href="/index.php?title=Release_Management/Calendar&amp;printable=yes" rel="alternate" title="Printable version of this page [p]" accesskey="p">Printable version</a></li><li id="t-permalink"><a href="/index.php?title=Release_Management/Calendar&amp;oldid=1207772" title="Permanent link to this revision of the page">Permanent link</a></li><li id="t-info"><a href="/index.php?title=Release_Management/Calendar&amp;action=info" title="More information about this page">Page information</a></li><li id="t-importfrometherpadlink"><a href="/Special:ImportFromEtherpad" rel="importfrometherpad-link">Import an Etherpad</a></li><li id="t-smwbrowselink"><a href="/Special:Browse/:Release-5FManagement-2FCalendar" rel="search">Browse properties</a></li>					</ul>
+							</div>
+		</div>
+				</div>
+		</div>
+		<div id="footer" role="contentinfo">
+							<ul id="footer-info">
+											<li id="footer-info-lastmod"> This page was last modified on 15 February 2019, at 03:10.</li>
+									</ul>
+							<ul id="footer-places">
+											<li id="footer-places-privacy"><a href="/MozillaWiki:Privacy_policy" title="MozillaWiki:Privacy policy">Privacy policy</a></li>
+											<li id="footer-places-about"><a href="/MozillaWiki:About" title="MozillaWiki:About">About MozillaWiki</a></li>
+											<li id="footer-places-mobileview"><a href="https://m.wiki.mozilla.org/index.php?title=Release_Management/Calendar&amp;mobileaction=toggle_view_mobile" class="noprint stopMobileRedirectToggle">Mobile view</a></li>
+									</ul>
+										<ul id="footer-icons" class="noprint">
+											<li id="footer-poweredbyico">
+							<a href="//www.mediawiki.org/"><img src="/resources/assets/poweredby_mediawiki_88x31.png" alt="Powered by MediaWiki" srcset="/resources/assets/poweredby_mediawiki_132x47.png 1.5x, /resources/assets/poweredby_mediawiki_176x62.png 2x" width="88" height="31"/></a><a href="https://www.semantic-mediawiki.org/wiki/Semantic_MediaWiki"><img src="/extensions/SemanticMediaWiki/includes/../res/images/smw_button.png" alt="Powered by Semantic MediaWiki" width="88" height="31"/></a>						</li>
+									</ul>
+						<div style="clear:both"></div>
+		</div>
+		<script>(window.RLQ=window.RLQ||[]).push(function(){mw.loader.state({"user":"ready","user.groups":"ready"});mw.loader.load(["ext.smw.tooltips","mediawiki.action.view.postEdit","site","mediawiki.user","mediawiki.hidpi","mediawiki.page.ready","mediawiki.searchSuggest","ext.ImportFromEtherpad.main.init"]);});</script><script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-35433268-22', 'auto');
+  ga('set', 'anonymizeIp', true);
+  ga('send', 'pageview');
+
+</script>
+<script>(window.RLQ=window.RLQ||[]).push(function(){mw.config.set({"wgBackendResponseTime":251});});</script>
+	<script type="text/javascript">window.NREUM||(NREUM={});NREUM.info={"beacon":"bam.nr-data.net","licenseKey":"d656aeec33","applicationID":"43461061","transactionName":"NAFXZ0VQD0VVARUIVg1LdFBDWA5YGwMCFVAMChpFXlQW","queueTime":0,"applicationTime":283,"atts":"GEZUEQ1KHEs=","errorBeacon":"bam.nr-data.net","agent":""}</script></body>
+</html>
