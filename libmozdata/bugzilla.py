@@ -72,7 +72,7 @@ class Bugzilla(Connection):
         header['X-Bugzilla-API-Key'] = self.get_apikey()
         return header
 
-    def put(self, data, attachment=False):
+    def put(self, data, attachment=False, retry_on_failure=False):
         """Put some data in bugs
 
         Args:
@@ -90,7 +90,7 @@ class Bugzilla(Connection):
             header = self.get_header()
 
             def cb(data, res, *args, **kwargs):
-                if res.status_code == 200:
+                if retry_on_failure and res.status_code == 200:
                     json = res.json()
                     if json.get('error', False):
                         failed.extend(data)
