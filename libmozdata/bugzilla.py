@@ -78,6 +78,7 @@ class Bugzilla(Connection):
         Args:
             data (dict): a dictionnary
         """
+        failures = []
         if self.bugids:
             if self.__is_bugid():
                 ids = self.bugids
@@ -90,10 +91,13 @@ class Bugzilla(Connection):
             header = self.get_header()
 
             def cb(data, res, *args, **kwargs):
-                if retry_on_failure and res.status_code == 200:
+                if res.status_code == 200:
                     json = res.json()
                     if json.get('error', False):
-                        failed.extend(data)
+                        if retry_on_failure:
+                            failed.extend(data)
+                        else:
+                            failures.extend(data)
 
             while failed:
                 _failed = list(failed)
@@ -110,6 +114,7 @@ class Bugzilla(Connection):
                                      verify=True,
                                      timeout=self.TIMEOUT,
                                      hooks={'response': functools.partial(cb, _ids)}).result()
+        return failures
 
     def get_data(self):
         """Collect the data
