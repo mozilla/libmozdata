@@ -410,7 +410,7 @@ class PhabricatorAPI(object):
         buildables = self.search_buildable(object_phid=object_phid)
         assert len(buildables) == 1
         buildable = buildables[0]
-        logger.info('Found HarborMaster buildable', id=buildable['id'], phid=buildable['phid'])
+        logger.info('Found HarborMaster buildable id={id} phid={phid}'.format(**buildable))
 
         # Then find the build in that buildable & plan
         builds = self.search_build(
@@ -419,11 +419,11 @@ class PhabricatorAPI(object):
         )
         assert len(buildables) == 1
         build = builds[0]
-        logger.info('Found HarborMaster build', id=build['id'], phid=build['phid'])
+        logger.info('Found HarborMaster build id={id} phid={phid}'.format(**build))
 
         # Finally look for the build targets
         targets = self.search_build_target(build_phid=build['phid'])
-        logger.info('Found HarborMaster build targets', nb=len(targets))
+        logger.info('Found {} HarborMaster build targets'.format(len(targets)))
 
         return build, targets
 
@@ -438,13 +438,13 @@ class PhabricatorAPI(object):
         targets = self.search_build_target(build_target_phid=build_target_phid)
         assert len(targets) == 1, 'Build target not found'
         build_phid = targets[0]['fields']['buildPHID']
-        logger.info('Found HarborMaster build', build=build_phid)
+        logger.info('Found HarborMaster build {}'.format(build_phid))
 
         # Then lookup the build
         builds = self.search_build(build_phid=build_phid)
         assert len(builds) == 1
         buildable_phid = builds[0]['fields']['buildablePHID']
-        logger.info('Found HarborMaster buildable', buildable=buildable_phid)
+        logger.info('Found HarborMaster buildable {}'.format(buildable_phid))
 
         # Finally load the buidable
         buildables = self.search_buildable(buildable_phid=buildable_phid)
@@ -496,7 +496,7 @@ class PhabricatorAPI(object):
                 'ui.external': external,
             },
         )
-        logger.info('Created HarborMaster link', target=build_target_phid, uri=uri)
+        logger.info('Created HarborMaster link on {} : {}'.format(build_target_phid, uri))
         return out
 
     def upload_coverage_results(self, object_phid, coverage_data):
@@ -622,7 +622,7 @@ class PhabricatorAPI(object):
 
             # Load all parent diffs
             for parent in parents:
-                logger.info('Loading parent diff', phid=parent)
+                logger.info('Loading parent diff {}'.format(parent))
 
                 # Sort parent diffs by their id to load the most recent patch
                 parent_diffs = sorted(
@@ -636,7 +636,7 @@ class PhabricatorAPI(object):
                 # This is needed to support stack of patches with already merged patches
                 diff_base = last_diff['baseRevision']
                 if revision_available(repo, diff_base):
-                    logger.info('Found a parent with a landed revision, stopping stack here', rev=diff_base)
+                    logger.info('Found a parent with landed revision {}, stopping stack here'.format(diff_base))
                     hg_base = diff_base
                     break
         else:
@@ -645,7 +645,7 @@ class PhabricatorAPI(object):
 
         # When base revision is missing, update to default revision
         if hg_base is None or not revision_available(repo, hg_base):
-            logger.warning('Missing base revision from Phabricator', rev=hg_base)
+            logger.warning('Missing base revision {} from Phabricator'.format(hg_base))
             hg_base = default_revision
 
         # Load all patches from their numerical ID
@@ -654,7 +654,7 @@ class PhabricatorAPI(object):
 
         # Update the repo to base revision
         try:
-            logger.info('Updating repo to revision', rev=hg_base)
+            logger.info('Updating repo to revision {}'.format(hg_base))
             repo.update(
                 rev=hg_base,
                 clean=True,
@@ -665,7 +665,7 @@ class PhabricatorAPI(object):
         # Get current revision using full informations tuple from hglib
         revision = repo.identify(id=True).strip()
         revision = repo.log(revision, limit=1)[0]
-        logger.info('Updated repo to revision', revision=revision.node)
+        logger.info('Updated repo to revision {}'.format(revision.node))
 
         # Outputs base revision and patches from the bottom one up to the target
         return (revision, list(reversed(patches.items())))
