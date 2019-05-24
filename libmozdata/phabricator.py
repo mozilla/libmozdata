@@ -18,7 +18,7 @@ import requests
 HGMO_JSON_REV_URL_TEMPLATE = 'https://hg.mozilla.org/mozilla-central/json-rev/{}'
 MOZILLA_PHABRICATOR_PROD = 'https://phabricator.services.mozilla.com/api/'
 
-logger = logging.get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class BuildState(enum.Enum):
