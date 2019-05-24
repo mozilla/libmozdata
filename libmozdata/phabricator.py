@@ -15,7 +15,6 @@ import hglib
 import requests
 
 
-
 HGMO_JSON_REV_URL_TEMPLATE = 'https://hg.mozilla.org/mozilla-central/json-rev/{}'
 MOZILLA_PHABRICATOR_PROD = 'https://phabricator.services.mozilla.com/api/'
 
@@ -193,7 +192,7 @@ class PhabricatorAPI(object):
 
         # Test authentication
         self.user = self.request('user.whoami')
-        logger.info(f"Authenticated on {self.url} as {self.user['realName']}")
+        logger.info('Authenticated on {} as {}'.format(self.url, self.user['realName']))
 
     @property
     def hostname(self):
@@ -262,7 +261,7 @@ class PhabricatorAPI(object):
         out = self.request(
             'differential.revision.search',
             constraints=constraints,
-            **params,
+            **params
         )
 
         data = out['data']
@@ -488,15 +487,15 @@ class PhabricatorAPI(object):
         Helper to create a URI Harbormaster Artifact
         '''
         out = self.create_harbormaster_artifact(
-                build_target_phid=build_target_phid,
-                artifact_type=ArtifactType.Uri,
-                key=artifact_key,
-                payload={
-                    'uri': uri,
-                    'name': name,
-                    'ui.external': external,
-                },
-            )
+            build_target_phid=build_target_phid,
+            artifact_type=ArtifactType.Uri,
+            key=artifact_key,
+            payload={
+                'uri': uri,
+                'name': name,
+                'ui.external': external,
+            },
+        )
         logger.info('Created HarborMaster link', target=build_target_phid, uri=uri)
         return out
 
@@ -567,7 +566,7 @@ class PhabricatorAPI(object):
         out = self.request(
             'project.search',
             constraints=constraints,
-            **params,
+            **params
         )
         return out['data']
 
@@ -661,7 +660,7 @@ class PhabricatorAPI(object):
                 clean=True,
             )
         except hglib.error.CommandError:
-            raise Exception(f'Failed to update to revision {hg_base}')
+            raise Exception('Failed to update to revision {}'.format(hg_base))
 
         # Get current revision using full informations tuple from hglib
         revision = repo.identify(id=True).strip()
