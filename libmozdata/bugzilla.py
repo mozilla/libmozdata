@@ -87,7 +87,7 @@ class Bugzilla(Connection):
 
             url = Bugzilla.ATTACHMENT_API_URL if attachment else Bugzilla.API_URL
             url += '/'
-            failed = ids
+            to_retry = ids
             header = self.get_header()
 
             def cb(data, res, *args, **kwargs):
@@ -95,14 +95,14 @@ class Bugzilla(Connection):
                     json = res.json()
                     if json.get('error', False):
                         if retry_on_failure:
-                            failed.extend(data)
+                            to_retry.extend(data)
                         else:
                             failures.extend(data)
 
-            while failed:
-                _failed = list(failed)
-                failed = []
-                for _ids in Connection.chunks(_failed):
+            while to_retry:
+                _to_retry = list(to_retry)
+                to_retry = []
+                for _ids in Connection.chunks(_to_retry):
                     first_id = _ids[0]
                     if len(_ids) >= 2:
                         data['ids'] = _ids
