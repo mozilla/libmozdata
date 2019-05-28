@@ -91,13 +91,17 @@ class Bugzilla(Connection):
             header = self.get_header()
 
             def cb(data, res, *args, **kwargs):
+                error = True
                 if res.status_code == 200:
                     json = res.json()
-                    if json.get('error', False):
-                        if retry_on_failure:
-                            to_retry.extend(data)
-                        else:
-                            failures.extend(data)
+                    if not json.get('error', False):
+                        error = False
+
+                if error:
+                    if retry_on_failure:
+                        to_retry.extend(data)
+                    else:
+                        failures.extend(data)
 
             while to_retry:
                 _to_retry = list(to_retry)
