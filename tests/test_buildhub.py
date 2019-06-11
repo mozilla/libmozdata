@@ -6,7 +6,6 @@ from libmozdata import buildhub
 
 
 class BuidlhubTest(unittest.TestCase):
-
     @responses.activate
     def test_get_distinct_versions(self):
         responses.add(

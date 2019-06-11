@@ -3,18 +3,19 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import six
-from .connection import (Connection, Query)
+
 from . import config
+from .connection import Connection, Query
 
 
 class Mercurial(Connection):
     """Mozilla mercurial connection: http://hg.mozilla.org
     """
 
-    HG_URL = config.get('Mercurial', 'URL', 'https://hg.mozilla.org')
-    remote = HG_URL == 'https://hg.mozilla.org'
+    HG_URL = config.get("Mercurial", "URL", "https://hg.mozilla.org")
+    remote = HG_URL == "https://hg.mozilla.org"
 
-    def __init__(self, queries, channel='nightly', **kwargs):
+    def __init__(self, queries, channel="nightly", **kwargs):
         """Constructor
 
         Args:
@@ -34,12 +35,12 @@ class Mercurial(Connection):
         Returns:
             str: the repo name
         """
-        if channel == 'nightly' or channel == 'central':
-            return 'mozilla-central'
-        elif channel == 'inbound':
-            return 'integration/mozilla-inbound'
+        if channel == "nightly" or channel == "central":
+            return "mozilla-central"
+        elif channel == "inbound":
+            return "integration/mozilla-inbound"
         else:
-            return 'releases/mozilla-' + channel
+            return "releases/mozilla-" + channel
 
     @staticmethod
     def get_repo_url(channel):
@@ -52,7 +53,7 @@ class Mercurial(Connection):
             str: the repo url
         """
         if Mercurial.remote:
-            return Mercurial.HG_URL + '/' + Mercurial.get_repo(channel)
+            return Mercurial.HG_URL + "/" + Mercurial.get_repo(channel)
         else:
             return Mercurial.HG_URL
 
@@ -61,7 +62,15 @@ class Revision(Mercurial):
     """Connection to get a revision
     """
 
-    def __init__(self, channel='nightly', params=None, handler=None, handlerdata=None, queries=None, **kwargs):
+    def __init__(
+        self,
+        channel="nightly",
+        params=None,
+        handler=None,
+        handlerdata=None,
+        queries=None,
+        **kwargs
+    ):
         """Constructor
 
         Args:
@@ -74,7 +83,9 @@ class Revision(Mercurial):
         if queries:
             super(Revision, self).__init__(queries, **kwargs)
         else:
-            super(Revision, self).__init__(Query(Revision.get_url(channel), params, handler, handlerdata), **kwargs)
+            super(Revision, self).__init__(
+                Query(Revision.get_url(channel), params, handler, handlerdata), **kwargs
+            )
 
     @staticmethod
     def get_url(channel):
@@ -86,7 +97,7 @@ class Revision(Mercurial):
         Returns:
             str: the api url
         """
-        return Mercurial.get_repo_url(channel) + '/json-rev'
+        return Mercurial.get_repo_url(channel) + "/json-rev"
 
     @staticmethod
     def default_handler(json, data):
@@ -99,7 +110,7 @@ class Revision(Mercurial):
         data.update(json)
 
     @staticmethod
-    def get_revision(channel='nightly', node='default'):
+    def get_revision(channel="nightly", node="default"):
         """Get the revision for a node
 
         Args:
@@ -110,7 +121,7 @@ class Revision(Mercurial):
             dict: the revision corresponding to the node
         """
         data = {}
-        Revision(channel, {'node': node}, Revision.default_handler, data).wait()
+        Revision(channel, {"node": node}, Revision.default_handler, data).wait()
         return data
 
 
@@ -118,7 +129,9 @@ class RawRevision(Mercurial):
     """Connection to get a raw revision
     """
 
-    def __init__(self, channel='nightly', params=None, handler=None, queries=None, **kwargs):
+    def __init__(
+        self, channel="nightly", params=None, handler=None, queries=None, **kwargs
+    ):
         """Constructor
 
         Args:
@@ -131,7 +144,9 @@ class RawRevision(Mercurial):
         if queries:
             super(RawRevision, self).__init__(queries, **kwargs)
         else:
-            super(RawRevision, self).__init__(Query(RawRevision.get_url(channel), params, handler), **kwargs)
+            super(RawRevision, self).__init__(
+                Query(RawRevision.get_url(channel), params, handler), **kwargs
+            )
 
     @staticmethod
     def get_url(channel):
@@ -143,10 +158,10 @@ class RawRevision(Mercurial):
         Returns:
             str: the api url
         """
-        return Mercurial.get_repo_url(channel) + '/raw-rev'
+        return Mercurial.get_repo_url(channel) + "/raw-rev"
 
     @staticmethod
-    def get_revision(channel='nightly', node='default'):
+    def get_revision(channel="nightly", node="default"):
         """Get the revision for a node
 
         Args:
@@ -159,18 +174,26 @@ class RawRevision(Mercurial):
         data = {}
 
         def handler(response):
-            data['res'] = response
+            data["res"] = response
 
-        RawRevision(channel, {'node': node}, handler).wait()
+        RawRevision(channel, {"node": node}, handler).wait()
 
-        return data['res']
+        return data["res"]
 
 
 class FileInfo(Mercurial):
     """Connection to get file info
     """
 
-    def __init__(self, channel='nightly', params=None, handler=None, handlerdata=None, queries=None, **kwargs):
+    def __init__(
+        self,
+        channel="nightly",
+        params=None,
+        handler=None,
+        handlerdata=None,
+        queries=None,
+        **kwargs
+    ):
         """Constructor
 
         Args:
@@ -183,7 +206,9 @@ class FileInfo(Mercurial):
         if queries:
             super(FileInfo, self).__init__(queries, **kwargs)
         else:
-            super(FileInfo, self).__init__(Query(FileInfo.get_url(channel), params, handler, handlerdata), **kwargs)
+            super(FileInfo, self).__init__(
+                Query(FileInfo.get_url(channel), params, handler, handlerdata), **kwargs
+            )
 
     @staticmethod
     def get_url(channel):
@@ -195,7 +220,7 @@ class FileInfo(Mercurial):
         Returns:
             str: the api url
         """
-        return Mercurial.get_repo_url(channel) + '/json-filelog'
+        return Mercurial.get_repo_url(channel) + "/json-filelog"
 
     @staticmethod
     def default_handler(json, data):
@@ -208,7 +233,7 @@ class FileInfo(Mercurial):
         data.update(json)
 
     @staticmethod
-    def get(paths, channel='nightly', node='default'):
+    def get(paths, channel="nightly", node="default"):
         """Get the file info for several paths
 
         Args:
@@ -221,20 +246,24 @@ class FileInfo(Mercurial):
         """
         data = {}
 
-        __base = {'node': node,
-                  'file': None}
+        __base = {"node": node, "file": None}
 
         if isinstance(paths, six.string_types):
-            __base['file'] = paths
+            __base["file"] = paths
             _dict = {}
             data[paths] = _dict
-            FileInfo(channel=channel, params=__base, handler=FileInfo.default_handler, handlerdata=_dict).wait()
+            FileInfo(
+                channel=channel,
+                params=__base,
+                handler=FileInfo.default_handler,
+                handlerdata=_dict,
+            ).wait()
         else:
             url = FileInfo.get_url(channel)
             queries = []
             for path in paths:
                 cparams = __base.copy()
-                cparams['file'] = path
+                cparams["file"] = path
                 _dict = {}
                 data[path] = _dict
                 queries.append(Query(url, cparams, FileInfo.default_handler, _dict))
@@ -247,7 +276,15 @@ class Annotate(Mercurial):
     """Connection to get file annotation (blame)
     """
 
-    def __init__(self, channel='nightly', params=None, handler=None, handlerdata=None, queries=None, **kwargs):
+    def __init__(
+        self,
+        channel="nightly",
+        params=None,
+        handler=None,
+        handlerdata=None,
+        queries=None,
+        **kwargs
+    ):
         """Constructor
 
         Args:
@@ -260,7 +297,9 @@ class Annotate(Mercurial):
         if queries:
             super(Annotate, self).__init__(queries, **kwargs)
         else:
-            super(Annotate, self).__init__(Query(Annotate.get_url(channel), params, handler, handlerdata), **kwargs)
+            super(Annotate, self).__init__(
+                Query(Annotate.get_url(channel), params, handler, handlerdata), **kwargs
+            )
 
     @staticmethod
     def get_url(channel):
@@ -272,7 +311,7 @@ class Annotate(Mercurial):
         Returns:
             str: the api url
         """
-        return Mercurial.get_repo_url(channel) + '/json-annotate'
+        return Mercurial.get_repo_url(channel) + "/json-annotate"
 
     @staticmethod
     def default_handler(json, data):
@@ -285,7 +324,7 @@ class Annotate(Mercurial):
         data.update(json)
 
     @staticmethod
-    def get(paths, channel='nightly', node='default'):
+    def get(paths, channel="nightly", node="default"):
         """Get the annotated files for several paths
 
         Args:
@@ -298,20 +337,24 @@ class Annotate(Mercurial):
         """
         data = {}
 
-        __base = {'node': node,
-                  'file': None}
+        __base = {"node": node, "file": None}
 
         if isinstance(paths, six.string_types):
-            __base['file'] = paths
+            __base["file"] = paths
             _dict = {}
             data[paths] = _dict
-            Annotate(channel=channel, params=__base, handler=Annotate.default_handler, handlerdata=_dict).wait()
+            Annotate(
+                channel=channel,
+                params=__base,
+                handler=Annotate.default_handler,
+                handlerdata=_dict,
+            ).wait()
         else:
             url = Annotate.get_url(channel)
             queries = []
             for path in paths:
                 cparams = __base.copy()
-                cparams['file'] = path
+                cparams["file"] = path
                 _dict = {}
                 data[path] = _dict
                 queries.append(Query(url, cparams, Annotate.default_handler, _dict))

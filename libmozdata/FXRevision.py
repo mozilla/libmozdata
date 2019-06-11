@@ -3,13 +3,14 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import re
+
 from connection import Connection
 
 
 class FXRevision(Connection):
 
-    ARCHIVES_URL = 'http://archive.mozilla.org'
-    NIGHTLY_URL = ARCHIVES_URL + '/pub/firefox/nightly/'
+    ARCHIVES_URL = "http://archive.mozilla.org"
+    NIGHTLY_URL = ARCHIVES_URL + "/pub/firefox/nightly/"
 
     def __init__(self, versions, fx_version, os):
         super(FXRevision, self).__init__(self.ARCHIVES_URL)
@@ -17,7 +18,9 @@ class FXRevision(Connection):
         self.fx_version = fx_version
         self.os = os
         self.info = {}
-        pattern = re.compile('([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})')
+        pattern = re.compile(
+            "([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})"
+        )
         for version in versions:
             m = pattern.search(version)
             self.dates[version] = [m.group(i) for i in range(1, 7)]
@@ -29,17 +32,29 @@ class FXRevision(Connection):
         return self.info
 
     def __make_url(self, l):
-        return '%s%s/%s/%s-mozilla-central/firefox-%s.en-US.%s.json' % (self.NIGHTLY_URL, l[0], l[1], '-'.join(l), self.fx_version, self.os)
+        return "%s%s/%s/%s-mozilla-central/firefox-%s.en-US.%s.json" % (
+            self.NIGHTLY_URL,
+            l[0],
+            l[1],
+            "-".join(l),
+            self.fx_version,
+            self.os,
+        )
 
     def __info_cb(self, res, *args, **kwargs):
         json = res.json()
-        self.info[json['buildid']] = json['moz_source_stamp']
+        self.info[json["buildid"]] = json["moz_source_stamp"]
 
     def __get_info(self):
         for date in self.dates.values():
-            self.results.append(self.session.get(self.__make_url(date),
-                                                 timeout=self.TIMEOUT,
-                                                 hooks={'response': self.__info_cb}))
+            self.results.append(
+                self.session.get(
+                    self.__make_url(date),
+                    timeout=self.TIMEOUT,
+                    hooks={"response": self.__info_cb},
+                )
+            )
+
 
 # fxr = FXRevision(['20160223030304'], '47.0a1', 'linux-i686')
 # pprint(fxr.get())

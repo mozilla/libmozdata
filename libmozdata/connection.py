@@ -3,11 +3,12 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import multiprocessing
+
 from requests.adapters import HTTPAdapter
-from requests_futures.sessions import FuturesSession
 from requests.packages.urllib3.util.retry import Retry
-from . import config
-from . import utils
+from requests_futures.sessions import FuturesSession
+
+from . import config, utils
 
 
 class Query(object):
@@ -39,7 +40,9 @@ class Query(object):
         if not isinstance(params_list, list):
             params_list = [self.params]
 
-        return '\n'.join('url: %s' % self.url + self.params_repr(params) for params in params_list)
+        return "\n".join(
+            "url: %s" % self.url + self.params_repr(params) for params in params_list
+        )
 
 
 class Connection(object):
@@ -50,9 +53,11 @@ class Connection(object):
     MAX_RETRIES = 256
     MAX_WORKERS = multiprocessing.cpu_count()
     CHUNK_SIZE = 32
-    TOKEN = ''
-    USER_AGENT = config.get('User-Agent', 'name', 'libmozdata')
-    X_FORWARDED_FOR = utils.get_x_fwed_for_str(config.get('X-Forwarded-For', 'data', ''))
+    TOKEN = ""
+    USER_AGENT = config.get("User-Agent", "name", "libmozdata")
+    X_FORWARDED_FOR = utils.get_x_fwed_for_str(
+        config.get("X-Forwarded-For", "data", "")
+    )
 
     # Error 429 is for 'Too many requests' => we retry
     STATUS_FORCELIST = [429]
@@ -66,24 +71,30 @@ class Connection(object):
         """
 
         self.session = FuturesSession(max_workers=self.MAX_WORKERS)
-        retries = Retry(total=Connection.MAX_RETRIES, backoff_factor=1, status_forcelist=Connection.STATUS_FORCELIST)
+        retries = Retry(
+            total=Connection.MAX_RETRIES,
+            backoff_factor=1,
+            status_forcelist=Connection.STATUS_FORCELIST,
+        )
         self.session.mount(base_url, HTTPAdapter(max_retries=retries))
         self.results = []
         self.queries = queries
 
         if kwargs:
-            if 'timeout' in kwargs:
-                self.TIMEOUT = kwargs['timeout']
-            if 'max_retries' in kwargs:
-                self.MAX_RETRIES = kwargs['max_retries']
-            if 'max_workers' in kwargs:
-                self.MAX_WORKERS = kwargs['max_workers']
-            if 'user_agent' in kwargs:
-                self.USER_AGENT = kwargs['user_agent']
-            if 'x_forwarded_for' in kwargs:
-                self.X_FORWARDED_FOR = utils.get_x_fwded_for_str(kwargs['x_forwarded_for'])
-            if 'raise_error' in kwargs:
-                self.RAISE_ERROR = kwargs['raise_error']
+            if "timeout" in kwargs:
+                self.TIMEOUT = kwargs["timeout"]
+            if "max_retries" in kwargs:
+                self.MAX_RETRIES = kwargs["max_retries"]
+            if "max_workers" in kwargs:
+                self.MAX_WORKERS = kwargs["max_workers"]
+            if "user_agent" in kwargs:
+                self.USER_AGENT = kwargs["user_agent"]
+            if "x_forwarded_for" in kwargs:
+                self.X_FORWARDED_FOR = utils.get_x_fwded_for_str(
+                    kwargs["x_forwarded_for"]
+                )
+            if "raise_error" in kwargs:
+                self.RAISE_ERROR = kwargs["raise_error"]
         else:
             self.RAISE_ERROR = False
 
@@ -98,6 +109,7 @@ class Connection(object):
         Returns:
             function: the callback for the query
         """
+
         def cb(res, *args, **kwargs):
             if res.status_code == 200:
                 try:
@@ -112,9 +124,9 @@ class Connection(object):
             elif self.RAISE_ERROR:
                 res.raise_for_status()
             else:
-                print('Connection error:')
-                print('   url: ', res.url)
-                print('   text: ', res.text)
+                print("Connection error:")
+                print("   url: ", res.url)
+                print("   text: ", res.text)
 
         return cb
 
@@ -139,9 +151,13 @@ class Connection(object):
             dict: the header
         """
         if self.X_FORWARDED_FOR:
-            return {'User-Agent': self.USER_AGENT, 'X-Forwarded-For': self.X_FORWARDED_FOR, 'Connection': 'close'}
+            return {
+                "User-Agent": self.USER_AGENT,
+                "X-Forwarded-For": self.X_FORWARDED_FOR,
+                "Connection": "close",
+            }
         else:
-            return {'User-Agent': self.USER_AGENT, 'Connection': 'close'}
+            return {"User-Agent": self.USER_AGENT, "Connection": "close"}
 
     def get_auth(self):
         """Get the auth to use each query
@@ -171,29 +187,41 @@ class Connection(object):
                 cb = self.__get_cb(query)
                 if query.params:
                     if isinstance(query.params, dict):
-                        self.results.append(self.session.get(query.url,
-                                                             params=query.params,
-                                                             headers=header,
-                                                             auth=auth,
-                                                             verify=True,
-                                                             timeout=self.TIMEOUT,
-                                                             hooks={'response': cb}))
+                        self.results.append(
+                            self.session.get(
+                                query.url,
+                                params=query.params,
+                                headers=header,
+                                auth=auth,
+                                verify=True,
+                                timeout=self.TIMEOUT,
+                                hooks={"response": cb},
+                            )
+                        )
                     else:
                         for p in query.params:
-                            self.results.append(self.session.get(query.url,
-                                                                 params=p,
-                                                                 headers=header,
-                                                                 auth=auth,
-                                                                 verify=True,
-                                                                 timeout=self.TIMEOUT,
-                                                                 hooks={'response': cb}))
+                            self.results.append(
+                                self.session.get(
+                                    query.url,
+                                    params=p,
+                                    headers=header,
+                                    auth=auth,
+                                    verify=True,
+                                    timeout=self.TIMEOUT,
+                                    hooks={"response": cb},
+                                )
+                            )
                 else:
-                    self.results.append(self.session.get(query.url,
-                                                         headers=header,
-                                                         auth=auth,
-                                                         verify=True,
-                                                         timeout=self.TIMEOUT,
-                                                         hooks={'response': cb}))
+                    self.results.append(
+                        self.session.get(
+                            query.url,
+                            headers=header,
+                            auth=auth,
+                            verify=True,
+                            timeout=self.TIMEOUT,
+                            hooks={"response": cb},
+                        )
+                    )
 
     @staticmethod
     def chunks(l, chunk_size=CHUNK_SIZE):
@@ -207,4 +235,4 @@ class Connection(object):
             a chunk from the data
         """
         for i in range(0, len(l), chunk_size):
-            yield l[i:(i + chunk_size)]
+            yield l[i : (i + chunk_size)]

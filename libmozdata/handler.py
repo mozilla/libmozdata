@@ -4,7 +4,6 @@
 
 
 class Handler(object):
-
     def __init__(self, func=None, data=None):
         self.handler = func
         self.data = data
@@ -12,7 +11,7 @@ class Handler(object):
     def handle(self, *args):
         if self.handler:
             if self.data is not None:
-                args += (self.data, )
+                args += (self.data,)
                 self.handler(*args)
             else:
                 self.handler(*args)
@@ -50,7 +49,6 @@ class Handler(object):
 
 
 class MultipleHandler(Handler):
-
     def __init__(self, *args):
         self.handler = []
         for arg in args:

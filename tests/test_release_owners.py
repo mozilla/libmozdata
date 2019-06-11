@@ -3,6 +3,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import unittest
+
 from libmozdata import release_owners as ro
 
 
@@ -12,5 +13,5 @@ class ReleaseOwnersTest(unittest.TestCase):
         self.assertIsNotNone(owners)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

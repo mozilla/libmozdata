@@ -16,7 +16,7 @@ class InvalidWiki(Exception):
 class Td(object):
     def __init__(self, row_span):
         super(Td, self).__init__()
-        self.data = ''
+        self.data = ""
         self.row_span = int(row_span)
 
     def set(self, data):
@@ -66,7 +66,7 @@ class Table(object):
         C = len(res[0])
         for r in res:
             if len(r) < C:
-                r.extend([''] * (C - len(r)))
+                r.extend([""] * (C - len(r)))
 
         return res
 
@@ -83,40 +83,40 @@ class WikiParser(HTMLParser):
 
     def feed(self, data):
         if not isinstance(data, str):
-            data = str(data, 'ascii')
+            data = str(data, "ascii")
         HTMLParser.feed(self, data)
 
     def handle_starttag(self, tag, attrs):
-        if tag == 'table':
+        if tag == "table":
             self.table_counter += 1
             if self.table_counter in self.tables_number:
                 self.table = Table()
         if self.table is not None:
-            if tag == 'tr':
+            if tag == "tr":
                 self.table.add_row()
-            elif tag == 'td':
+            elif tag == "td":
                 attrs = dict(attrs)
-                self.table.add_cell(attrs.get('rowspan', 1))
-                self.td = ''
-            elif tag == 'th':
+                self.table.add_cell(attrs.get("rowspan", 1))
+                self.td = ""
+            elif tag == "th":
                 attrs = dict(attrs)
-                self.table.add_cell(attrs.get('rowspan', 1))
-                self.th = ''
+                self.table.add_cell(attrs.get("rowspan", 1))
+                self.th = ""
 
     def handle_endtag(self, tag):
         if self.table is not None:
-            if tag == 'table':
+            if tag == "table":
                 self.tables.append(self.table)
                 self.table = None
                 if self.table_counter == max(self.tables_number):
                     raise StopIteration()
-            elif tag == 'td':
+            elif tag == "td":
                 self.table.set(self.td)
                 self.td = None
-            elif tag == 'th':
+            elif tag == "th":
                 self.table.set(self.th)
                 self.th = None
-        if tag == 'html':
+        if tag == "html":
             raise StopIteration()
 
     def handle_data(self, data):

@@ -2,20 +2,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import six
-import operator
 import calendar
-from datetime import (datetime, date, timedelta)
-from dateutil.relativedelta import relativedelta
 import math
+import operator
+import os.path
 import random
+from datetime import date, datetime, timedelta
+
 import dateutil.parser
 import pytz
+import six
+from dateutil.relativedelta import relativedelta
 from requests.utils import quote
-import os.path
 
-
-__pacific = pytz.timezone('US/Pacific')
+__pacific = pytz.timezone("US/Pacific")
 
 
 def get_best(stats):
@@ -43,7 +43,7 @@ def get_timestamp(dt):
         int: the corresponding timestamp
     """
     if isinstance(dt, six.string_types):
-        dt = datetime.utcnow() if dt == 'now' else get_date_ymd(dt)
+        dt = datetime.utcnow() if dt == "now" else get_date_ymd(dt)
     return int(calendar.timegm(dt.timetuple()))
 
 
@@ -73,15 +73,17 @@ def get_date_ymd(dt):
     if isinstance(dt, datetime):
         return as_utc(dt)
 
-    if dt == 'today':
+    if dt == "today":
         today = datetime.utcnow()
         return pytz.utc.localize(datetime(today.year, today.month, today.day))
-    elif dt == 'tomorrow':
+    elif dt == "tomorrow":
         tomorrow = datetime.utcnow() + timedelta(1)
         return pytz.utc.localize(datetime(tomorrow.year, tomorrow.month, tomorrow.day))
-    elif dt == 'yesterday':
+    elif dt == "yesterday":
         yesterday = datetime.utcnow() - timedelta(1)
-        return pytz.utc.localize(datetime(yesterday.year, yesterday.month, yesterday.day))
+        return pytz.utc.localize(
+            datetime(yesterday.year, yesterday.month, yesterday.day)
+        )
 
     return as_utc(dateutil.parser.parse(dt))
 
@@ -103,7 +105,7 @@ def get_date_str(ymd):
     Returns:
         str: the date as a string 'Year-month-day'
     """
-    return ymd.strftime('%Y-%m-%d')
+    return ymd.strftime("%Y-%m-%d")
 
 
 def get_date(_date, delta=None):
@@ -140,7 +142,7 @@ def is64(cpu_name):
     Returns:
         bool: True if 64 is in the name
     """
-    return '64' in cpu_name
+    return "64" in cpu_name
 
 
 def percent(x):
@@ -166,7 +168,7 @@ def simple_percent(x):
     """
     if math.floor(x) == x:
         x = int(x)
-    return str(x) + '%'
+    return str(x) + "%"
 
 
 def get_sample(data, fraction):
@@ -203,7 +205,9 @@ def get_date_from_buildid(bid):
     minute = int(bid[10:12])
     second = int(bid[12:14])
 
-    return __pacific.localize(datetime(year, month, day, hour, minute, second)).astimezone(pytz.utc)
+    return __pacific.localize(
+        datetime(year, month, day, hour, minute, second)
+    ).astimezone(pytz.utc)
 
 
 def get_buildid_from_date(d):
@@ -215,7 +219,7 @@ def get_buildid_from_date(d):
     Returns:
         str: the build_id
     """
-    return d.astimezone(__pacific).strftime('%Y%m%d%H%M%S')
+    return d.astimezone(__pacific).strftime("%Y%m%d%H%M%S")
 
 
 def as_utc(d):
@@ -244,7 +248,11 @@ def get_moz_date(d):
     Returns:
         datetime.datetime: the localized date
     """
-    return pytz.timezone('US/Pacific').localize(dateutil.parser.parse(d)).astimezone(pytz.utc)
+    return (
+        pytz.timezone("US/Pacific")
+        .localize(dateutil.parser.parse(d))
+        .astimezone(pytz.utc)
+    )
 
 
 def rate(x, y):
@@ -257,18 +265,18 @@ def rate(x, y):
     Returns:
         float: x / y or Nan if y == 0
     """
-    return float(x) / float(y) if y else float('nan')
+    return float(x) / float(y) if y else float("nan")
 
 
 def get_guttenberg_death():
-    return get_date_ymd('1468-02-03T00:00:00Z')
+    return get_date_ymd("1468-02-03T00:00:00Z")
 
 
 def signatures_parser(signatures):
     _set = set()
     if signatures:
-        signatures = map(lambda s: s.strip(' \t\r\n'), signatures.split('[@'))
-        signatures = map(lambda s: s[:-1].strip(' \t\r\n'), filter(None, signatures))
+        signatures = map(lambda s: s.strip(" \t\r\n"), signatures.split("[@"))
+        signatures = map(lambda s: s[:-1].strip(" \t\r\n"), filter(None, signatures))
         for s in filter(None, signatures):
             _set.add(s)
     return list(_set)
@@ -278,7 +286,10 @@ def get_monday_sunday(date):
     iso = date.isocalendar()
     delta_monday = iso[2] - 1
     delta_sunday = 7 - iso[2]
-    return date - relativedelta(days=delta_monday), date + relativedelta(days=delta_sunday)
+    return (
+        date - relativedelta(days=delta_monday),
+        date + relativedelta(days=delta_sunday),
+    )
 
 
 def mean_stddev(x):
@@ -291,7 +302,7 @@ def mean_stddev(x):
 
 
 def get_channels():
-    return ['nightly', 'aurora', 'beta', 'release', 'esr']
+    return ["nightly", "aurora", "beta", "release", "esr"]
 
 
 def get_str_list(x):
@@ -305,17 +316,32 @@ def get_str_list(x):
 
 def get_x_fwed_for_str(s):
     if isinstance(s, six.string_types):
-        return ', '.join(map(lambda x: x.strip(' \t'), s.split(',')))
+        return ", ".join(map(lambda x: x.strip(" \t"), s.split(",")))
     else:
-        return ', '.join(map(lambda x: x.strip(' \t'), s))
+        return ", ".join(map(lambda x: x.strip(" \t"), s))
 
 
 def get_params_for_url(params):
-    return '?' + '&'.join([quote(name) + '=' + quote(str(value)) if not isinstance(value, list) else '&'.join([quote(name) + '=' + quote(str(intValue)) for intValue in value]) for name, value in sorted(params.items(), key=lambda p: p[0]) if value is not None]) if params else ''
+    return (
+        "?"
+        + "&".join(
+            [
+                quote(name) + "=" + quote(str(value))
+                if not isinstance(value, list)
+                else "&".join(
+                    [quote(name) + "=" + quote(str(intValue)) for intValue in value]
+                )
+                for name, value in sorted(params.items(), key=lambda p: p[0])
+                if value is not None
+            ]
+        )
+        if params
+        else ""
+    )
 
 
 def get_url(url):
-    return url if url.endswith('/') else url + '/'
+    return url if url.endswith("/") else url + "/"
 
 
 def get_language(path):
@@ -326,24 +352,31 @@ def get_language(path):
     name = os.path.basename(path)
     extension = os.path.splitext(name)[1][1:]
     langs = {
-        'Shell': ['sh'],
-        'Xml': ['xml', 'xst'],
-        'Html': ['html', 'xhtml'],
-        'Css': ['css'],
-        'Javascript': ['js', 'jsm'],
-        'Makefile': ['mk', 'Makefile', 'Makefile.am', 'Makefile.in', 'configure.in', 'autoconf.mk.in'],
-        'C++': ['cpp', 'hpp', 'hh'],
-        'C': ['c', 'h'],
-        'Java': ['java'],
-        'Font': ['ttf', 'ttf^headers^'],
-        'Tests': ['reftest.list', 'crashtests.list', ],
-        'Windows IDL': ['idl'],
-        'Mozilla XUL': ['xul'],
-        'Ini': ['ini'],
-        'License': ['LICENSE'],
-        'Python': ['py'],
-        'moz.build': ['moz.build'],
-        'Rust': ['rs'],
+        "Shell": ["sh"],
+        "Xml": ["xml", "xst"],
+        "Html": ["html", "xhtml"],
+        "Css": ["css"],
+        "Javascript": ["js", "jsm"],
+        "Makefile": [
+            "mk",
+            "Makefile",
+            "Makefile.am",
+            "Makefile.in",
+            "configure.in",
+            "autoconf.mk.in",
+        ],
+        "C++": ["cpp", "hpp", "hh"],
+        "C": ["c", "h"],
+        "Java": ["java"],
+        "Font": ["ttf", "ttf^headers^"],
+        "Tests": ["reftest.list", "crashtests.list"],
+        "Windows IDL": ["idl"],
+        "Mozilla XUL": ["xul"],
+        "Ini": ["ini"],
+        "License": ["LICENSE"],
+        "Python": ["py"],
+        "moz.build": ["moz.build"],
+        "Rust": ["rs"],
     }
     for lang, names in langs.items():
         if name in names or extension in names:
