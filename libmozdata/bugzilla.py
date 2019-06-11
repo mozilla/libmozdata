@@ -3,29 +3,47 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import functools
-import six
 import re
+
 import requests
-from .connection import (Connection, Query)
-from . import config
-from . import utils
-from .handler import Handler
+import six
+
 import libmozdata.versions
+
+from . import config, utils
+from .connection import Connection, Query
+from .handler import Handler
 
 
 class Bugzilla(Connection):
     """Connection to bugzilla.mozilla.org
     """
 
-    URL = config.get('Bugzilla', 'URL', 'https://bugzilla.mozilla.org')
+    URL = config.get("Bugzilla", "URL", "https://bugzilla.mozilla.org")
     # URL = config.get('Allizgub', 'URL', 'https://bugzilla-dev.allizom.org')
-    API_URL = URL + '/rest/bug'
-    ATTACHMENT_API_URL = API_URL + '/attachment'
-    TOKEN = config.get('Bugzilla', 'token', '')
+    API_URL = URL + "/rest/bug"
+    ATTACHMENT_API_URL = API_URL + "/attachment"
+    TOKEN = config.get("Bugzilla", "token", "")
     # TOKEN = config.get('Allizgub', 'token', '')
     BUGZILLA_CHUNK_SIZE = 100
 
-    def __init__(self, bugids=None, include_fields='_default', bughandler=None, bugdata=None, historyhandler=None, historydata=None, commenthandler=None, commentdata=None, comment_include_fields=None, attachmenthandler=None, attachmentdata=None, attachment_include_fields=None, queries=None, **kwargs):
+    def __init__(
+        self,
+        bugids=None,
+        include_fields="_default",
+        bughandler=None,
+        bugdata=None,
+        historyhandler=None,
+        historydata=None,
+        commenthandler=None,
+        commentdata=None,
+        comment_include_fields=None,
+        attachmenthandler=None,
+        attachmentdata=None,
+        attachment_include_fields=None,
+        queries=None,
+        **kwargs
+    ):
         """Constructor
 
         Args:
@@ -69,14 +87,14 @@ class Bugzilla(Connection):
 
     def get_header(self):
         header = super(Bugzilla, self).get_header()
-        header['X-Bugzilla-API-Key'] = self.get_apikey()
+        header["X-Bugzilla-API-Key"] = self.get_apikey()
         return header
 
     def put(self, data, attachment=False, retry_on_failure=False):
         """Put some data in bugs
 
         Args:
-            data (dict): a dictionnary
+            data (dict): a dictionary
         """
         failures = []
         if self.bugids:
@@ -86,7 +104,7 @@ class Bugzilla(Connection):
                 ids = self.__get_bugs_list()
 
             url = Bugzilla.ATTACHMENT_API_URL if attachment else Bugzilla.API_URL
-            url += '/'
+            url += "/"
             to_retry = ids
             header = self.get_header()
 
@@ -94,7 +112,7 @@ class Bugzilla(Connection):
                 error = True
                 if res.status_code == 200:
                     json = res.json()
-                    if not json.get('error', False):
+                    if not json.get("error", False):
                         error = False
 
                 if error:
@@ -109,15 +127,17 @@ class Bugzilla(Connection):
                 for _ids in Connection.chunks(_to_retry):
                     first_id = _ids[0]
                     if len(_ids) >= 2:
-                        data['ids'] = _ids
-                    elif 'ids' in data:
-                        del data['ids']
-                    self.session.put(url + first_id,
-                                     json=data,
-                                     headers=header,
-                                     verify=True,
-                                     timeout=self.TIMEOUT,
-                                     hooks={'response': functools.partial(cb, _ids)}).result()
+                        data["ids"] = _ids
+                    elif "ids" in data:
+                        del data["ids"]
+                    self.session.put(
+                        url + first_id,
+                        json=data,
+                        headers=header,
+                        verify=True,
+                        timeout=self.TIMEOUT,
+                        hooks={"response": functools.partial(cb, _ids)},
+                    ).result()
         return failures
 
     def get_data(self):
@@ -178,14 +198,27 @@ class Bugzilla(Connection):
 
         bugids = list(set(self.bugids).union(set(bz.bugids)))
         include_fields = __merge_fields(self.include_fields, bz.include_fields)
-        comment_include_fields = __merge_fields(self.comment_include_fields, bz.comment_include_fields)
-        attachment_include_fields = __merge_fields(self.attachment_include_fields, bz.attachment_include_fields)
+        comment_include_fields = __merge_fields(
+            self.comment_include_fields, bz.comment_include_fields
+        )
+        attachment_include_fields = __merge_fields(
+            self.attachment_include_fields, bz.attachment_include_fields
+        )
         bughandler = self.bughandler.merge(bz.bughandler)
         historyhandler = self.historyhandler.merge(bz.historyhandler)
         commenthandler = self.commenthandler.merge(bz.commenthandler)
         attachmenthandler = self.attachmenthandler.merge(bz.attachmenthandler)
 
-        return Bugzilla(bugids=bugids, include_fields=include_fields, bughandler=bughandler, historyhandler=historyhandler, commenthandler=commenthandler, attachmenthandler=attachmenthandler, comment_include_fields=comment_include_fields, attachment_include_fields=attachment_include_fields)
+        return Bugzilla(
+            bugids=bugids,
+            include_fields=include_fields,
+            bughandler=bughandler,
+            historyhandler=historyhandler,
+            commenthandler=commenthandler,
+            attachmenthandler=attachmenthandler,
+            comment_include_fields=comment_include_fields,
+            attachment_include_fields=attachment_include_fields,
+        )
 
     def __get_no_private_ids(self):
         if not self.no_private_bugids:
@@ -196,7 +229,7 @@ class Bugzilla(Connection):
     def get_nightly_version():
         def handler(json, data):
             max_version = -1
-            pat = re.compile('cf_status_firefox([0-9]+)')
+            pat = re.compile("cf_status_firefox([0-9]+)")
             for key in json.keys():
                 m = pat.match(key)
                 if m:
@@ -206,16 +239,16 @@ class Bugzilla(Connection):
             data[0] = max_version
 
         nightly_version = [-1]
-        Bugzilla(bugids=['1234567'], bughandler=handler, bugdata=nightly_version).wait()
+        Bugzilla(bugids=["1234567"], bughandler=handler, bugdata=nightly_version).wait()
 
         return nightly_version[0]
 
     @staticmethod
     def get_links(bugids):
         if isinstance(bugids, six.string_types) or isinstance(bugids, int):
-            return 'https://bugzilla.mozilla.org/' + str(bugids)
+            return "https://bugzilla.mozilla.org/" + str(bugids)
         else:
-            return ['https://bugzilla.mozilla.org/' + str(bugid) for bugid in bugids]
+            return ["https://bugzilla.mozilla.org/" + str(bugid) for bugid in bugids]
 
     @staticmethod
     def follow_dup(bugids, only_final=True):
@@ -228,30 +261,32 @@ class Bugzilla(Connection):
         Returns:
             dict: each bug in entry is mapped to the last bug in the duplicate chain (None if there's no dup and 'cycle' if a cycle is detected)
         """
-        include_fields = ['id', 'resolution', 'dupe_of']
+        include_fields = ["id", "resolution", "dupe_of"]
         dup = {}
         _set = set()
         for bugid in bugids:
             dup[str(bugid)] = None
 
         def bughandler(bug):
-            if bug['resolution'] == 'DUPLICATE':
-                dupeofid = str(bug['dupe_of'])
-                dup[str(bug['id'])] = [dupeofid]
+            if bug["resolution"] == "DUPLICATE":
+                dupeofid = str(bug["dupe_of"])
+                dup[str(bug["id"])] = [dupeofid]
                 _set.add(dupeofid)
 
-        bz = Bugzilla(bugids=bugids, include_fields=include_fields, bughandler=bughandler).get_data()
+        bz = Bugzilla(
+            bugids=bugids, include_fields=include_fields, bughandler=bughandler
+        ).get_data()
         bz.wait_bugs()
 
         def bughandler2(bug):
-            if bug['resolution'] == 'DUPLICATE':
-                bugid = str(bug['id'])
+            if bug["resolution"] == "DUPLICATE":
+                bugid = str(bug["id"])
                 for _id, dupid in dup.items():
                     if dupid and dupid[-1] == bugid:
-                        dupeofid = str(bug['dupe_of'])
+                        dupeofid = str(bug["dupe_of"])
                         if dupeofid == _id or dupeofid in dupid:
                             # avoid infinite loop if any
-                            dup[_id].append('cycle')
+                            dup[_id].append("cycle")
                         else:
                             dup[_id].append(dupeofid)
                             _set.add(dupeofid)
@@ -275,12 +310,16 @@ class Bugzilla(Connection):
         history_entries = []
 
         for history_entry in history:
-            for change in history_entry['changes']:
+            for change in history_entry["changes"]:
                 matches = True
 
                 for change_key, change_value in change.items():
                     for key, value in change_to_match.items():
-                        if key == change_key and value != change_value and value not in change_value.split(', '):
+                        if (
+                            key == change_key
+                            and value != change_value
+                            and value not in change_value.split(", ")
+                        ):
                             matches = False
                             break
 
@@ -294,27 +333,67 @@ class Bugzilla(Connection):
         return history_entries
 
     @staticmethod
-    def get_landing_patterns(channels=['release', 'beta', 'aurora', 'nightly']):
+    def get_landing_patterns(channels=["release", "beta", "aurora", "nightly"]):
         if not isinstance(channels, list):
             channels = [channels]
 
         landing_patterns = []
         for channel in channels:
-            if channel in ['central', 'nightly']:
+            if channel in ["central", "nightly"]:
                 landing_patterns += [
-                    (re.compile(r'://hg.mozilla.org/mozilla-central/rev/([0-9a-f]+)'), channel),
-                    (re.compile(r'://hg.mozilla.org/mozilla-central/pushloghtml\?changeset=([0-9a-f]+)'), channel),
+                    (
+                        re.compile(
+                            r"://hg.mozilla.org/mozilla-central/rev/([0-9a-f]+)"
+                        ),
+                        channel,
+                    ),
+                    (
+                        re.compile(
+                            r"://hg.mozilla.org/mozilla-central/pushloghtml\?changeset=([0-9a-f]+)"
+                        ),
+                        channel,
+                    ),
                 ]
-            elif channel == 'inbound':
-                landing_patterns += [(re.compile(r'://hg.mozilla.org/integration/mozilla-inbound/rev/([0-9a-f]+)'), 'inbound')]
-            elif channel in ['release', 'beta', 'aurora']:
-                landing_patterns += [(re.compile(r'://hg.mozilla.org/releases/mozilla-' + channel + '/rev/([0-9a-f]+)'), channel)]
-            elif channel == 'esr':
-                landing_patterns += [(re.compile(r'://hg.mozilla.org/releases/mozilla-esr(?:[0-9]+)/rev/([0-9a-f]+)'), channel)]
-            elif channel == 'fx-team':
-                landing_patterns += [(re.compile(r'://hg.mozilla.org/integration/fx-team/rev/([0-9a-f]+)'), 'inbound')]
+            elif channel == "inbound":
+                landing_patterns += [
+                    (
+                        re.compile(
+                            r"://hg.mozilla.org/integration/mozilla-inbound/rev/([0-9a-f]+)"
+                        ),
+                        "inbound",
+                    )
+                ]
+            elif channel in ["release", "beta", "aurora"]:
+                landing_patterns += [
+                    (
+                        re.compile(
+                            r"://hg.mozilla.org/releases/mozilla-"
+                            + channel
+                            + "/rev/([0-9a-f]+)"
+                        ),
+                        channel,
+                    )
+                ]
+            elif channel == "esr":
+                landing_patterns += [
+                    (
+                        re.compile(
+                            r"://hg.mozilla.org/releases/mozilla-esr(?:[0-9]+)/rev/([0-9a-f]+)"
+                        ),
+                        channel,
+                    )
+                ]
+            elif channel == "fx-team":
+                landing_patterns += [
+                    (
+                        re.compile(
+                            r"://hg.mozilla.org/integration/fx-team/rev/([0-9a-f]+)"
+                        ),
+                        "inbound",
+                    )
+                ]
             else:
-                raise Exception('Unexpected channel: ' + channel)
+                raise Exception("Unexpected channel: " + channel)
 
         return landing_patterns
 
@@ -327,12 +406,14 @@ class Bugzilla(Connection):
 
         for comment in comments:
             for landing_pattern in landing_patterns:
-                for match in landing_pattern[0].finditer(comment['text']):
-                    results.append({
-                        'comment': comment,
-                        'revision': match.group(1),
-                        'channel': landing_pattern[1],
-                    })
+                for match in landing_pattern[0].finditer(comment["text"]):
+                    results.append(
+                        {
+                            "comment": comment,
+                            "revision": match.group(1),
+                            "channel": landing_pattern[1],
+                        }
+                    )
 
         return results
 
@@ -344,10 +425,10 @@ class Bugzilla(Connection):
         status_flags = {}
         for c, v in base_versions.items():
             v = str(v)
-            if c == 'esr':
-                f = 'cf_status_firefox_esr' + v
+            if c == "esr":
+                f = "cf_status_firefox_esr" + v
             else:
-                f = 'cf_status_firefox' + v
+                f = "cf_status_firefox" + v
             status_flags[c] = f
 
         return status_flags
@@ -366,11 +447,18 @@ class Bugzilla(Connection):
             return None
 
         def bug_handler(bug, data):
-            data[str(bug['id'])] = utils.signatures_parser(bug.get('cf_crash_signature', None))
+            data[str(bug["id"])] = utils.signatures_parser(
+                bug.get("cf_crash_signature", None)
+            )
 
         bugids = utils.get_str_list(bugids)
         data = {bugid: [] for bugid in bugids}
-        Bugzilla(bugids=bugids, include_fields=['id', 'cf_crash_signature'], bughandler=bug_handler, bugdata=data).wait()
+        Bugzilla(
+            bugids=bugids,
+            include_fields=["id", "cf_crash_signature"],
+            bughandler=bug_handler,
+            bugdata=data,
+        ).wait()
 
         return data
 
@@ -384,11 +472,14 @@ class Bugzilla(Connection):
         Returns:
             (list): list of accessible bugs
         """
+
         def bughandler(bug, data):
-            data.append(str(bug['id']))
+            data.append(str(bug["id"]))
 
         data = []
-        Bugzilla(bugids, include_fields=['id'], bughandler=bughandler, bugdata=data).wait()
+        Bugzilla(
+            bugids, include_fields=["id"], bughandler=bughandler, bugdata=data
+        ).wait()
 
         return data
 
@@ -407,13 +498,17 @@ class Bugzilla(Connection):
     def __get_bugs_for_history_comment(self):
         """Get history and comment (if there are some handlers) after a search query
         """
-        if self.historyhandler.isactive() or self.commenthandler.isactive() or self.attachmenthandler.isactive():
+        if (
+            self.historyhandler.isactive()
+            or self.commenthandler.isactive()
+            or self.attachmenthandler.isactive()
+        ):
             bugids = []
             bughandler = self.bughandler
 
             def __handler(bug, bd):
                 bughandler.handle(bug)
-                bd.append(bug['id'])
+                bd.append(bug["id"])
 
             self.bughandler = Handler(__handler, bugids)
 
@@ -443,7 +538,7 @@ class Bugzilla(Connection):
             res: result
         """
         if res.status_code == 200:
-            for bug in res.json()['bugs']:
+            for bug in res.json()["bugs"]:
                 self.bughandler.handle(bug)
 
     def __get_bugs(self):
@@ -451,59 +546,79 @@ class Bugzilla(Connection):
         """
         header = self.get_header()
         for bugids in Connection.chunks(sorted(self.bugids, key=lambda k: int(k))):
-            self.bugs_results.append(self.session.get(Bugzilla.API_URL,
-                                                      params={'id': ','.join(map(str, bugids)),
-                                                              'include_fields': self.include_fields},
-                                                      headers=header,
-                                                      verify=True,
-                                                      timeout=self.TIMEOUT,
-                                                      hooks={'response': self.__bugs_cb}))
+            self.bugs_results.append(
+                self.session.get(
+                    Bugzilla.API_URL,
+                    params={
+                        "id": ",".join(map(str, bugids)),
+                        "include_fields": self.include_fields,
+                    },
+                    headers=header,
+                    verify=True,
+                    timeout=self.TIMEOUT,
+                    hooks={"response": self.__bugs_cb},
+                )
+            )
 
     def __get_bugs_by_search(self):
         """Get the bugs in making a search query
         """
-        url = Bugzilla.API_URL + '?'
+        url = Bugzilla.API_URL + "?"
         header = self.get_header()
-        specials = {'count_only', 'limit', 'order', 'offset'}
+        specials = {"count_only", "limit", "order", "offset"}
         for query in self.bugids:
             if isinstance(query, six.string_types):
-                url = Bugzilla.API_URL + '?' + query
-                self.bugs_results.append(self.session.get(url,
-                                                          headers=header,
-                                                          verify=True,
-                                                          timeout=self.TIMEOUT,
-                                                          hooks={'response': self.__bugs_cb}))
+                url = Bugzilla.API_URL + "?" + query
+                self.bugs_results.append(
+                    self.session.get(
+                        url,
+                        headers=header,
+                        verify=True,
+                        timeout=self.TIMEOUT,
+                        hooks={"response": self.__bugs_cb},
+                    )
+                )
             elif specials.isdisjoint(query.keys()):
                 url = Bugzilla.API_URL
                 params = query.copy()
-                params['count_only'] = 1
-                r = requests.get(url,
-                                 params=params,
-                                 headers=header,
-                                 verify=True,
-                                 timeout=self.TIMEOUT)
+                params["count_only"] = 1
+                r = requests.get(
+                    url,
+                    params=params,
+                    headers=header,
+                    verify=True,
+                    timeout=self.TIMEOUT,
+                )
                 if r.ok:
-                    count = r.json()['bug_count']
-                    del params['count_only']
-                    params['limit'] = Bugzilla.BUGZILLA_CHUNK_SIZE
-                    params['order'] = 'bug_id'
+                    count = r.json()["bug_count"]
+                    del params["count_only"]
+                    params["limit"] = Bugzilla.BUGZILLA_CHUNK_SIZE
+                    params["order"] = "bug_id"
                     for i in range(0, count, Bugzilla.BUGZILLA_CHUNK_SIZE):
                         # Batch the execution to avoid timeouts
                         params = params.copy()
-                        params['offset'] = i
-                        self.bugs_results.append(self.session.get(url,
-                                                                  params=params,
-                                                                  headers=header,
-                                                                  verify=True,
-                                                                  timeout=self.TIMEOUT,
-                                                                  hooks={'response': self.__bugs_cb}))
+                        params["offset"] = i
+                        self.bugs_results.append(
+                            self.session.get(
+                                url,
+                                params=params,
+                                headers=header,
+                                verify=True,
+                                timeout=self.TIMEOUT,
+                                hooks={"response": self.__bugs_cb},
+                            )
+                        )
             else:
-                self.bugs_results.append(self.session.get(url,
-                                                          params=query,
-                                                          headers=header,
-                                                          verify=True,
-                                                          timeout=self.TIMEOUT,
-                                                          hooks={'response': self.__bugs_cb}))
+                self.bugs_results.append(
+                    self.session.get(
+                        url,
+                        params=query,
+                        headers=header,
+                        verify=True,
+                        timeout=self.TIMEOUT,
+                        hooks={"response": self.__bugs_cb},
+                    )
+                )
 
     def __get_bugs_list(self):
         """Get the bugs list corresponding to the search query
@@ -512,18 +627,22 @@ class Bugzilla(Connection):
 
         def cb(res, *args, **kwargs):
             if res.status_code == 200:
-                for bug in res.json()['bugs']:
-                    _list.add(bug['id'])
+                for bug in res.json()["bugs"]:
+                    _list.add(bug["id"])
 
         results = []
-        url = Bugzilla.API_URL + '?'
+        url = Bugzilla.API_URL + "?"
         header = self.get_header()
         for query in self.bugids:
-            results.append(self.session.get(url + query,
-                                            headers=header,
-                                            verify=True,
-                                            timeout=self.TIMEOUT,
-                                            hooks={'response': cb}))
+            results.append(
+                self.session.get(
+                    url + query,
+                    headers=header,
+                    verify=True,
+                    timeout=self.TIMEOUT,
+                    hooks={"response": cb},
+                )
+            )
 
         for r in results():
             r.result()
@@ -539,26 +658,30 @@ class Bugzilla(Connection):
         """
         if res.status_code == 200:
             json = res.json()
-            if 'bugs' in json and json['bugs']:
-                for h in json['bugs']:
+            if "bugs" in json and json["bugs"]:
+                for h in json["bugs"]:
                     self.historyhandler.handle(h)
 
     def __get_history(self):
         """Get the bug history
         """
-        url = Bugzilla.API_URL + '/%s/history'
+        url = Bugzilla.API_URL + "/%s/history"
         header = self.get_header()
         # TODO: remove next line after the fix of bug 1283392
         bugids = self.__get_no_private_ids()
         for _bugids in Connection.chunks(sorted(bugids, key=lambda k: int(k))):
             first = _bugids[0]
             remainder = _bugids[1:] if len(_bugids) >= 2 else []
-            self.history_results.append(self.session.get(url % first,
-                                                         headers=header,
-                                                         params={'ids': remainder},
-                                                         verify=True,
-                                                         timeout=self.TIMEOUT,
-                                                         hooks={'response': self.__history_cb}))
+            self.history_results.append(
+                self.session.get(
+                    url % first,
+                    headers=header,
+                    params={"ids": remainder},
+                    verify=True,
+                    timeout=self.TIMEOUT,
+                    hooks={"response": self.__history_cb},
+                )
+            )
 
     def __comment_cb(self, res, *args, **kwargs):
         """Callback for bug comment
@@ -569,8 +692,8 @@ class Bugzilla(Connection):
         """
         if res.status_code == 200:
             json = res.json()
-            if 'bugs' in json:
-                bugs = json['bugs']
+            if "bugs" in json:
+                bugs = json["bugs"]
                 if bugs:
                     for key in bugs.keys():
                         if isinstance(key, six.string_types) and key.isdigit():
@@ -580,22 +703,26 @@ class Bugzilla(Connection):
     def __get_comment(self):
         """Get the bug comment
         """
-        url = Bugzilla.API_URL + '/%s/comment'
+        url = Bugzilla.API_URL + "/%s/comment"
         header = self.get_header()
         # TODO: remove next line after the fix of bug 1283392
         bugids = self.__get_no_private_ids()
         for _bugids in Connection.chunks(sorted(bugids, key=lambda k: int(k))):
             first = _bugids[0]
             remainder = _bugids[1:] if len(_bugids) >= 2 else []
-            self.comment_results.append(self.session.get(url % first,
-                                                         headers=header,
-                                                         params={
-                                                             'ids': remainder,
-                                                             'include_fields': self.comment_include_fields
-                                                         },
-                                                         verify=True,
-                                                         timeout=self.TIMEOUT,
-                                                         hooks={'response': self.__comment_cb}))
+            self.comment_results.append(
+                self.session.get(
+                    url % first,
+                    headers=header,
+                    params={
+                        "ids": remainder,
+                        "include_fields": self.comment_include_fields,
+                    },
+                    verify=True,
+                    timeout=self.TIMEOUT,
+                    hooks={"response": self.__comment_cb},
+                )
+            )
 
     def __attachment_cb(self, res, *args, **kwargs):
         """Callback for bug attachment
@@ -606,8 +733,8 @@ class Bugzilla(Connection):
         """
         if res.status_code == 200:
             json = res.json()
-            if 'bugs' in json:
-                bugs = json['bugs']
+            if "bugs" in json:
+                bugs = json["bugs"]
                 if bugs:
                     for key in bugs.keys():
                         if isinstance(key, six.string_types) and key.isdigit():
@@ -617,33 +744,45 @@ class Bugzilla(Connection):
     def __get_attachment(self):
         """Get the bug attachment
         """
-        url = Bugzilla.API_URL + '/%s/attachment'
+        url = Bugzilla.API_URL + "/%s/attachment"
         header = self.get_header()
         # TODO: remove next line after the fix of bug 1283392
         bugids = self.__get_no_private_ids()
         for _bugids in Connection.chunks(sorted(bugids, key=lambda k: int(k))):
             first = _bugids[0]
             remainder = _bugids[1:] if len(_bugids) >= 2 else []
-            self.attachment_results.append(self.session.get(url % first,
-                                                            headers=header,
-                                                            params={
-                                                                'ids': remainder,
-                                                                'include_fields': self.attachment_include_fields
-                                                            },
-                                                            verify=True,
-                                                            timeout=self.TIMEOUT,
-                                                            hooks={'response': self.__attachment_cb}))
+            self.attachment_results.append(
+                self.session.get(
+                    url % first,
+                    headers=header,
+                    params={
+                        "ids": remainder,
+                        "include_fields": self.attachment_include_fields,
+                    },
+                    verify=True,
+                    timeout=self.TIMEOUT,
+                    hooks={"response": self.__attachment_cb},
+                )
+            )
 
 
 class BugzillaUser(Connection):
     """Connection to bugzilla.mozilla.org
     """
 
-    URL = config.get('Bugzilla', 'URL', 'https://bugzilla.mozilla.org')
-    API_URL = URL + '/rest/user'
-    TOKEN = config.get('Bugzilla', 'token', '')
+    URL = config.get("Bugzilla", "URL", "https://bugzilla.mozilla.org")
+    API_URL = URL + "/rest/user"
+    TOKEN = config.get("Bugzilla", "token", "")
 
-    def __init__(self, user_names=None, search_strings=None, include_fields='_default', user_handler=None, user_data=None, **kwargs):
+    def __init__(
+        self,
+        user_names=None,
+        search_strings=None,
+        include_fields="_default",
+        user_handler=None,
+        user_data=None,
+        **kwargs
+    ):
         """Constructor
 
         Args:
@@ -660,30 +799,48 @@ class BugzillaUser(Connection):
                 user_names = [user_names]
 
             params = {
-                'include_fields': include_fields,
-                'names': [user_name for user_name in user_names if isinstance(user_name, six.string_types) and not user_name.isdigit()],
-                'ids': [str(user_id) for user_id in user_names if isinstance(user_id, int) or user_id.isdigit()],
+                "include_fields": include_fields,
+                "names": [
+                    user_name
+                    for user_name in user_names
+                    if isinstance(user_name, six.string_types)
+                    and not user_name.isdigit()
+                ],
+                "ids": [
+                    str(user_id)
+                    for user_id in user_names
+                    if isinstance(user_id, int) or user_id.isdigit()
+                ],
             }
 
-            super(BugzillaUser, self).__init__(BugzillaUser.URL, Query(BugzillaUser.API_URL, params, self.__users_cb), **kwargs)
+            super(BugzillaUser, self).__init__(
+                BugzillaUser.URL,
+                Query(BugzillaUser.API_URL, params, self.__users_cb),
+                **kwargs
+            )
         elif search_strings is not None:
             if isinstance(search_strings, six.string_types):
                 search_strings = [search_strings]
 
             queries = []
             for search_string in search_strings:
-                queries.append(Query(BugzillaUser.API_URL + '?' + search_string, handler=self.__users_cb))
+                queries.append(
+                    Query(
+                        BugzillaUser.API_URL + "?" + search_string,
+                        handler=self.__users_cb,
+                    )
+                )
 
             super(BugzillaUser, self).__init__(BugzillaUser.URL, queries, **kwargs)
 
     def get_header(self):
         header = super(BugzillaUser, self).get_header()
-        header['X-Bugzilla-API-Key'] = self.get_apikey()
+        header["X-Bugzilla-API-Key"] = self.get_apikey()
         return header
 
     def __users_cb(self, res):
         if not self.user_handler.isactive():
             return
 
-        for user in res['users']:
+        for user in res["users"]:
             self.user_handler.handle(user)

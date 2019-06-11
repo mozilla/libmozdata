@@ -2,22 +2,23 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import six
 import functools
 import re
 from datetime import timedelta
-from .connection import (Connection, Query)
-from . import utils
-from . import config
+
+import six
+
+from . import config, utils
+from .connection import Connection, Query
 
 
 class Redash(Connection):
     """re:dash connection: https://sql.telemetry.mozilla.org
     """
 
-    RE_DASH_URL = config.get('Re:dash', 'URL', 'https://sql.telemetry.mozilla.org')
-    API_URL = RE_DASH_URL + '/api/queries'
-    TOKEN = config.get('Re:dash', 'token', '')
+    RE_DASH_URL = config.get("Re:dash", "URL", "https://sql.telemetry.mozilla.org")
+    API_URL = RE_DASH_URL + "/api/queries"
+    TOKEN = config.get("Re:dash", "token", "")
 
     def __init__(self, queries):
         """Constructor
@@ -29,7 +30,7 @@ class Redash(Connection):
 
     def get_header(self):
         header = super(Redash, self).get_header()
-        header['Authorization'] = 'Key %s' % self.get_apikey()
+        header["Authorization"] = "Key %s" % self.get_apikey()
         return header
 
     @staticmethod
@@ -45,8 +46,8 @@ class Redash(Connection):
 
     @staticmethod
     def __get_rows(channel, versions, rows):
-        if channel == 'beta':
-            pat = re.compile(r'([0-9]+\.0)b[0-9]+')
+        if channel == "beta":
+            pat = re.compile(r"([0-9]+\.0)b[0-9]+")
             _versions = set()
             for v in versions:
                 m = pat.match(v)
@@ -56,7 +57,7 @@ class Redash(Connection):
             _versions = set(versions)
 
         majors = set()
-        pat_major = re.compile(r'([0-9]+)')
+        pat_major = re.compile(r"([0-9]+)")
         for v in versions:
             m = pat_major.match(v)
             if m:
@@ -64,11 +65,11 @@ class Redash(Connection):
 
         _rows = []
         for row in rows:
-            if row['channel'] == channel:
-                if 'build_version' not in row:
+            if row["channel"] == channel:
+                if "build_version" not in row:
                     continue
 
-                v = row['build_version']
+                v = row["build_version"]
 
                 if not v:
                     continue
@@ -94,13 +95,27 @@ class Redash(Connection):
         """
         data = {}
         if isinstance(query_ids, six.string_types):
-            url = Redash.API_URL + '/' + query_ids + '/results.json'
-            Redash(Query(url, None, functools.partial(Redash.default_handler, query_ids), data)).wait()
+            url = Redash.API_URL + "/" + query_ids + "/results.json"
+            Redash(
+                Query(
+                    url,
+                    None,
+                    functools.partial(Redash.default_handler, query_ids),
+                    data,
+                )
+            ).wait()
         else:
             queries = []
-            url = Redash.API_URL + '/%s/results.json'
+            url = Redash.API_URL + "/%s/results.json"
             for query_id in query_ids:
-                queries.append(Query(url % query_id, None, functools.partial(Redash.default_handler, query_id), data))
+                queries.append(
+                    Query(
+                        url % query_id,
+                        None,
+                        functools.partial(Redash.default_handler, query_id),
+                        data,
+                    )
+                )
             Redash(queries=queries).wait()
 
         return data
@@ -119,10 +134,10 @@ class Redash(Connection):
         Returns:
             dict: containing result in json for each query
         """
-        qid = '387' if product == 'FennecAndroid' else '346'
+        qid = "387" if product == "FennecAndroid" else "346"
 
         khours = Redash.get(qid)
-        rows = khours[qid]['query_result']['data']['rows']
+        rows = khours[qid]["query_result"]["data"]["rows"]
         res = {}
 
         start_date = utils.get_date_ymd(start_date)
@@ -131,14 +146,14 @@ class Redash(Connection):
         # init the data
         duration = (end_date - start_date).days
         for i in range(duration + 1):
-            res[start_date + timedelta(i)] = 0.
+            res[start_date + timedelta(i)] = 0.0
 
         rows = Redash.__get_rows(channel, versions, rows)
 
         for row in rows:
-            d = utils.get_date_ymd(row['activity_date'])
+            d = utils.get_date_ymd(row["activity_date"])
             if start_date <= d <= end_date:
-                res[d] += row['usage_khours']
+                res[d] += row["usage_khours"]
 
         return res
 
@@ -156,16 +171,12 @@ class Redash(Connection):
         Returns:
             dict: containing result in json for each query
         """
-        qid = '400' if product == 'FennecAndroid' else '399'
+        qid = "400" if product == "FennecAndroid" else "399"
 
         crashes = Redash.get(qid)
-        rows = crashes[qid]['query_result']['data']['rows']
+        rows = crashes[qid]["query_result"]["data"]["rows"]
         res = {}
-        stats = {'m+c': 0.,
-                 'main': 0.,
-                 'content': 0.,
-                 'plugin': 0.,
-                 'all': 0.}
+        stats = {"m+c": 0.0, "main": 0.0, "content": 0.0, "plugin": 0.0, "all": 0.0}
 
         start_date = utils.get_date_ymd(start_date)
         end_date = utils.get_date_ymd(end_date)
@@ -178,13 +189,13 @@ class Redash(Connection):
         rows = Redash.__get_rows(channel, versions, rows)
 
         for row in rows:
-            d = utils.get_date_ymd(row['date'])
+            d = utils.get_date_ymd(row["date"])
             if d >= start_date and d <= end_date:
                 stats = res[d]
-                stats['m+c'] += row['main'] + row['content']
-                stats['main'] += row['main']
-                stats['content'] += row['content']
-                stats['plugin'] += row['plugin'] + row['gmplugin']
-                stats['all'] += row['total']
+                stats["m+c"] += row["main"] + row["content"]
+                stats["main"] += row["main"]
+                stats["content"] += row["content"]
+                stats["plugin"] += row["plugin"] + row["gmplugin"]
+                stats["all"] += row["total"]
 
         return res

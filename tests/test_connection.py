@@ -3,21 +3,34 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import unittest
+
 from libmozdata.connection import Query
 
 
 class QueryTest(unittest.TestCase):
-
     def test(self):
-        self.assertEqual(str(Query('https://www.mozilla.org/')), 'url: https://www.mozilla.org/')
+        self.assertEqual(
+            str(Query("https://www.mozilla.org/")), "url: https://www.mozilla.org/"
+        )
 
     def test_args(self):
-        representation = str(Query('https://www.mozilla.org/', {
-            'var1': True,
-            'var2': ['value2', 'value3'],
-            'var3': None
-        }))
-        self.assertTrue(representation == 'url: https://www.mozilla.org/?var1=True&var2=value2&var2=value3' or representation == 'url: https://www.mozilla.org/?var2=value2&var2=value3&var1=True')
+        representation = str(
+            Query(
+                "https://www.mozilla.org/",
+                {"var1": True, "var2": ["value2", "value3"], "var3": None},
+            )
+        )
+        self.assertTrue(
+            representation
+            == "url: https://www.mozilla.org/?var1=True&var2=value2&var2=value3"
+            or representation
+            == "url: https://www.mozilla.org/?var2=value2&var2=value3&var1=True"
+        )
 
-        representation = str(Query('https://www.mozilla.org/', [{'var1': True}, {'var2': 'marco'}]))
-        self.assertEqual(representation, 'url: https://www.mozilla.org/?var1=True\nurl: https://www.mozilla.org/?var2=marco')
+        representation = str(
+            Query("https://www.mozilla.org/", [{"var1": True}, {"var2": "marco"}])
+        )
+        self.assertEqual(
+            representation,
+            "url: https://www.mozilla.org/?var1=True\nurl: https://www.mozilla.org/?var2=marco",
+        )

@@ -4,9 +4,10 @@
 
 import unittest
 from datetime import timedelta
-from libmozdata.redash import Redash
+
 import libmozdata.utils as utils
 import libmozdata.versions
+from libmozdata.redash import Redash
 
 
 class RedashTest(unittest.TestCase):
@@ -16,15 +17,17 @@ class RedashTest(unittest.TestCase):
 
         versions = libmozdata.versions.get()
 
-        end_date = utils.get_date_ymd('yesterday')
+        end_date = utils.get_date_ymd("yesterday")
         start_date = utils.get_date_ymd(end_date - timedelta(10))
 
-        for channel in ['release', 'beta', 'nightly']:
-            khours = Redash.get_khours(start_date, end_date, channel, [versions[channel]], 'Firefox')
+        for channel in ["release", "beta", "nightly"]:
+            khours = Redash.get_khours(
+                start_date, end_date, channel, [versions[channel]], "Firefox"
+            )
             self.assertEqual(len(khours), 11)
             for i in range(11):
                 self.assertIn(start_date + timedelta(i), khours)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
