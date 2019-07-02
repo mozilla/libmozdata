@@ -12,7 +12,7 @@ import requests
 
 SEARCH_URL = os.getenv(
     "BUILDHUB_SEARCH_URL",
-    "https://buildhub.prod.mozaws.net/v1/buckets/build-hub/collections/releases/search",
+    "https://buildhub.moz.tools/api/search",
 )
 
 
