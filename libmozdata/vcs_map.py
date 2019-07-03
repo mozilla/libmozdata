@@ -3,7 +3,6 @@ import os
 import sys
 import urllib.request
 
-import hglib
 import requests
 
 MAPPER_SERVICE = "https://mapper.mozilla-releng.net"
@@ -101,6 +100,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     download_mapfile()
+
+    import hglib
 
     hg = hglib.open(args.repository_dir)
     args = hglib.util.cmdbuilder(b"log", template="{node}\n")
