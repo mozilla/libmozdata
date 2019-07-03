@@ -1,6 +1,5 @@
 import argparse
 import os
-import sys
 import urllib.request
 
 import requests
@@ -61,7 +60,10 @@ def mercurial_to_git(mercurial_hash):
 
     if mercurial_hash not in mercurial_to_git_mapping:
         r = requests.get(f"{MAPPER_SERVICE}/gecko-dev/rev/hg/{mercurial_hash}")
-        r.raise_for_status()
+        if not r.ok:
+            raise Exception(
+                f"Missing mercurial commit in the VCS map: {mercurial_hash}"
+            )
 
         git_hash = r.text.split(" ")[0]
 
@@ -77,13 +79,11 @@ def git_to_mercurial(git_hash, cache_only=False):
 
     if git_hash not in git_to_mercurial_mapping:
         if cache_only:
-            print(f"missing git commit in the vcs_map: {git_hash}", file=sys.stderr)
-            return ""
+            raise Exception("Missing git commit in the VCS map: {git_hash}")
 
         r = requests.get(f"{MAPPER_SERVICE}/gecko-dev/rev/git/{git_hash}")
         if not r.ok:
-            print(f"missing git commit in the vcs_map: {git_hash}", file=sys.stderr)
-            return ""
+            raise Exception(f"Missing git commit in the VCS map: {git_hash}")
 
         mercurial_hash = r.text.split(" ")[1]
 
