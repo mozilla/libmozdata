@@ -5,7 +5,6 @@ import urllib.request
 
 import hglib
 import requests
-from tqdm import tqdm
 
 MAPPER_SERVICE = "https://mapper.mozilla-releng.net"
 VCS_MAP_FULL_PATH = "vcs_map_full"
@@ -108,5 +107,5 @@ if __name__ == "__main__":
     x = hg.rawcommand(args)
     revs = x.splitlines()
 
-    for rev in tqdm(revs):
+    for rev in revs:
         mercurial_to_git(rev.decode("ascii"))
