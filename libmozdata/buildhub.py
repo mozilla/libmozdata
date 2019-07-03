@@ -10,10 +10,7 @@ from distutils.version import LooseVersion
 
 import requests
 
-SEARCH_URL = os.getenv(
-    "BUILDHUB_SEARCH_URL",
-    "https://buildhub.moz.tools/api/search",
-)
+SEARCH_URL = os.getenv("BUILDHUB_SEARCH_URL", "https://buildhub.moz.tools/api/search")
 
 
 class BadBuildhubRequest(Exception):
