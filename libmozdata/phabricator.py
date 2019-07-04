@@ -169,6 +169,10 @@ class PhabricatorRevisionNotFoundException(Exception):
     pass
 
 
+class PhabricatorUserNotFoundException(Exception):
+    pass
+
+
 class ConduitError(Exception):
     """
     Exception to be raised when Phabricator returns an error response.
@@ -578,6 +582,27 @@ class PhabricatorAPI(object):
             constraints["slugs"] = slugs
         out = self.request("project.search", constraints=constraints, **params)
         return out["data"]
+
+    def load_user(self, user_phid=None, user_id=None, **params):
+        """
+        Find details of a user
+        """
+        assert (user_phid is not None) ^ (
+            user_id is not None
+        ), "One and only one of user_phid or user_id should be passed"
+
+        constraints = {}
+        if user_id is not None:
+            constraints["ids"] = [user_id]
+        if user_phid is not None:
+            constraints["phids"] = [user_phid]
+
+        out = self.request("user.search", constraints=constraints, **params)
+
+        data = out["data"]
+        if len(data) != 1:
+            raise PhabricatorUserNotFoundException()
+        return data[0]
 
     def request(self, path, **payload):
         """
