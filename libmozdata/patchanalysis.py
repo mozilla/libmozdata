@@ -303,8 +303,11 @@ def patch_analysis(
         else:
             # Calc changes additions & deletions
             counts = [
-                (old is None and new is not None, new is None and old is not None)
-                for old, new, _ in diff.changes
+                (
+                    change.old is None and change.new is not None,
+                    change.new is None and change.old is not None,
+                )
+                for change in diff.changes
             ]
             counts = list(zip(*counts))  # inverse zip
             info["changes_add"] += sum(counts[0])
