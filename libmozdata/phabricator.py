@@ -3,11 +3,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import collections
 import enum
 import functools
 import json
 import logging
-from collections import OrderedDict
 from urllib.parse import urlencode, urlparse
 
 import hglib
@@ -15,6 +15,10 @@ import requests
 
 HGMO_JSON_REV_URL_TEMPLATE = "https://hg.mozilla.org/mozilla-central/json-rev/{}"
 MOZILLA_PHABRICATOR_PROD = "https://phabricator.services.mozilla.com/api/"
+
+PhabricatorPatch = collections.namedtuple(
+    "Diff", "id, phid, patch, base_revision, commits"
+)
 
 logger = logging.getLogger(__name__)
 
@@ -627,26 +631,43 @@ class PhabricatorAPI(object):
         assert "result" in data
         return data["result"]
 
-    def load_patches_stack(self, repo, diff, default_revision="central"):
+    def load_patches_stack(self, diff_id, diff=None):
         """
-        Load full stack of patches from Phabricator into a mercurial repository:
-        * uses a diff dict from search_diffs
-        * setup repo to base revision from Mozilla Central
-        * Apply previous needed patches from Phabricator
+        Load a stack of patches with related commits, to reach a given Phabricator Diff
+        without hitting a local mercurial repository
+        If the full diff details are provided, they can be used directly in the stack
         """
-        assert isinstance(repo, hglib.client.hgclient)
-        assert isinstance(diff, dict)
-        assert "phid" in diff
-        assert "id" in diff
-        assert "revisionPHID" in diff
-        assert "baseRevision" in diff
-
         # Diff PHIDs from our patch to its base
-        patches = OrderedDict()
-        patches[diff["phid"]] = diff["id"]
+        def add_patch(diff):
+            # Build a nicer Diff instance with associated commit & patch
+            assert isinstance(diff, dict)
+            assert "id" in diff
+            assert "phid" in diff
+            assert "baseRevision" in diff
+            patch = self.load_raw_diff(diff["id"])
+            diffs = self.search_diffs(
+                diff_phid=diff["phid"], attachments={"commits": True}
+            )
+            commits = diffs[0]["attachments"]["commits"].get("commits", [])
+            logger.info("Adding patch #{} to stack".format(diff["id"]))
+            return PhabricatorPatch(
+                diff["id"], diff["phid"], patch, diff["baseRevision"], commits
+            )
+
+        # Load full diff when not provided by user
+        if diff is None:
+            diffs = self.search_diffs(diff_id=diff_id)
+            if not diffs:
+                raise Exception("Diff not found")
+            diff = diffs[0]
+        else:
+            assert isinstance(diff, dict)
+            assert "revisionPHID" in diff
+
+        # Stack always has the top diff
+        stack = [add_patch(diff)]
 
         parents = self.load_parents(diff["revisionPHID"])
-        hg_base = None
         if parents:
 
             # Load all parent diffs
@@ -658,43 +679,8 @@ class PhabricatorAPI(object):
                     self.search_diffs(revision_phid=parent), key=lambda x: x["id"]
                 )
                 last_diff = parent_diffs[-1]
-                patches[last_diff["phid"]] = last_diff["id"]
 
-                # Use parent until a base revision is available in the repository
-                # This is needed to support stack of patches with already merged patches
-                diff_base = last_diff["baseRevision"]
-                if revision_available(repo, diff_base):
-                    logger.info(
-                        "Found a parent with landed revision {}, stopping stack here".format(
-                            diff_base
-                        )
-                    )
-                    hg_base = diff_base
-                    break
-        else:
-            # Use base revision from top diff
-            hg_base = diff["baseRevision"]
+                # Add most recent patch to stack
+                stack.insert(0, add_patch(last_diff))
 
-        # When base revision is missing, update to default revision
-        if hg_base is None or not revision_available(repo, hg_base):
-            logger.warning("Missing base revision {} from Phabricator".format(hg_base))
-            hg_base = default_revision
-
-        # Load all patches from their numerical ID
-        for diff_phid, diff_id in patches.items():
-            patches[diff_phid] = self.load_raw_diff(diff_id)
-
-        # Update the repo to base revision
-        try:
-            logger.info("Updating repo to revision {}".format(hg_base))
-            repo.update(rev=hg_base, clean=True)
-        except hglib.error.CommandError:
-            raise Exception("Failed to update to revision {}".format(hg_base))
-
-        # Get current revision using full information tuple from hglib
-        revision = repo.identify(id=True).strip()
-        revision = repo.log(revision, limit=1)[0]
-        logger.info("Updated repo to revision {}".format(revision.node))
-
-        # Outputs base revision and patches from the bottom one up to the target
-        return (revision, list(reversed(patches.items())))
+        return stack
