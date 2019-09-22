@@ -43,7 +43,7 @@ def get_calendar():
             "Quarter",
             "Soft Freeze",
             "Merge Date",
-            "Central",
+            "Nightly",
             "Beta",
             "Release Date",
             "Release",
