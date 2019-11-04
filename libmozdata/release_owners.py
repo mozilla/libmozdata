@@ -43,7 +43,7 @@ def get_owners():
             try:
                 # sometimes the date is 2019-XX-XX (when the date is not known)
                 release_date = utils.get_date_ymd(row[6])
-            except ValueError:
+            except (AssertionError, ValueError):
                 continue
 
             _OWNERS.append(
