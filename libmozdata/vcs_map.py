@@ -1,8 +1,8 @@
 import argparse
+import io
 import os
 import shutil
 import tarfile
-import urllib.request
 
 import requests
 
@@ -27,9 +27,9 @@ def download_mapfile():
         old_etag = None
 
     if old_etag != new_etag or not os.path.exists(VCS_MAP_FULL_PATH):
-        file_name, _ = urllib.request.urlretrieve(MAP_FILE_URL)
+        r = requests.get(MAP_FILE_URL)
 
-        with tarfile.open(file_name, "r:bz2") as tar:
+        with tarfile.open(fileobj=io.BytesIO(r.content), mode="r:bz2") as tar:
             with open(VCS_MAP_FULL_PATH, "wb") as f:
                 shutil.copyfileobj(
                     tar.extractfile("./build/conversion/beagle/.hg/git-mapfile"), f
