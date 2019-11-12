@@ -2,11 +2,11 @@ import argparse
 import os
 import shutil
 import tarfile
-import tempfile
 import urllib.request
 
 import requests
 
+MAP_FILE_URL = "https://moz-vcssync.s3-us-west-2.amazonaws.com/mapping/gecko-dev/git-mapfile.tar.bz2"
 MAPPER_SERVICE = "https://mapper.mozilla-releng.net"
 VCS_MAP_FULL_PATH = "vcs_map_full"
 VCS_MAP_CACHE_PATH = "vcs_map_cache"
@@ -17,15 +17,13 @@ mercurial_to_git_mapping = {}
 
 def download_mapfile():
     if not os.path.exists(VCS_MAP_FULL_PATH):
-        file_name, _ = urllib.request.urlretrieve(
-            "https://moz-vcssync.s3-us-west-2.amazonaws.com/mapping/gecko-dev/git-mapfile.tar.bz2"
-        )
+        file_name, _ = urllib.request.urlretrieve(MAP_FILE_URL)
 
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            with tarfile.open(file_name, "r:bz2") as tar:
-                tar_path = "./build/conversion/beagle/.hg/git-mapfile"
-                tar.extract(member=tar_path, path=tmp_dir)
-                shutil.move(os.path.join(tmp_dir, tar_path), VCS_MAP_FULL_PATH)
+        with tarfile.open(file_name, "r:bz2") as tar:
+            with open(VCS_MAP_FULL_PATH, "wb") as f:
+                shutil.copyfileobj(
+                    tar.extractfile("./build/conversion/beagle/.hg/git-mapfile"), f
+                )
 
 
 MAPFILE_LOADED = False
