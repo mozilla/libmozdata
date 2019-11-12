@@ -16,7 +16,17 @@ mercurial_to_git_mapping = {}
 
 
 def download_mapfile():
-    if not os.path.exists(VCS_MAP_FULL_PATH):
+    r = requests.head(MAP_FILE_URL, allow_redirects=True)
+
+    new_etag = r.headers["ETag"]
+
+    try:
+        with open(f"{VCS_MAP_FULL_PATH}.etag", "r") as f:
+            old_etag = f.read()
+    except IOError:
+        old_etag = None
+
+    if old_etag != new_etag or not os.path.exists(VCS_MAP_FULL_PATH):
         file_name, _ = urllib.request.urlretrieve(MAP_FILE_URL)
 
         with tarfile.open(file_name, "r:bz2") as tar:
@@ -24,6 +34,9 @@ def download_mapfile():
                 shutil.copyfileobj(
                     tar.extractfile("./build/conversion/beagle/.hg/git-mapfile"), f
                 )
+
+        with open(f"{VCS_MAP_FULL_PATH}.etag", "w") as f:
+            f.write(new_etag)
 
 
 MAPFILE_LOADED = False
