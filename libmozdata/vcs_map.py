@@ -84,7 +84,7 @@ def git_to_mercurial(git_hash):
 
     if git_hash not in git_to_mercurial_mapping:
         if download_mapfile():
-            load_mapfile(do_reload=True)
+            load_mapfile()
 
     if git_hash not in git_to_mercurial_mapping:
         raise Exception(f"Missing git commit in the VCS map: {git_hash}")
