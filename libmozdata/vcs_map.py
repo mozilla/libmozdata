@@ -1,32 +1,49 @@
 import argparse
+import io
 import os
 import shutil
 import tarfile
-import urllib.request
 
 import requests
 
 MAP_FILE_URL = "https://moz-vcssync.s3-us-west-2.amazonaws.com/mapping/gecko-dev/git-mapfile.tar.bz2"
-MAPPER_SERVICE = "https://mapper.mozilla-releng.net"
-VCS_MAP_FULL_PATH = "vcs_map_full"
-VCS_MAP_CACHE_PATH = "vcs_map_cache"
+VCS_MAP_PATH = "gecko-dev_git-mapfile"
 
 git_to_mercurial_mapping = {}
 mercurial_to_git_mapping = {}
 
+MAPFILE_LOADED = False
+
 
 def download_mapfile():
-    if not os.path.exists(VCS_MAP_FULL_PATH):
-        file_name, _ = urllib.request.urlretrieve(MAP_FILE_URL)
+    global MAPFILE_LOADED
 
-        with tarfile.open(file_name, "r:bz2") as tar:
-            with open(VCS_MAP_FULL_PATH, "wb") as f:
-                shutil.copyfileobj(
-                    tar.extractfile("./build/conversion/beagle/.hg/git-mapfile"), f
-                )
+    r = requests.head(MAP_FILE_URL, allow_redirects=True)
 
+    new_etag = r.headers["ETag"]
 
-MAPFILE_LOADED = False
+    try:
+        with open(f"{VCS_MAP_PATH}.etag", "r") as f:
+            old_etag = f.read()
+    except IOError:
+        old_etag = None
+
+    if old_etag == new_etag and os.path.exists(VCS_MAP_PATH):
+        return False
+
+    r = requests.get(MAP_FILE_URL)
+
+    with tarfile.open(fileobj=io.BytesIO(r.content), mode="r:bz2") as tar:
+        with open(VCS_MAP_PATH, "wb") as f:
+            shutil.copyfileobj(
+                tar.extractfile("./build/conversion/beagle/.hg/git-mapfile"), f
+            )
+
+    with open(f"{VCS_MAP_PATH}.etag", "w") as f:
+        f.write(new_etag)
+
+    MAPFILE_LOADED = False
+    return True
 
 
 def load_mapfile():
@@ -44,59 +61,33 @@ def load_mapfile():
                 mercurial_to_git_mapping[mercurial_hash] = git_hash
 
     try:
-        _read_mapping_file(VCS_MAP_FULL_PATH)
+        _read_mapping_file(VCS_MAP_PATH)
     except FileNotFoundError:
         pass
-
-    try:
-        _read_mapping_file(VCS_MAP_CACHE_PATH)
-    except FileNotFoundError:
-        pass
-
-
-def _write_result(git_hash, mercurial_hash):
-    with open(VCS_MAP_CACHE_PATH, "a") as f:
-        mercurial_to_git_mapping[mercurial_hash] = git_hash
-        git_to_mercurial_mapping[git_hash] = mercurial_hash
-
-        f.write(f"{git_hash} {mercurial_hash}\n")
 
 
 def mercurial_to_git(mercurial_hash):
     load_mapfile()
 
     if mercurial_hash not in mercurial_to_git_mapping:
-        r = requests.get(f"{MAPPER_SERVICE}/gecko-dev/rev/hg/{mercurial_hash}")
-        if not r.ok:
-            raise Exception(
-                f"Missing mercurial commit in the VCS map: {mercurial_hash}"
-            )
+        if download_mapfile():
+            load_mapfile()
 
-        git_hash = r.text.split(" ")[0]
-
-        _write_result(git_hash, mercurial_hash)
-
-        return git_hash
+    if mercurial_hash not in mercurial_to_git_mapping:
+        raise Exception(f"Missing mercurial commit in the VCS map: {mercurial_hash}")
 
     return mercurial_to_git_mapping[mercurial_hash]
 
 
-def git_to_mercurial(git_hash, cache_only=False):
+def git_to_mercurial(git_hash):
     load_mapfile()
 
     if git_hash not in git_to_mercurial_mapping:
-        if cache_only:
-            raise Exception("Missing git commit in the VCS map: {git_hash}")
+        if download_mapfile():
+            load_mapfile(do_reload=True)
 
-        r = requests.get(f"{MAPPER_SERVICE}/gecko-dev/rev/git/{git_hash}")
-        if not r.ok:
-            raise Exception(f"Missing git commit in the VCS map: {git_hash}")
-
-        mercurial_hash = r.text.split(" ")[1]
-
-        _write_result(git_hash, mercurial_hash)
-
-        return mercurial_hash
+    if git_hash not in git_to_mercurial_mapping:
+        raise Exception(f"Missing git commit in the VCS map: {git_hash}")
 
     return git_to_mercurial_mapping[git_hash]
 
