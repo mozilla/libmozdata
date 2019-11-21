@@ -587,6 +587,14 @@ class PhabricatorAPI(object):
         out = self.request("project.search", constraints=constraints, **params)
         return out["data"]
 
+    def search_users(self, constraints={}, **params):
+        """
+        Search multiple users
+        """
+        assert isinstance(constraints, dict)
+        out = self.request("user.search", constraints=constraints, **params)
+        return out["data"]
+
     def load_user(self, user_phid=None, user_id=None, **params):
         """
         Find details of a user
@@ -601,9 +609,7 @@ class PhabricatorAPI(object):
         if user_phid is not None:
             constraints["phids"] = [user_phid]
 
-        out = self.request("user.search", constraints=constraints, **params)
-
-        data = out["data"]
+        data = self.search_users(constraints, **params)
         if len(data) != 1:
             raise PhabricatorUserNotFoundException()
         return data[0]
