@@ -17,7 +17,7 @@ HGMO_JSON_REV_URL_TEMPLATE = "https://hg.mozilla.org/mozilla-central/json-rev/{}
 MOZILLA_PHABRICATOR_PROD = "https://phabricator.services.mozilla.com/api/"
 
 PhabricatorPatch = collections.namedtuple(
-    "Diff", "id, phid, patch, base_revision, commits"
+    "PhabricatorPatch", "id, phid, patch, base_revision, commits"
 )
 
 logger = logging.getLogger(__name__)
