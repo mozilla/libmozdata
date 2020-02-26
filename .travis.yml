@@ -8,7 +8,7 @@ install:
   - pip install -r requirements.txt
   - pip install -r test-requirements.txt
 script:
-  - pre-commit run --all-files
+  - pre-commit run --all-files --show-diff-on-failure
   - coverage run --source=libmozdata -m unittest discover tests/ --verbose
   - python setup.py sdist
   - pip install dist/libmozdata-$(cat VERSION).tar.gz
