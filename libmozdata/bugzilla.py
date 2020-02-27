@@ -38,6 +38,7 @@ class Bugzilla(Connection):
         commenthandler=None,
         commentdata=None,
         comment_include_fields=None,
+        attachmentids=None,
         attachmenthandler=None,
         attachmentdata=None,
         attachment_include_fields=None,
@@ -56,6 +57,7 @@ class Bugzilla(Connection):
             commenthandler (Optional[function]): the handler to use with each retrieved bug comment
             commentdata (Optional): the data to use with the comment handler
             comment_include_fields (Optional[List[str]]): list of comment include fields
+            attachmentids (List[str]): list of attachment ids to retrieve
             attachmenthandler (Optional[function]): the handler to use with each retrieved bug attachment
             attachmentdata (Optional): the data to use with the attachment handler
             attachment_include_fields (Optional[List[str]]): list of attachment include fields
@@ -69,6 +71,8 @@ class Bugzilla(Connection):
                 self.bugids = [bugids]
             elif isinstance(bugids, int):
                 self.bugids = [str(bugids)]
+            elif attachmentids is not None:
+                self.bugids = None
             else:
                 self.bugids = list(bugids)
             self.include_fields = include_fields
@@ -76,6 +80,11 @@ class Bugzilla(Connection):
             self.historyhandler = Handler.get(historyhandler, historydata)
             self.commenthandler = Handler.get(commenthandler, commentdata)
             self.comment_include_fields = comment_include_fields
+            self.attachmentids = (
+                attachmentids
+                if isinstance(attachmentids, list) or attachmentids is None
+                else [attachmentids]
+            )
             self.attachmenthandler = Handler.get(attachmenthandler, attachmentdata)
             self.attachment_include_fields = attachment_include_fields
             self.bugs_results = []
@@ -487,12 +496,15 @@ class Bugzilla(Connection):
         """Check if the first bugid is a bug id or a search query
 
         Returns:
-            (bool): True if the first bugid is a bug id
+            (bool): True if the first bugid is a bug id or None
         """
         if self.bugids:
             bugid = self.bugids[0]
             if not isinstance(bugid, dict) and str(bugid).isdigit():
                 return True
+        else:
+            return True
+
         return False
 
     def __get_bugs_for_history_comment(self):
@@ -724,7 +736,7 @@ class Bugzilla(Connection):
                 )
             )
 
-    def __attachment_cb(self, res, *args, **kwargs):
+    def __attachment_bugs_cb(self, res, *args, **kwargs):
         """Callback for bug attachment
 
         Args:
@@ -741,27 +753,49 @@ class Bugzilla(Connection):
                             attachments = bugs[key]
                             self.attachmenthandler.handle(attachments, key)
 
+    def __attachment_cb(self, res, *args, **kwargs):
+        """Callback for bug attachment
+
+        Args:
+            sess: session
+            res: result
+        """
+        if res.status_code == 200:
+            json = res.json()
+            attachments = json.get("attachments")
+            if attachments:
+                self.attachmenthandler.handle(list(attachments.values()))
+
     def __get_attachment(self):
         """Get the bug attachment
         """
-        url = Bugzilla.API_URL + "/%s/attachment"
         header = self.get_header()
-        # TODO: remove next line after the fix of bug 1283392
-        bugids = self.__get_no_private_ids()
-        for _bugids in Connection.chunks(sorted(bugids, key=lambda k: int(k))):
-            first = _bugids[0]
-            remainder = _bugids[1:] if len(_bugids) >= 2 else []
+        if self.attachmentids:
+            url = Bugzilla.API_URL + "/attachment/%s"
+            ids = self.attachmentids
+            field = "attachment_ids"
+            cb = self.__attachment_cb
+        else:
+            url = Bugzilla.API_URL + "/%s/attachment"
+            # TODO: remove next line after the fix of bug 1283392
+            ids = self.__get_no_private_ids()
+            field = "ids"
+            cb = self.__attachment_bugs_cb
+
+        for _ids in Connection.chunks(sorted(ids, key=lambda k: int(k))):
+            first = _ids[0]
+            remainder = _ids[1:] if len(_ids) >= 2 else []
             self.attachment_results.append(
                 self.session.get(
                     url % first,
                     headers=header,
                     params={
-                        "ids": remainder,
+                        field: remainder,
                         "include_fields": self.attachment_include_fields,
                     },
                     verify=True,
                     timeout=self.TIMEOUT,
-                    hooks={"response": self.__attachment_cb},
+                    hooks={"response": cb},
                 )
             )
 
