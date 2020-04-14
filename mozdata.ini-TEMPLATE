@@ -11,7 +11,7 @@ MaxDays = 3
 URL = https://hg.mozilla.org
 
 [Socorro]
-URL = https://crash-stats.mozilla.com
+URL = https://crash-stats.mozilla.org
 token =
 
 [Bugzilla]
