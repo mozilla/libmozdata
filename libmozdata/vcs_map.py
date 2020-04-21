@@ -7,7 +7,12 @@ def mercurial_to_git(repo_dir, mercurial_hash):
     )
     if p.returncode != 0:
         raise Exception(p.stderr)
-    return p.stdout.strip().decode("ascii")
+
+    result = p.stdout.strip().decode("ascii")
+    if result == "0000000000000000000000000000000000000000":
+        raise Exception(f"Missing mapping for mercurial commit: {mercurial_hash}")
+
+    return result
 
 
 def git_to_mercurial(repo_dir, git_hash):
@@ -16,7 +21,12 @@ def git_to_mercurial(repo_dir, git_hash):
     )
     if p.returncode != 0:
         raise Exception(p.stderr)
-    return p.stdout.strip().decode("ascii")
+
+    result = p.stdout.strip().decode("ascii")
+    if result == "0000000000000000000000000000000000000000":
+        raise Exception(f"Missing mapping for git commit: {git_hash}")
+
+    return result
 
 
 if __name__ == "__main__":
