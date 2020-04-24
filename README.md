@@ -36,4 +36,4 @@ https://github.com/mozilla/libmozdata/issues/new
 
 ## Contact
 
-Email: release-mgmt@mozilla.com
+Email: calixte@mozilla.com or marco@mozilla.com
