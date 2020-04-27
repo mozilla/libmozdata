@@ -1,36 +1,38 @@
 import subprocess
 
 
-def mercurial_to_git(repo_dir, mercurial_hash):
-    p = subprocess.run(
-        ["git", "cinnabar", "hg2git", mercurial_hash], cwd=repo_dir, capture_output=True
+def _batch_cinnabar(op, repo_dir, hashes):
+    p = subprocess.Popen(
+        ["git", "cinnabar", op, "--batch"],
+        cwd=repo_dir,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
     )
-    if p.returncode != 0:
-        raise Exception(p.stderr)
 
-    result = p.stdout.strip().decode("ascii")
-    if result == "0000000000000000000000000000000000000000":
-        raise Exception(f"Missing mapping for mercurial commit: {mercurial_hash}")
+    for h in hashes:
+        p.stdin.write(f"{h}\n".encode("ascii"))
+        p.stdin.flush()
+        result_h = p.stdout.readline().strip().decode("ascii")
+        if result_h == "0000000000000000000000000000000000000000":
+            raise Exception(f"Missing mapping for {h}")
+        yield result_h
 
-    return result
+    p.terminate()
+    p.wait()
 
 
-def git_to_mercurial(repo_dir, git_hash):
-    p = subprocess.run(
-        ["git", "cinnabar", "git2hg", git_hash], cwd=repo_dir, capture_output=True
-    )
-    if p.returncode != 0:
-        raise Exception(p.stderr)
+def mercurial_to_git(repo_dir, mercurial_hashes):
+    yield from _batch_cinnabar("hg2git", repo_dir, mercurial_hashes)
 
-    result = p.stdout.strip().decode("ascii")
-    if result == "0000000000000000000000000000000000000000":
-        raise Exception(f"Missing mapping for git commit: {git_hash}")
 
-    return result
+def git_to_mercurial(repo_dir, git_hashes):
+    yield from _batch_cinnabar("git2hg", repo_dir, git_hashes)
 
 
 if __name__ == "__main__":
     import argparse
+    import collections
+    import hglib
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -41,15 +43,15 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    import hglib
-
     hg = hglib.open(args.repository_dir)
     cmd_args = hglib.util.cmdbuilder(b"log", template="{node}\n")
     x = hg.rawcommand(cmd_args)
     revs = x.splitlines()
 
-    for rev in revs:
-        git_to_mercurial(
-            args.git_repository_dir,
-            mercurial_to_git(args.git_repository_dir, rev.decode("ascii")),
-        )
+    it = git_to_mercurial(
+        args.git_repository_dir,
+        mercurial_to_git(
+            args.git_repository_dir, (rev.decode("ascii") for rev in revs)
+        ),
+    )
+    collections.deque(it, maxlen=0)
