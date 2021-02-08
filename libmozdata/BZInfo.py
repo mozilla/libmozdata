@@ -9,8 +9,7 @@ from .bugzilla import Bugzilla
 
 
 class BZInfo(Bugzilla):
-    """Information relative to bugs data in bugzilla
-    """
+    """Information relative to bugs data in bugzilla"""
 
     def __init__(self, bugids):
         """Constructor

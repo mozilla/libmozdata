@@ -16,8 +16,7 @@ from .handler import Handler
 
 
 class Bugzilla(Connection):
-    """Connection to bugzilla.mozilla.org
-    """
+    """Connection to bugzilla.mozilla.org"""
 
     URL = config.get("Bugzilla", "URL", "https://bugzilla.mozilla.org")
     # URL = config.get('Allizgub', 'URL', 'https://bugzilla-dev.allizom.org')
@@ -150,8 +149,7 @@ class Bugzilla(Connection):
         return failures
 
     def get_data(self):
-        """Collect the data
-        """
+        """Collect the data"""
         if not self.got_data:
             self.got_data = True
             if self.__is_bugid():
@@ -182,8 +180,7 @@ class Bugzilla(Connection):
                 r.result()
 
     def wait_bugs(self):
-        """Just wait for bugs
-        """
+        """Just wait for bugs"""
         for r in self.bugs_results:
             r.result()
 
@@ -508,8 +505,7 @@ class Bugzilla(Connection):
         return False
 
     def __get_bugs_for_history_comment(self):
-        """Get history and comment (if there are some handlers) after a search query
-        """
+        """Get history and comment (if there are some handlers) after a search query"""
         if (
             self.historyhandler.isactive()
             or self.commenthandler.isactive()
@@ -554,8 +550,7 @@ class Bugzilla(Connection):
                 self.bughandler.handle(bug)
 
     def __get_bugs(self):
-        """Get the bugs
-        """
+        """Get the bugs"""
         header = self.get_header()
         for bugids in Connection.chunks(sorted(self.bugids, key=lambda k: int(k))):
             self.bugs_results.append(
@@ -573,8 +568,7 @@ class Bugzilla(Connection):
             )
 
     def __get_bugs_by_search(self):
-        """Get the bugs in making a search query
-        """
+        """Get the bugs in making a search query"""
         url = Bugzilla.API_URL + "?"
         header = self.get_header()
         specials = {"count_only", "limit", "order", "offset"}
@@ -633,8 +627,7 @@ class Bugzilla(Connection):
                 )
 
     def __get_bugs_list(self):
-        """Get the bugs list corresponding to the search query
-        """
+        """Get the bugs list corresponding to the search query"""
         _list = set()
 
         def cb(res, *args, **kwargs):
@@ -675,8 +668,7 @@ class Bugzilla(Connection):
                     self.historyhandler.handle(h)
 
     def __get_history(self):
-        """Get the bug history
-        """
+        """Get the bug history"""
         url = Bugzilla.API_URL + "/%s/history"
         header = self.get_header()
         # TODO: remove next line after the fix of bug 1283392
@@ -713,8 +705,7 @@ class Bugzilla(Connection):
                             self.commenthandler.handle(comments, key)
 
     def __get_comment(self):
-        """Get the bug comment
-        """
+        """Get the bug comment"""
         url = Bugzilla.API_URL + "/%s/comment"
         header = self.get_header()
         # TODO: remove next line after the fix of bug 1283392
@@ -767,8 +758,7 @@ class Bugzilla(Connection):
                 self.attachmenthandler.handle(list(attachments.values()))
 
     def __get_attachment(self):
-        """Get the bug attachment
-        """
+        """Get the bug attachment"""
         header = self.get_header()
         if self.attachmentids:
             url = Bugzilla.API_URL + "/attachment/%s"
@@ -801,8 +791,7 @@ class Bugzilla(Connection):
 
 
 class BugzillaUser(Connection):
-    """Connection to bugzilla.mozilla.org
-    """
+    """Connection to bugzilla.mozilla.org"""
 
     URL = config.get("Bugzilla", "URL", "https://bugzilla.mozilla.org")
     API_URL = URL + "/rest/user"

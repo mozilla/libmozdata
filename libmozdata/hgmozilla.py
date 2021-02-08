@@ -9,8 +9,7 @@ from .connection import Connection, Query
 
 
 class Mercurial(Connection):
-    """Mozilla mercurial connection: http://hg.mozilla.org
-    """
+    """Mozilla mercurial connection: http://hg.mozilla.org"""
 
     HG_URL = config.get("Mercurial", "URL", "https://hg.mozilla.org")
     remote = HG_URL == "https://hg.mozilla.org"
@@ -59,8 +58,7 @@ class Mercurial(Connection):
 
 
 class Revision(Mercurial):
-    """Connection to get a revision
-    """
+    """Connection to get a revision"""
 
     def __init__(
         self,
@@ -126,8 +124,7 @@ class Revision(Mercurial):
 
 
 class RawRevision(Mercurial):
-    """Connection to get a raw revision
-    """
+    """Connection to get a raw revision"""
 
     def __init__(
         self, channel="nightly", params=None, handler=None, queries=None, **kwargs
@@ -182,8 +179,7 @@ class RawRevision(Mercurial):
 
 
 class FileInfo(Mercurial):
-    """Connection to get file info
-    """
+    """Connection to get file info"""
 
     def __init__(
         self,
@@ -273,8 +269,7 @@ class FileInfo(Mercurial):
 
 
 class Annotate(Mercurial):
-    """Connection to get file annotation (blame)
-    """
+    """Connection to get file annotation (blame)"""
 
     def __init__(
         self,

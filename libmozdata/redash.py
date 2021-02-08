@@ -13,8 +13,7 @@ from .connection import Connection, Query
 
 
 class Redash(Connection):
-    """re:dash connection: https://sql.telemetry.mozilla.org
-    """
+    """re:dash connection: https://sql.telemetry.mozilla.org"""
 
     RE_DASH_URL = config.get("Re:dash", "URL", "https://sql.telemetry.mozilla.org")
     API_URL = RE_DASH_URL + "/api/queries"

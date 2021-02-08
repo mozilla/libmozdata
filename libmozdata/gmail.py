@@ -18,8 +18,7 @@ CREDENTIALS_PATH = os.path.expanduser(config.get("Gmail", "credentials", ""))
 
 
 def send(To, Subject, Body, Cc=[], Bcc=[], html=False, files=[]):
-    """Send an email
-    """
+    """Send an email"""
     subtype = "html" if html else "plain"
     message = MIMEMultipart()
     message["To"] = ", ".join(To)

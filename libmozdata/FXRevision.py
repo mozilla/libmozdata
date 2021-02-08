@@ -31,12 +31,12 @@ class FXRevision(Connection):
         self.wait()
         return self.info
 
-    def __make_url(self, l):
+    def __make_url(self, date):
         return "%s%s/%s/%s-mozilla-central/firefox-%s.en-US.%s.json" % (
             self.NIGHTLY_URL,
-            l[0],
-            l[1],
-            "-".join(l),
+            date[0],
+            date[1],
+            "-".join(date),
             self.fx_version,
             self.os,
         )

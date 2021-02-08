@@ -32,6 +32,7 @@ def git_to_mercurial(repo_dir, git_hashes):
 if __name__ == "__main__":
     import argparse
     import collections
+
     import hglib
 
     parser = argparse.ArgumentParser()

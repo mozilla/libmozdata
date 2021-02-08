@@ -9,8 +9,7 @@ from .connection import Connection, Query
 
 
 class Socorro(Connection):
-    """Socorro connection: https://crash-stats.mozilla.org
-    """
+    """Socorro connection: https://crash-stats.mozilla.org"""
 
     CRASH_STATS_URL = config.get("Socorro", "URL", "https://crash-stats.mozilla.org")
     API_URL = CRASH_STATS_URL + "/api"
@@ -31,8 +30,7 @@ class Socorro(Connection):
 
 
 class SuperSearch(Socorro):
-    """SuperSearch: https://crash-stats.mozilla.org/search/?product=&_dont_run=1
-    """
+    """SuperSearch: https://crash-stats.mozilla.org/search/?product=&_dont_run=1"""
 
     URL = Socorro.API_URL + "/SuperSearch/"
     URL_UNREDACTED = Socorro.API_URL + "/SuperSearchUnredacted/"
@@ -112,8 +110,7 @@ class SuperSearch(Socorro):
 
 
 class ProcessedCrash(Socorro):
-    """ProcessedCrash: https://crash-stats.mozilla.org/api/#ProcessedCrash
-    """
+    """ProcessedCrash: https://crash-stats.mozilla.org/api/#ProcessedCrash"""
 
     URL = Socorro.API_URL + "/ProcessedCrash/"
 
@@ -187,8 +184,7 @@ class ProcessedCrash(Socorro):
 
 
 class Bugs(Socorro):
-    """Bugs: https://crash-stats.mozilla.org/api/#Bugs
-    """
+    """Bugs: https://crash-stats.mozilla.org/api/#Bugs"""
 
     URL = Socorro.API_URL + "/Bugs/"
 

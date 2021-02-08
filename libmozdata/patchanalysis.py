@@ -297,8 +297,8 @@ def patch_analysis(
             ) or any(
                 subtext1 in diff.text and subtext2 in diff.text
                 for (subtext1, subtext2) in [("Binary file ", " has changed")]
-            ), (
-                "Can't parse changes from patch: " + str(diff)
+            ), "Can't parse changes from patch: " + str(
+                diff
             )
         else:
             # Calc changes additions & deletions

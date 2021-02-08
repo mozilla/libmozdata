@@ -14,8 +14,8 @@ from .connection import Query
 class HGFileInfo(object):
     """File info from Mercurial
 
-       We collect the different authors, reviewers and related bugs from the patches which touched to the file.
-       The patches can be filtered according to pushdate.
+    We collect the different authors, reviewers and related bugs from the patches which touched to the file.
+    The patches can be filtered according to pushdate.
     """
 
     MAX_REV_COUNT = 4095
@@ -151,8 +151,7 @@ class HGFileInfo(object):
                 self.data[path].extend(entries)
 
     def __get_info(self, paths, node):
-        """Get info
-        """
+        """Get info"""
         __base = {"node": node, "file": None, "revcount": HGFileInfo.MAX_REV_COUNT + 1}
         queries = []
         url = hgmozilla.FileInfo.get_url(self.channel)

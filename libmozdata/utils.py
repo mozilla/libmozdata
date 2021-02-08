@@ -256,7 +256,7 @@ def get_moz_date(d):
 
 
 def rate(x, y):
-    """ Compute a rate
+    """Compute a rate
 
     Args:
         x (num): numerator

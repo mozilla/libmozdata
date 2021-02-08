@@ -46,8 +46,7 @@ class Query(object):
 
 
 class Connection(object):
-    """Represents a connection to a server
-    """
+    """Represents a connection to a server"""
 
     TIMEOUT = 30
     MAX_RETRIES = 256
@@ -131,8 +130,7 @@ class Connection(object):
         return cb
 
     def wait(self):
-        """Just wait that all the queries have been treated
-        """
+        """Just wait that all the queries have been treated"""
         for r in self.results:
             r.result()
 
@@ -224,15 +222,15 @@ class Connection(object):
                     )
 
     @staticmethod
-    def chunks(l, chunk_size=CHUNK_SIZE):
+    def chunks(data, chunk_size=CHUNK_SIZE):
         """Get chunk from a list
 
         Args:
-            l (List): data to chunkify
+            data (List): data to chunkify
             chunk_size (Optional[int]): the size of each chunk
 
         Yields:
             a chunk from the data
         """
-        for i in range(0, len(l), chunk_size):
-            yield l[i : (i + chunk_size)]
+        for i in range(0, len(data), chunk_size):
+            yield data[i : (i + chunk_size)]

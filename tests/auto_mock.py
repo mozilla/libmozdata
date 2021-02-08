@@ -10,12 +10,12 @@ import unittest
 import responses
 
 try:
-    from urllib.parse import urlparse, parse_qsl
-    from urllib.request import Request, urlopen
     from urllib.error import HTTPError
+    from urllib.parse import parse_qsl, urlparse
+    from urllib.request import Request, urlopen
 except ImportError:
-    from urlparse import urlparse, parse_qsl
-    from urllib2 import Request, HTTPError, urlopen
+    from urllib2 import HTTPError, Request, urlopen
+    from urlparse import parse_qsl, urlparse
 
 logger = logging.getLogger(__name__)
 

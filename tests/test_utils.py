@@ -121,8 +121,9 @@ class UtilsTest(unittest.TestCase):
         self.assertTrue(math.isnan(utils.rate(0.0, 0.0)))
 
     def test_uplift_comment_html(self):
-        from libmozdata.patchanalysis import parse_uplift_comment as parse
         import glob
+
+        from libmozdata.patchanalysis import parse_uplift_comment as parse
 
         # Bugzilla bug
         out = parse("This is about bUg 12345. What a great bug.")

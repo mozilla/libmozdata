@@ -13,8 +13,7 @@ from .HGFileInfo import HGFileInfo
 
 
 class FileStats(object):
-    """Stats about a file in the repo.
-    """
+    """Stats about a file in the repo."""
 
     def __init__(
         self, path, channel="nightly", node="default", utc_ts=None, max_days=None
