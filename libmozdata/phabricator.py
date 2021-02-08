@@ -177,6 +177,10 @@ class PhabricatorUserNotFoundException(Exception):
     pass
 
 
+class PhabricatorBzNotFoundException(Exception):
+    pass
+
+
 class ConduitError(Exception):
     """
     Exception to be raised when Phabricator returns an error response.
@@ -613,6 +617,31 @@ class PhabricatorAPI(object):
         if len(data) != 1:
             raise PhabricatorUserNotFoundException()
         return data[0]
+
+    def search_bz_accounts(self, **params):
+        """
+        Search multiple Bugzilla accounts
+        """
+        return self.request("bugzilla.account.search", **params)
+
+    def load_bz_account(self, user_phids=None, user_ids=None, **params):
+        """
+        Find Bugzilla user ids
+        """
+        if user_ids is not None and "ids" not in params:
+            params["ids"] = user_ids if isinstance(user_ids, list) else [user_ids]
+        if user_phids is not None and "phids" not in params:
+            params["phids"] = (
+                user_phids if isinstance(user_phids, list) else [user_phids]
+            )
+
+        data = self.search_bz_accounts(**params)
+        if not data:
+            raise PhabricatorBzNotFoundException()
+
+        if not isinstance(data, list):
+            data = [data]
+        return data
 
     def request(self, path, **payload):
         """
