@@ -547,6 +547,7 @@ class Bugzilla(Connection):
             sess: session
             res: result
         """
+        res.raise_for_status()
         if res.status_code == 200:
             for bug in res.json()["bugs"]:
                 self.bughandler.handle(bug)
