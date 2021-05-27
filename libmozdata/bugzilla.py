@@ -132,7 +132,9 @@ class Bugzilla(Connection):
             while to_retry:
                 _to_retry = list(to_retry)
                 to_retry = []
-                for _ids in Connection.chunks(_to_retry):
+                for _ids in Connection.chunks(
+                    _to_retry, chunk_size=Bugzilla.BUGZILLA_CHUNK_SIZE
+                ):
                     first_id = _ids[0]
                     if len(_ids) >= 2:
                         data["ids"] = _ids
@@ -552,7 +554,10 @@ class Bugzilla(Connection):
     def __get_bugs(self):
         """Get the bugs"""
         header = self.get_header()
-        for bugids in Connection.chunks(sorted(self.bugids, key=lambda k: int(k))):
+        for bugids in Connection.chunks(
+            sorted(self.bugids, key=lambda k: int(k)),
+            chunk_size=Bugzilla.BUGZILLA_CHUNK_SIZE,
+        ):
             self.bugs_results.append(
                 self.session.get(
                     Bugzilla.API_URL,
@@ -673,7 +678,10 @@ class Bugzilla(Connection):
         header = self.get_header()
         # TODO: remove next line after the fix of bug 1283392
         bugids = self.__get_no_private_ids()
-        for _bugids in Connection.chunks(sorted(bugids, key=lambda k: int(k))):
+        for _bugids in Connection.chunks(
+            sorted(bugids, key=lambda k: int(k)),
+            chunk_size=Bugzilla.BUGZILLA_CHUNK_SIZE,
+        ):
             first = _bugids[0]
             remainder = _bugids[1:] if len(_bugids) >= 2 else []
             self.history_results.append(
@@ -710,7 +718,10 @@ class Bugzilla(Connection):
         header = self.get_header()
         # TODO: remove next line after the fix of bug 1283392
         bugids = self.__get_no_private_ids()
-        for _bugids in Connection.chunks(sorted(bugids, key=lambda k: int(k))):
+        for _bugids in Connection.chunks(
+            sorted(bugids, key=lambda k: int(k)),
+            chunk_size=Bugzilla.BUGZILLA_CHUNK_SIZE,
+        ):
             first = _bugids[0]
             remainder = _bugids[1:] if len(_bugids) >= 2 else []
             self.comment_results.append(
@@ -772,7 +783,9 @@ class Bugzilla(Connection):
             field = "ids"
             cb = self.__attachment_bugs_cb
 
-        for _ids in Connection.chunks(sorted(ids, key=lambda k: int(k))):
+        for _ids in Connection.chunks(
+            sorted(ids, key=lambda k: int(k)), chunk_size=Bugzilla.BUGZILLA_CHUNK_SIZE
+        ):
             first = _ids[0]
             remainder = _ids[1:] if len(_ids) >= 2 else []
             self.attachment_results.append(
