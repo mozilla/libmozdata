@@ -1,0 +1,131 @@
+version: 1
+policy:
+  pullRequests: public
+tasks:
+  $let:
+    head_branch:
+      $if: 'tasks_for == "github-pull-request"'
+      then: ${event.pull_request.head.ref}
+      else:
+        $if: 'tasks_for == "github-push"'
+        then: ${event.ref}
+        else: ${event.release.target_commitish}
+
+    head_rev:
+      $if: 'tasks_for == "github-pull-request"'
+      then: ${event.pull_request.head.sha}
+      else:
+        $if: 'tasks_for == "github-push"'
+        then: ${event.after}
+        else: ${event.release.tag_name}
+
+    repository:
+      $if: 'tasks_for == "github-pull-request"'
+      then: ${event.pull_request.head.repo.html_url}
+      else: ${event.repository.html_url}
+
+    channel:
+      $if: 'tasks_for == "github-push"'
+      then:
+        $if: 'event.ref in ["refs/heads/testing", "refs/heads/production"]'
+        then: ${event.ref[11:]}
+        else: "dev"
+      else: "dev"
+
+    tag:
+      $if: 'tasks_for == "github-push"'
+      then:
+        $if: 'event.ref[:10] == "refs/tags/"'
+        then: { $eval: "event.ref[10:]" }
+        else: "latest"
+      else: "latest"
+
+    taskboot_image: "mozilla/taskboot:0.2.2"
+  in:
+    - taskId: { $eval: as_slugid("lint_and_tests_task") }
+      provisionerId: proj-relman
+      workerType: ci
+      created: { $fromNow: "" }
+      deadline: { $fromNow: "1 hour" }
+      payload:
+        maxRunTime: 3600
+        image: python:3.9
+        env:
+          CODECOV_TOKEN: 2074f917-03ff-4f90-bafd-1fb186e42216
+        command:
+          - "/bin/bash"
+          - "-lcx"
+          - "git clone --quiet ${repository} &&
+            cd libmozdata &&
+            git -c advice.detachedHead=false checkout ${head_rev} &&
+            pip install --disable-pip-version-check --no-cache-dir --progress-bar off -r requirements.txt &&
+            pip install --disable-pip-version-check --no-cache-dir --progress-bar off -r test-requirements.txt &&
+            pre-commit run -a --show-diff-on-failure &&
+            coverage run --source=libmozdata -m unittest discover tests/ --verbose &&
+            python -m coverage run setup.py sdist &&
+            pip install dist/libmozdata-$(cat VERSION).tar.gz &&
+            bash <(curl -s https://codecov.io/bash)
+            "
+      metadata:
+        name: libmozdata lint and tests
+        description: libmozdata lint and tests
+        owner: mcastelluccio@mozilla.com
+        source: https://github.com/mozilla/libmozdata
+
+    - $if: 'tag != "latest"'
+      then:
+        taskId: { $eval: as_slugid("publish_task") }
+        created: { $fromNow: "" }
+        deadline: { $fromNow: "1 hour" }
+        provisionerId: proj-relman
+        workerType: ci
+        dependencies:
+          - { $eval: as_slugid("lint_and_tests_task") }
+        payload:
+          features:
+            taskclusterProxy: true
+          maxRunTime: 3600
+          image: "${taskboot_image}"
+          env:
+            TASKCLUSTER_SECRET: "project/relman/libmozdata/deploy"
+            GIT_REPOSITORY: "${repository}"
+            GIT_REVISION: "${head_rev}"
+          command:
+            - taskboot
+            - deploy-pypi
+        scopes:
+          - "secrets:get:project/relman/libmozdata/deploy"
+        metadata:
+          name: libmozdata publication on PyPi
+          description: Publish new version on PyPi
+          owner: mcastelluccio@mozilla.com
+          source: https://github.com/mozilla/libmozdata
+
+    - $if: 'tag != "latest"'
+      then:
+        taskId: { $eval: as_slugid("release_task") }
+        created: { $fromNow: "" }
+        deadline: { $fromNow: "1 hour" }
+        provisionerId: proj-relman
+        workerType: ci
+        dependencies:
+          - { $eval: as_slugid("lint_and_tests_task") }
+        payload:
+          features:
+            taskclusterProxy: true
+          maxRunTime: 3600
+          image: "${taskboot_image}"
+          env:
+            TASKCLUSTER_SECRET: "project/relman/libmozdata/deploy"
+          command:
+            - taskboot
+            - github-release
+            - mozilla/libmozdata
+            - "${tag}"
+        scopes:
+          - "secrets:get:project/relman/libmozdata/deploy"
+        metadata:
+          name: libmozdata publication on GitHub
+          description: Publish release notes on GitHub
+          owner: mcastelluccio@mozilla.com
+          source: https://github.com/mozilla/libmozdata
