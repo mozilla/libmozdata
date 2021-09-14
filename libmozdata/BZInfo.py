@@ -62,7 +62,7 @@ class BZInfo(Bugzilla):
 
         A collaboration between A & B is when A reviews a patch of B (or reciprocally)
         in term of graph:
-           - each node represents a reviewer or a writter (owner)
+           - each node represents a reviewer or a writer (owner)
            - each edge represents a collaboration
         here we count the degree of each node and find out who's the best collaborator
 
