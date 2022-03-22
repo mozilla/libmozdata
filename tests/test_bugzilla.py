@@ -25,11 +25,11 @@ class BugIDTest(MockTestCase):
         bugzilla.Bugzilla(12345, bughandler=bughandler, bugdata=bug).get_data().wait()
 
         self.assertEqual(bug["id"], 12345)
-        self.assertEqual(bug["resolution"], u"FIXED")
-        self.assertEqual(bug["assigned_to"], u"jefft@formerly-netscape.com.tld")
+        self.assertEqual(bug["resolution"], "FIXED")
+        self.assertEqual(bug["assigned_to"], "jefft@formerly-netscape.com.tld")
         self.assertEqual(
             bug["summary"],
-            u"[DOGFOOD] Unable to Forward a message received as an Inline page or an attachment",
+            "[DOGFOOD] Unable to Forward a message received as an Inline page or an attachment",
         )
 
     @responses.activate
@@ -43,18 +43,18 @@ class BugIDTest(MockTestCase):
         ).get_data().wait()
 
         self.assertEqual(bugs[12345]["id"], 12345)
-        self.assertEqual(bugs[12345]["resolution"], u"FIXED")
-        self.assertEqual(bugs[12345]["assigned_to"], u"jefft@formerly-netscape.com.tld")
+        self.assertEqual(bugs[12345]["resolution"], "FIXED")
+        self.assertEqual(bugs[12345]["assigned_to"], "jefft@formerly-netscape.com.tld")
         self.assertEqual(
             bugs[12345]["summary"],
-            u"[DOGFOOD] Unable to Forward a message received as an Inline page or an attachment",
+            "[DOGFOOD] Unable to Forward a message received as an Inline page or an attachment",
         )
 
         self.assertEqual(bugs[12346]["id"], 12346)
-        self.assertEqual(bugs[12346]["resolution"], u"FIXED")
-        self.assertEqual(bugs[12346]["assigned_to"], u"doug.turner@gmail.com")
+        self.assertEqual(bugs[12346]["resolution"], "FIXED")
+        self.assertEqual(bugs[12346]["assigned_to"], "doug.turner@gmail.com")
         self.assertEqual(
-            bugs[12346]["summary"], u"nsOutputFileStream should buffer the output"
+            bugs[12346]["summary"], "nsOutputFileStream should buffer the output"
         )
 
     @responses.activate
@@ -75,20 +75,20 @@ class BugIDTest(MockTestCase):
 
         for bugs in [bugs1, bugs2]:
             self.assertEqual(bugs[12345]["id"], 12345)
-            self.assertEqual(bugs[12345]["resolution"], u"FIXED")
+            self.assertEqual(bugs[12345]["resolution"], "FIXED")
             self.assertEqual(
-                bugs[12345]["assigned_to"], u"jefft@formerly-netscape.com.tld"
+                bugs[12345]["assigned_to"], "jefft@formerly-netscape.com.tld"
             )
             self.assertEqual(
                 bugs[12345]["summary"],
-                u"[DOGFOOD] Unable to Forward a message received as an Inline page or an attachment",
+                "[DOGFOOD] Unable to Forward a message received as an Inline page or an attachment",
             )
 
             self.assertEqual(bugs[12346]["id"], 12346)
-            self.assertEqual(bugs[12346]["resolution"], u"FIXED")
-            self.assertEqual(bugs[12346]["assigned_to"], u"doug.turner@gmail.com")
+            self.assertEqual(bugs[12346]["resolution"], "FIXED")
+            self.assertEqual(bugs[12346]["assigned_to"], "doug.turner@gmail.com")
             self.assertEqual(
-                bugs[12346]["summary"], u"nsOutputFileStream should buffer the output"
+                bugs[12346]["summary"], "nsOutputFileStream should buffer the output"
             )
 
     @responses.activate
@@ -112,20 +112,20 @@ class BugIDTest(MockTestCase):
 
         for bugs in [bugs1, bugs2, bugs3]:
             self.assertEqual(bugs[12345]["id"], 12345)
-            self.assertEqual(bugs[12345]["resolution"], u"FIXED")
+            self.assertEqual(bugs[12345]["resolution"], "FIXED")
             self.assertEqual(
-                bugs[12345]["assigned_to"], u"jefft@formerly-netscape.com.tld"
+                bugs[12345]["assigned_to"], "jefft@formerly-netscape.com.tld"
             )
             self.assertEqual(
                 bugs[12345]["summary"],
-                u"[DOGFOOD] Unable to Forward a message received as an Inline page or an attachment",
+                "[DOGFOOD] Unable to Forward a message received as an Inline page or an attachment",
             )
 
             self.assertEqual(bugs[12346]["id"], 12346)
-            self.assertEqual(bugs[12346]["resolution"], u"FIXED")
-            self.assertEqual(bugs[12346]["assigned_to"], u"doug.turner@gmail.com")
+            self.assertEqual(bugs[12346]["resolution"], "FIXED")
+            self.assertEqual(bugs[12346]["assigned_to"], "doug.turner@gmail.com")
             self.assertEqual(
-                bugs[12346]["summary"], u"nsOutputFileStream should buffer the output"
+                bugs[12346]["summary"], "nsOutputFileStream should buffer the output"
             )
 
     @responses.activate
@@ -153,9 +153,9 @@ class BugIDTest(MockTestCase):
         self.assertEqual(bugs1[12345]["id"], 12345)
         self.assertEqual(bugs1[12346]["id"], 12346)
         self.assertEqual(bugs2[12345]["id"], 12345)
-        self.assertEqual(bugs2[12345]["resolution"], u"FIXED")
+        self.assertEqual(bugs2[12345]["resolution"], "FIXED")
         self.assertEqual(bugs2[12346]["id"], 12346)
-        self.assertEqual(bugs2[12346]["resolution"], u"FIXED")
+        self.assertEqual(bugs2[12346]["resolution"], "FIXED")
 
     @responses.activate
     def test_queries(self):
@@ -173,18 +173,18 @@ class BugIDTest(MockTestCase):
         bugzilla.Bugzilla(queries=queries, bughandler=bughandler).wait()
 
         self.assertEqual(bugs[12345]["id"], 12345)
-        self.assertEqual(bugs[12345]["resolution"], u"FIXED")
-        self.assertEqual(bugs[12345]["assigned_to"], u"jefft@formerly-netscape.com.tld")
+        self.assertEqual(bugs[12345]["resolution"], "FIXED")
+        self.assertEqual(bugs[12345]["assigned_to"], "jefft@formerly-netscape.com.tld")
         self.assertEqual(
             bugs[12345]["summary"],
-            u"[DOGFOOD] Unable to Forward a message received as an Inline page or an attachment",
+            "[DOGFOOD] Unable to Forward a message received as an Inline page or an attachment",
         )
 
         self.assertEqual(bugs[12346]["id"], 12346)
-        self.assertEqual(bugs[12346]["resolution"], u"FIXED")
-        self.assertEqual(bugs[12346]["assigned_to"], u"doug.turner@gmail.com")
+        self.assertEqual(bugs[12346]["resolution"], "FIXED")
+        self.assertEqual(bugs[12346]["assigned_to"], "doug.turner@gmail.com")
         self.assertEqual(
-            bugs[12346]["summary"], u"nsOutputFileStream should buffer the output"
+            bugs[12346]["summary"], "nsOutputFileStream should buffer the output"
         )
 
     @responses.activate
@@ -309,7 +309,7 @@ class BugCommentHistoryTest(MockTestCase):
 
         self.assertEqual(data["bug"]["id"], 12345)
         self.assertEqual(len(data["comment"]), 19)
-        self.assertTrue(data["comment"][0]["text"].startswith(u"Steps to reproduce"))
+        self.assertTrue(data["comment"][0]["text"].startswith("Steps to reproduce"))
         self.assertEqual(len(data["history"]["history"]), 24)
 
     @responses.activate
@@ -336,7 +336,7 @@ class BugCommentHistoryTest(MockTestCase):
 
         self.assertEqual(data["bug"]["id"], 12345)
         self.assertEqual(len(data["comment"]), 19)
-        self.assertTrue(data["comment"][0]["text"].startswith(u"Steps to reproduce"))
+        self.assertTrue(data["comment"][0]["text"].startswith("Steps to reproduce"))
         self.assertEqual(len(data["history"]["history"]), 24)
 
     @responses.activate
@@ -609,7 +609,7 @@ class BugAttachmentTest(MockTestCase):
 
         self.assertEqual(data["bug"]["id"], 12345)
         self.assertEqual(len(data["comment"]), 19)
-        self.assertTrue(data["comment"][0]["text"].startswith(u"Steps to reproduce"))
+        self.assertTrue(data["comment"][0]["text"].startswith("Steps to reproduce"))
         self.assertEqual(len(data["history"]["history"]), 24)
         self.assertEqual(len(data["attachment"]), 1)
         self.assertEqual(data["attachment"][0]["description"], "Some patch.")
@@ -645,7 +645,7 @@ class BugAttachmentTest(MockTestCase):
 
         self.assertEqual(data["bug"]["id"], 12345)
         self.assertEqual(len(data["comment"]), 19)
-        self.assertTrue(data["comment"][0]["text"].startswith(u"Steps to reproduce"))
+        self.assertTrue(data["comment"][0]["text"].startswith("Steps to reproduce"))
         self.assertEqual(len(data["history"]["history"]), 24)
         self.assertEqual(len(data["attachment"]), 1)
         self.assertEqual(data["attachment"][0]["description"], "Some patch.")

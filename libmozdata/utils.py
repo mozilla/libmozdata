@@ -295,7 +295,7 @@ def get_monday_sunday(date):
 def mean_stddev(x):
     N = len(x)
     m = sum(x) / N
-    v = sum([xi ** 2 for xi in x]) / N - m ** 2
+    v = sum([xi**2 for xi in x]) / N - m**2
     e = math.sqrt(v)
 
     return m, e

@@ -14,7 +14,7 @@ class BZInfoTest(unittest.TestCase):
         self.assertIn("12345", info)
         info = info["12345"]
         self.assertTrue(info["authorized"])
-        self.assertEqual(info["owner"], u"jefft@formerly-netscape.com.tld")
+        self.assertEqual(info["owner"], "jefft@formerly-netscape.com.tld")
         # self.assertIn(u'jefft@formerly-netscape.com.tld', info['commenters'])
         self.assertEqual(info["component"], "Backend")
         self.assertEqual(info["product"], "MailNews Core")

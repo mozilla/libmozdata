@@ -4,15 +4,15 @@ repos:
     hooks:
       - id: seed-isort-config
   - repo: https://github.com/timothycrosley/isort
-    rev: 5.9.3
+    rev: 5.10.1
     hooks:
       - id: isort
   - repo: https://github.com/ambv/black
-    rev: 21.9b0
+    rev: 22.1.0
     hooks:
       - id: black
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v2.4.0
+    rev: v2.6.0
     hooks:
       - id: prettier
         exclude: ^tests/|libmozdata/modules.json
@@ -26,7 +26,7 @@ repos:
           - "flake8-debugger==3.1.0"
           - "flake8-mypy==17.8.0"
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.0.1
+    rev: v4.1.0
     hooks:
       - id: check-ast
       - id: check-docstring-first
@@ -52,11 +52,11 @@ repos:
       - id: codespell
         exclude: libmozdata/modules.json
   - repo: https://github.com/marco-c/taskcluster_yml_validator
-    rev: v0.0.7
+    rev: v0.0.9
     hooks:
       - id: taskcluster_yml
   - repo: https://github.com/asottile/yesqa
-    rev: v1.2.3
+    rev: v1.3.0
     hooks:
       - id: yesqa
   - repo: meta
