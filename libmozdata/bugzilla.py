@@ -881,3 +881,93 @@ class BugzillaUser(Connection):
 
         for user in res["users"]:
             self.user_handler.handle(user)
+
+
+class BugzillaProduct(Connection):
+    """
+    Connection to bugzilla.mozilla.org
+
+    API docs: https://bugzilla.readthedocs.io/en/latest/api/core/v1/product.html
+    """
+
+    URL = config.get("Bugzilla", "URL", "https://bugzilla.mozilla.org")
+    API_URL = URL + "/rest/product"
+    TOKEN = config.get("Bugzilla", "token", "")
+
+    def __init__(
+        self,
+        product_names=None,
+        product_types=None,
+        search_strings=None,
+        include_fields="_default",
+        product_handler=None,
+        product_data=None,
+        **kwargs
+    ):
+        """Constructor
+
+        Args:
+            product_names (List[str]): list of product names or IDs
+            product_types (List[str]): list of the group of products to return
+            search_strings (List[str]): list of search strings
+            include_fields (List[str]): list of include fields
+            product_handler (Optional[function]): the handler to use with each retrieved product
+            product_data (Optional): the data to use with the product handler
+        """
+        self.product_handler = Handler.get(product_handler, product_data)
+
+        if product_names is not None:
+            if isinstance(product_names, six.string_types) or isinstance(
+                product_names, int
+            ):
+                product_names = [product_names]
+
+            params = {
+                "include_fields": include_fields,
+                "type": product_types,
+                "names": [
+                    product_name
+                    for product_name in product_names
+                    if isinstance(product_name, six.string_types)
+                    and not product_name.isdigit()
+                ],
+                "ids": [
+                    str(product_id)
+                    for product_id in product_names
+                    if isinstance(product_id, int) or product_id.isdigit()
+                ],
+            }
+
+            super(BugzillaProduct, self).__init__(
+                BugzillaProduct.URL,
+                Query(BugzillaProduct.API_URL, params, self.__products_cb),
+                **kwargs
+            )
+        elif search_strings is not None:
+            if isinstance(search_strings, six.string_types):
+                search_strings = [search_strings]
+
+            queries = []
+            for search_string in search_strings:
+                queries.append(
+                    Query(
+                        BugzillaProduct.API_URL + "?" + search_string,
+                        handler=self.__products_cb,
+                    )
+                )
+
+            super(BugzillaProduct, self).__init__(
+                BugzillaProduct.URL, queries, **kwargs
+            )
+
+    def get_header(self):
+        header = super(BugzillaProduct, self).get_header()
+        header["X-Bugzilla-API-Key"] = self.get_apikey()
+        return header
+
+    def __products_cb(self, res):
+        if not self.product_handler.isactive():
+            return
+
+        for product in res["products"]:
+            self.product_handler.handle(product)

@@ -994,6 +994,196 @@ class User(MockTestCase):
         self.assertEqual(nv, 52)
 
 
+class Product(MockTestCase):
+
+    mock_urls = [bugzilla.BugzillaProduct.URL]
+
+    def __init__(self, a):
+        tok = os.environ.get("API_KEY_BUGZILLA")
+        if tok:
+            bugzilla.BugzillaProduct.TOKEN = tok
+        super(Product, self).__init__(a)
+
+    @responses.activate
+    def test_get_product(self):
+        product = {}
+        product_data = {}
+
+        def product_handler(u, data):
+            product.update(u)
+            data.update(u)
+
+        bugzilla.BugzillaProduct(
+            product_names="Intellego Graveyard",
+            product_handler=product_handler,
+            product_data=product_data,
+        ).wait()
+
+        self.assertEqual(product["id"], 119)
+        self.assertEqual(product["name"], "Intellego Graveyard")
+        self.assertEqual(product["is_active"], False)
+        self.assertEqual(product, product_data)
+
+    @responses.activate
+    def test_get_product_include_fields(self):
+        product = {}
+        product_data = {}
+
+        def product_handler(u, data):
+            product.update(u)
+            data.update(u)
+
+        include_fields = [
+            "name",
+            "components.name",
+            "components.team_name",
+            "components.triage_owner",
+        ]
+
+        bugzilla.BugzillaProduct(
+            product_names="Toolkit",
+            include_fields=include_fields,
+            product_handler=product_handler,
+            product_data=product_data,
+        ).wait()
+
+        self.assertEqual(product["name"], "Toolkit")
+        self.assertGreater(len(product["components"]), 0)
+        self.assertNotIn("id", product)
+
+        component = product["components"][0]
+        self.assertIn("name", component)
+        self.assertIn("team_name", component)
+        self.assertIn("triage_owner", component)
+        self.assertNotIn("description", component)
+        self.assertEqual(product, product_data)
+
+    @responses.activate
+    def test_get_product_no_data(self):
+        product = {}
+
+        def product_handler(u):
+            product.update(u)
+
+        bugzilla.BugzillaProduct(
+            product_names="Toolkit", product_handler=product_handler
+        ).wait()
+
+        self.assertEqual(product["id"], 30)
+        self.assertEqual(product["name"], "Toolkit")
+
+    @responses.activate
+    def test_get_product_id(self):
+        product = {}
+
+        def product_handler(u):
+            product.update(u)
+
+        bugzilla.BugzillaProduct(
+            product_names=30, product_handler=product_handler
+        ).wait()
+
+        self.assertEqual(product["id"], 30)
+        self.assertEqual(product["name"], "Toolkit")
+        self.assertEqual(product["is_active"], True)
+
+    @responses.activate
+    def test_get_product_id_string(self):
+        product = {}
+
+        def product_handler(u):
+            product.update(u)
+
+        bugzilla.BugzillaProduct(
+            product_names="30", product_handler=product_handler
+        ).wait()
+
+        self.assertEqual(product["id"], 30)
+        self.assertEqual(product["name"], "Toolkit")
+        self.assertEqual(product["is_active"], True)
+
+    @responses.activate
+    def test_get_product_array(self):
+        product = {}
+
+        def product_handler(u):
+            product.update(u)
+
+        bugzilla.BugzillaProduct(
+            product_names=[30, "Toolkit"], product_handler=product_handler
+        ).wait()
+        self.assertEqual(product["id"], 30)
+        self.assertEqual(product["name"], "Toolkit")
+        self.assertEqual(product["is_active"], True)
+
+    @responses.activate
+    def test_get_products(self):
+        product = {"first": {}, "second": {}}
+
+        def product_handler(u):
+            if u["id"] == 30:
+                product["first"].update(u)
+            elif u["id"] == 119:
+                product["second"].update(u)
+            else:
+                raise Exception("Unexpected ID")
+
+        bugzilla.BugzillaProduct(
+            product_names=["Toolkit", "Intellego Graveyard"],
+            product_handler=product_handler,
+        ).wait()
+
+        self.assertEqual(product["first"]["name"], "Toolkit")
+        self.assertEqual(product["first"]["is_active"], True)
+        self.assertEqual(
+            product["first"]["default_security_group"], "firefox-core-security"
+        )
+        self.assertEqual(product["second"]["name"], "Intellego Graveyard")
+        self.assertEqual(product["second"]["is_active"], False)
+        self.assertEqual(product["second"]["default_security_group"], "intellego-team")
+
+    #
+    @responses.activate
+    def test_get_products_ids(self):
+        product = {"first": {}, "second": {}}
+
+        def product_handler(u):
+            if u["id"] == 30:
+                product["first"].update(u)
+            elif u["id"] == 119:
+                product["second"].update(u)
+            else:
+                raise Exception("Unexpected ID")
+
+        bugzilla.BugzillaProduct(
+            product_names=["30", 119], product_handler=product_handler
+        ).wait()
+
+        self.assertEqual(product["first"]["name"], "Toolkit")
+        self.assertEqual(product["first"]["is_active"], True)
+        self.assertEqual(
+            product["first"]["default_security_group"], "firefox-core-security"
+        )
+        self.assertEqual(product["second"]["name"], "Intellego Graveyard")
+        self.assertEqual(product["second"]["is_active"], False)
+        self.assertEqual(product["second"]["default_security_group"], "intellego-team")
+
+    @responses.activate
+    def test_search_single_result(self):
+        product = {}
+
+        def product_handler(u):
+            product.update(u)
+
+        bugzilla.BugzillaProduct(
+            search_strings="names=Toolkit", product_handler=product_handler
+        ).wait()
+
+        self.assertEqual(product["name"], "Toolkit")
+        self.assertEqual(product["is_active"], True)
+        self.assertEqual(product["id"], 30)
+
+
 class BugLinksTest(unittest.TestCase):
     def test_bugid(self):
         self.assertEqual(
