@@ -6,9 +6,9 @@ import json
 import os
 import re
 from collections import defaultdict
-from distutils.version import LooseVersion
 
 import requests
+from distutils.version import LooseVersion
 
 SEARCH_URL = os.getenv("BUILDHUB_SEARCH_URL", "https://buildhub.moz.tools/api/search")
 
