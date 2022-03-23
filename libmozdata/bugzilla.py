@@ -971,3 +971,44 @@ class BugzillaProduct(Connection):
 
         for product in res["products"]:
             self.product_handler.handle(product)
+
+
+class BugzillaShorten(Connection):
+    """
+    Connection to bugzilla.mozilla.org
+    """
+
+    URL = config.get("Bugzilla", "URL", "https://bugzilla.mozilla.org")
+    API_URL = URL + "/rest/bitly/shorten"
+    TOKEN = config.get("Bugzilla", "token", "")
+
+    def __init__(self, url, url_data=None, url_handler=None, **kwargs):
+        """Constructor
+
+        Args:
+            url (List[str]): the url to shorten
+            url_handler (Optional[function]): the handler to use with each retrieved url
+            url_data (Optional): the data to use with the url handler
+        """
+        self.url_handler = Handler.get(url_handler, url_data)
+
+        params = {
+            "url": url,
+        }
+
+        super(BugzillaShorten, self).__init__(
+            BugzillaShorten.URL,
+            Query(BugzillaShorten.API_URL, params, self.__urls_cb),
+            **kwargs
+        )
+
+    def get_header(self):
+        header = super(BugzillaShorten, self).get_header()
+        header["X-Bugzilla-API-Key"] = self.get_apikey()
+        return header
+
+    def __urls_cb(self, res):
+        if not self.url_handler.isactive():
+            return
+
+        self.url_handler.handle(res["url"])

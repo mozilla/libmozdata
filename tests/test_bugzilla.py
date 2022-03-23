@@ -1184,6 +1184,36 @@ class Product(MockTestCase):
         self.assertEqual(product["id"], 30)
 
 
+class Shorten(MockTestCase):
+
+    mock_urls = [bugzilla.BugzillaShorten.URL]
+
+    def __init__(self, a):
+        tok = os.environ.get("API_KEY_BUGZILLA")
+        if tok:
+            bugzilla.Shorten.TOKEN = tok
+        super(Shorten, self).__init__(a)
+
+    @responses.activate
+    def test_get_url(self):
+        urls = []
+        url_data = []
+
+        def url_handler(u, data):
+            urls.append(u)
+            data.append(u)
+
+        bugzilla.BugzillaShorten(
+            url="https://bugzilla.mozilla.org/buglist.cgi?quicksearch=TEST",
+            url_handler=url_handler,
+            url_data=url_data,
+        ).wait()
+
+        self.assertEqual(len(url_data), 1)
+        self.assertEqual(url_data[0], "https://mzl.la/3tvuS0m")
+        self.assertEqual(url_data, urls)
+
+
 class BugLinksTest(unittest.TestCase):
     def test_bugid(self):
         self.assertEqual(
