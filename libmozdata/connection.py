@@ -51,6 +51,7 @@ class Connection(object):
     TIMEOUT = 30
     MAX_RETRIES = 256
     MAX_WORKERS = multiprocessing.cpu_count()
+    RAISE_ERROR = True
     CHUNK_SIZE = 32
     TOKEN = ""
     USER_AGENT = config.get("User-Agent", "name", "libmozdata")
@@ -94,8 +95,6 @@ class Connection(object):
                 )
             if "raise_error" in kwargs:
                 self.RAISE_ERROR = kwargs["raise_error"]
-        else:
-            self.RAISE_ERROR = False
 
         self.exec_queries()
 
