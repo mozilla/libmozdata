@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 
 import pytz
 import responses
+from requests.exceptions import HTTPError
 
 from libmozdata import patchanalysis, utils, versions
 from libmozdata.bugzilla import Bugzilla
@@ -406,13 +407,15 @@ class PatchAnalysisTest(MockTestCase):
         # No landed patches.
         # The author of the patch changed his email on Bugzilla, so past contributions
         # are hard to find.
-        info = patchanalysis.bug_analysis(1007402)
-        self.assertEqual(info["backout_num"], 0)
-        self.assertEqual(info["blocks"], 1)
-        self.assertEqual(info["depends_on"], 0)
-        self.assertEqual(info["comments"], 41)
-        self.assertEqual(info["r-ed_patches"], 1)
-        self.assertEqualPatches(info["patches"], 1007402)
+        with self.assertRaises(HTTPError) as exc:
+            info = patchanalysis.bug_analysis(1007402)
+            self.assertEqual(info["backout_num"], 0)
+            self.assertEqual(info["blocks"], 1)
+            self.assertEqual(info["depends_on"], 0)
+            self.assertEqual(info["comments"], 41)
+            self.assertEqual(info["r-ed_patches"], 1)
+            self.assertEqualPatches(info["patches"], 1007402)
+        self.assertEqual(exc.exception.response.status_code, 500)
 
         # No link between Bugzilla account and Mercurial author.
         # Reviewer uses different email on Bugzilla and Mercurial.
@@ -588,9 +591,11 @@ class PatchAnalysisTest(MockTestCase):
         info = patchanalysis.bug_analysis(680802)
 
         # A comment contains a non-existing revision.
-        with warnings.catch_warnings(record=True) as w:
-            info = patchanalysis.bug_analysis(1156913)
-            self.assertWarnings(w, ["Revision fa8854bd0029 doesn't exist."])
+        with self.assertRaises(HTTPError) as exc:
+            with warnings.catch_warnings(record=True) as w:
+                info = patchanalysis.bug_analysis(1156913)
+                self.assertWarnings(w, ["Revision fa8854bd0029 doesn't exist."])
+        self.assertEqual(exc.exception.response.status_code, 404)
 
         # Author in mercurial doesn't use the same format as usual ("Full Name email" instead of "Full Name <email>").
         info = patchanalysis.bug_analysis(1277522)
