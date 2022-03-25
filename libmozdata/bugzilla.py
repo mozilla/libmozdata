@@ -547,10 +547,11 @@ class Bugzilla(Connection):
             sess: session
             res: result
         """
-        res.raise_for_status()
         if res.status_code == 200:
             for bug in res.json()["bugs"]:
                 self.bughandler.handle(bug)
+        elif self.RAISE_ERROR:
+            res.raise_for_status()
 
     def __get_bugs(self):
         """Get the bugs"""
@@ -640,6 +641,8 @@ class Bugzilla(Connection):
             if res.status_code == 200:
                 for bug in res.json()["bugs"]:
                     _list.add(bug["id"])
+            elif self.RAISE_ERROR:
+                res.raise_for_status()
 
         results = []
         url = Bugzilla.API_URL + "?"
@@ -672,6 +675,8 @@ class Bugzilla(Connection):
             if "bugs" in json and json["bugs"]:
                 for h in json["bugs"]:
                     self.historyhandler.handle(h)
+        elif self.RAISE_ERROR:
+            res.raise_for_status()
 
     def __get_history(self):
         """Get the bug history"""
@@ -712,6 +717,8 @@ class Bugzilla(Connection):
                         if isinstance(key, six.string_types) and key.isdigit():
                             comments = bugs[key]
                             self.commenthandler.handle(comments, key)
+        elif self.RAISE_ERROR:
+            res.raise_for_status()
 
     def __get_comment(self):
         """Get the bug comment"""
@@ -755,6 +762,8 @@ class Bugzilla(Connection):
                         if isinstance(key, six.string_types) and key.isdigit():
                             attachments = bugs[key]
                             self.attachmenthandler.handle(attachments, key)
+        elif self.RAISE_ERROR:
+            res.raise_for_status()
 
     def __attachment_cb(self, res, *args, **kwargs):
         """Callback for bug attachment
@@ -768,6 +777,8 @@ class Bugzilla(Connection):
             attachments = json.get("attachments")
             if attachments:
                 self.attachmenthandler.handle(list(attachments.values()))
+        elif self.RAISE_ERROR:
+            res.raise_for_status()
 
     def __get_attachment(self):
         """Get the bug attachment"""
