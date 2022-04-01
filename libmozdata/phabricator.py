@@ -666,6 +666,19 @@ class PhabricatorAPI(object):
         assert "result" in data
         return data["result"]
 
+    def request_all_pages(self, path, **payload):
+        """
+        Send requests to Phabricator API and create a generator to return data from all pages.
+        The limit in the API is 100 results per request. This function will return all results.
+        """
+        next = True
+        while next:
+            result = self.request(path, **payload)
+            for row in result["data"]:
+                yield row
+
+            payload["after"] = next = result["cursor"]["after"]
+
     def load_patches_stack(self, diff_id, diff=None):
         """
         Load a stack of patches with related commits, to reach a given Phabricator Diff

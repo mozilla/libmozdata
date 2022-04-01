@@ -18,6 +18,9 @@ token =
 URL = https://bugzilla.mozilla.org
 token =
 
+[Phabricator]
+token =
+
 [Allizgub]
 URL = https://bugzilla-dev.allizom.org
 token =
