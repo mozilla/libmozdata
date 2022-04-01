@@ -3,7 +3,6 @@ import unittest
 
 from libmozdata import config
 from libmozdata.phabricator import PhabricatorAPI, PhabricatorPatch
-from tests.auto_mock import MockTestCase
 
 
 class PhabricatorTest(unittest.TestCase):
