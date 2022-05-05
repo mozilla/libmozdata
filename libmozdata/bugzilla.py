@@ -846,20 +846,25 @@ class BugzillaUser(Connection):
             if isinstance(user_names, six.string_types) or isinstance(user_names, int):
                 user_names = [user_names]
 
-            params = {
-                "include_fields": include_fields,
-                "names": [
-                    user_name
-                    for user_name in user_names
-                    if isinstance(user_name, six.string_types)
-                    and not user_name.isdigit()
-                ],
-                "ids": [
-                    str(user_id)
-                    for user_id in user_names
-                    if isinstance(user_id, int) or user_id.isdigit()
-                ],
-            }
+            params = [
+                {
+                    "include_fields": include_fields,
+                    "names": [
+                        user_name
+                        for user_name in user_names
+                        if isinstance(user_name, six.string_types)
+                        and not user_name.isdigit()
+                    ],
+                    "ids": [
+                        str(user_id)
+                        for user_id in user_names
+                        if isinstance(user_id, int) or user_id.isdigit()
+                    ],
+                }
+                for user_names in self.chunks(
+                    user_names, chunk_size=Bugzilla.BUGZILLA_CHUNK_SIZE
+                )
+            ]
 
             super(BugzillaUser, self).__init__(
                 BugzillaUser.URL,
