@@ -1176,7 +1176,7 @@ class Product(MockTestCase):
             product.update(u)
 
         bugzilla.BugzillaProduct(
-            search_strings="names=Toolkit", product_handler=product_handler
+            {"names": "Toolkit"}, product_handler=product_handler
         ).wait()
 
         self.assertEqual(product["name"], "Toolkit")

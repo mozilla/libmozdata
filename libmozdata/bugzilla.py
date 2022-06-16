@@ -914,7 +914,6 @@ class BugzillaProduct(Connection):
         self,
         product_names=None,
         product_types=None,
-        search_strings=None,
         include_fields="_default",
         product_handler=None,
         product_data=None,
@@ -925,88 +924,63 @@ class BugzillaProduct(Connection):
         Args:
             product_names (List[str]): search query or list of product names or IDs
             product_types (List[str]): list of the group of products to return
-            search_strings (List[str]): list of search strings
             include_fields (List[str]): list of include fields
             product_handler (Optional[function]): the handler to use with each retrieved product
             product_data (Optional): the data to use with the product handler
         """
         self.product_handler = Handler.get(product_handler, product_data)
 
-        if product_names is not None:
+        if isinstance(product_names, dict):
+            if include_fields or product_types:
+                params = product_names.copy()
+            else:
+                params = product_names
+
+            if include_fields:
+                if isinstance(include_fields, six.string_types):
+                    include_fields = [include_fields]
+                if isinstance(params.get("include_fields"), six.string_types):
+                    params["include_fields"] = [params["include_fields"]]
+
+                if "include_fields" in params:
+                    params["include_fields"] = list(
+                        set(params["include_fields"]).union(include_fields)
+                    )
+                else:
+                    params["include_fields"] = include_fields
+
+            if product_types:
+                if isinstance(product_types, six.string_types):
+                    product_types = [product_types]
+                if isinstance(params.get("type"), six.string_types):
+                    params["type"] = [params["type"]]
+
+                if "type" in params:
+                    params["type"] = list(set(params["type"]).union(product_types))
+                else:
+                    params["type"] = product_types
+
+        elif product_names is not None:
             if isinstance(product_names, six.string_types) or isinstance(
                 product_names, int
             ):
                 product_names = [product_names]
 
-            if isinstance(product_names, dict):
-                if include_fields or product_types:
-                    params = product_names.copy()
-                else:
-                    params = product_names
-
-                if include_fields:
-                    if isinstance(include_fields, six.string_types):
-                        include_fields = [include_fields]
-                    if isinstance(params.get("include_fields"), six.string_types):
-                        params["include_fields"] = [params["include_fields"]]
-
-                    if "include_fields" in params:
-                        params["include_fields"] = list(
-                            set(params["include_fields"]).union(include_fields)
-                        )
-                    else:
-                        params["include_fields"] = include_fields
-
-                if product_types:
-                    if isinstance(product_types, six.string_types):
-                        product_types = [product_types]
-                    if isinstance(params.get("type"), six.string_types):
-                        params["type"] = [params["type"]]
-
-                    if "type" in params:
-                        params["type"] = list(set(params["type"]).union(product_types))
-                    else:
-                        params["type"] = product_types
-
-            else:
-                params = {
-                    "include_fields": include_fields,
-                    "type": product_types,
-                    "names": [
-                        product_name
-                        for product_name in product_names
-                        if isinstance(product_name, six.string_types)
-                        and not product_name.isdigit()
-                    ],
-                    "ids": [
-                        str(product_id)
-                        for product_id in product_names
-                        if isinstance(product_id, int) or product_id.isdigit()
-                    ],
-                }
-
-            super(BugzillaProduct, self).__init__(
-                BugzillaProduct.URL,
-                Query(BugzillaProduct.API_URL, params, self.__products_cb),
-                **kwargs
-            )
-
-        elif search_strings is not None:
-            if isinstance(search_strings, six.string_types):
-                search_strings = [search_strings]
-
-            queries = []
-            for search_string in search_strings:
-                queries.append(
-                    Query(
-                        BugzillaProduct.API_URL + "?" + search_string,
-                        handler=self.__products_cb,
-                    )
-                )
-
-            super(BugzillaProduct, self).__init__(
-                BugzillaProduct.URL, queries, **kwargs
-            )
+            params = {
+                "include_fields": include_fields,
+                "type": product_types,
+                "names": [
+                    product_name
+                    for product_name in product_names
+                    if isinstance(product_name, six.string_types)
+                    and not product_name.isdigit()
+                ],
+                "ids": [
+                    str(product_id)
+                    for product_id in product_names
+                    if isinstance(product_id, int) or product_id.isdigit()
+                ],
+            }
 
         elif product_types is not None:
             params = {
@@ -1014,11 +988,16 @@ class BugzillaProduct(Connection):
                 "type": product_types,
             }
 
-            super(BugzillaProduct, self).__init__(
-                BugzillaProduct.URL,
-                Query(BugzillaProduct.API_URL, params, self.__products_cb),
-                **kwargs
+        else:
+            raise Exception(
+                "Should set one of the following: product_names or product_types"
             )
+
+        super(BugzillaProduct, self).__init__(
+            BugzillaProduct.URL,
+            Query(BugzillaProduct.API_URL, params, self.__products_cb),
+            **kwargs
+        )
 
     def get_header(self):
         header = super(BugzillaProduct, self).get_header()
