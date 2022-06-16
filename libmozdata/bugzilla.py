@@ -923,7 +923,7 @@ class BugzillaProduct(Connection):
         """Constructor
 
         Args:
-            product_names (List[str]): list of product names or IDs
+            product_names (List[str]): search query or list of product names or IDs
             product_types (List[str]): list of the group of products to return
             search_strings (List[str]): list of search strings
             include_fields (List[str]): list of include fields
@@ -938,27 +938,59 @@ class BugzillaProduct(Connection):
             ):
                 product_names = [product_names]
 
-            params = {
-                "include_fields": include_fields,
-                "type": product_types,
-                "names": [
-                    product_name
-                    for product_name in product_names
-                    if isinstance(product_name, six.string_types)
-                    and not product_name.isdigit()
-                ],
-                "ids": [
-                    str(product_id)
-                    for product_id in product_names
-                    if isinstance(product_id, int) or product_id.isdigit()
-                ],
-            }
+            if isinstance(product_names, dict):
+                if include_fields or product_types:
+                    params = product_names.copy()
+                else:
+                    params = product_names
+
+                if include_fields:
+                    if isinstance(include_fields, six.string_types):
+                        include_fields = [include_fields]
+                    if isinstance(params.get("include_fields"), six.string_types):
+                        params["include_fields"] = [params["include_fields"]]
+
+                    if "include_fields" in params:
+                        params["include_fields"] = list(
+                            set(params["include_fields"]).union(include_fields)
+                        )
+                    else:
+                        params["include_fields"] = include_fields
+
+                if product_types:
+                    if isinstance(product_types, six.string_types):
+                        product_types = [product_types]
+                    if isinstance(params.get("type"), six.string_types):
+                        params["type"] = [params["type"]]
+
+                    if "type" in params:
+                        params["type"] = list(set(params["type"]).union(product_types))
+                    else:
+                        params["type"] = product_types
+
+            else:
+                params = {
+                    "include_fields": include_fields,
+                    "type": product_types,
+                    "names": [
+                        product_name
+                        for product_name in product_names
+                        if isinstance(product_name, six.string_types)
+                        and not product_name.isdigit()
+                    ],
+                    "ids": [
+                        str(product_id)
+                        for product_id in product_names
+                        if isinstance(product_id, int) or product_id.isdigit()
+                    ],
+                }
 
             super(BugzillaProduct, self).__init__(
                 BugzillaProduct.URL,
                 Query(BugzillaProduct.API_URL, params, self.__products_cb),
                 **kwargs
             )
+
         elif search_strings is not None:
             if isinstance(search_strings, six.string_types):
                 search_strings = [search_strings]
@@ -974,6 +1006,18 @@ class BugzillaProduct(Connection):
 
             super(BugzillaProduct, self).__init__(
                 BugzillaProduct.URL, queries, **kwargs
+            )
+
+        elif product_types is not None:
+            params = {
+                "include_fields": include_fields,
+                "type": product_types,
+            }
+
+            super(BugzillaProduct, self).__init__(
+                BugzillaProduct.URL,
+                Query(BugzillaProduct.API_URL, params, self.__products_cb),
+                **kwargs
             )
 
     def get_header(self):
