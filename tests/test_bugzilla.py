@@ -1117,6 +1117,26 @@ class Product(MockTestCase):
         self.assertEqual(product["is_active"], True)
 
     @responses.activate
+    def test_get_product_types(self):
+        products = {}
+
+        def product_handler(product):
+            products[product["id"]] = product
+
+        bugzilla.BugzillaProduct(
+            product_types="accessible",
+            include_fields=["id", "name", "is_active"],
+            product_handler=product_handler,
+        ).wait()
+
+        self.assertGreater(len(products), 100)
+        self.assertIn(30, products)
+        product = products[30]
+        self.assertEqual(len(product), 3)
+        self.assertEqual(product["name"], "Toolkit")
+        self.assertEqual(product["is_active"], True)
+
+    @responses.activate
     def test_get_products(self):
         product = {"first": {}, "second": {}}
 
@@ -1176,7 +1196,7 @@ class Product(MockTestCase):
             product.update(u)
 
         bugzilla.BugzillaProduct(
-            search_strings="names=Toolkit", product_handler=product_handler
+            {"names": "Toolkit"}, product_handler=product_handler
         ).wait()
 
         self.assertEqual(product["name"], "Toolkit")
