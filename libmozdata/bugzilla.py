@@ -937,12 +937,12 @@ class BugzillaProduct(Connection):
                 params = product_names
 
             if include_fields:
-                if isinstance(include_fields, six.string_types):
-                    include_fields = [include_fields]
-                if isinstance(params.get("include_fields"), six.string_types):
-                    params["include_fields"] = [params["include_fields"]]
-
                 if "include_fields" in params:
+                    if isinstance(include_fields, six.string_types):
+                        include_fields = [include_fields]
+                    if isinstance(params.get("include_fields"), six.string_types):
+                        params["include_fields"] = [params["include_fields"]]
+
                     params["include_fields"] = list(
                         set(params["include_fields"]).union(include_fields)
                     )
@@ -950,12 +950,12 @@ class BugzillaProduct(Connection):
                     params["include_fields"] = include_fields
 
             if product_types:
-                if isinstance(product_types, six.string_types):
-                    product_types = [product_types]
-                if isinstance(params.get("type"), six.string_types):
-                    params["type"] = [params["type"]]
-
                 if "type" in params:
+                    if isinstance(product_types, six.string_types):
+                        product_types = [product_types]
+                    if isinstance(params.get("type"), six.string_types):
+                        params["type"] = [params["type"]]
+
                     params["type"] = list(set(params["type"]).union(product_types))
                 else:
                     params["type"] = product_types
