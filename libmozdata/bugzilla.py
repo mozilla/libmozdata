@@ -42,7 +42,7 @@ class Bugzilla(Connection):
         attachmentdata=None,
         attachment_include_fields=None,
         queries=None,
-        **kwargs
+        **kwargs,
     ):
         """Constructor
 
@@ -829,7 +829,7 @@ class BugzillaUser(Connection):
         include_fields="_default",
         user_handler=None,
         user_data=None,
-        **kwargs
+        **kwargs,
     ):
         """Constructor
 
@@ -869,7 +869,7 @@ class BugzillaUser(Connection):
             super(BugzillaUser, self).__init__(
                 BugzillaUser.URL,
                 Query(BugzillaUser.API_URL, params, self.__users_cb),
-                **kwargs
+                **kwargs,
             )
         elif search_strings is not None:
             if isinstance(search_strings, six.string_types):
@@ -917,7 +917,7 @@ class BugzillaProduct(Connection):
         include_fields="_default",
         product_handler=None,
         product_data=None,
-        **kwargs
+        **kwargs,
     ):
         """Constructor
 
@@ -996,7 +996,7 @@ class BugzillaProduct(Connection):
         super(BugzillaProduct, self).__init__(
             BugzillaProduct.URL,
             Query(BugzillaProduct.API_URL, params, self.__products_cb),
-            **kwargs
+            **kwargs,
         )
 
     def get_header(self):
@@ -1038,7 +1038,7 @@ class BugzillaShorten(Connection):
         super(BugzillaShorten, self).__init__(
             BugzillaShorten.URL,
             Query(BugzillaShorten.API_URL, params, self.__urls_cb),
-            **kwargs
+            **kwargs,
         )
 
     def get_header(self):
