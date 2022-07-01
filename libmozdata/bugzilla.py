@@ -1051,3 +1051,61 @@ class BugzillaShorten(Connection):
             return
 
         self.url_handler.handle(res["url"])
+
+
+class BugzillaComponent(Connection):
+    """
+    Connection to bugzilla.mozilla.org
+    """
+
+    URL = config.get("Bugzilla", "URL", "https://bugzilla.mozilla.org")
+    API_URL = URL + "/rest/component"
+    TOKEN = config.get("Bugzilla", "token", "")
+
+    def __init__(
+        self, product, component, component_data=None, component_handler=None, **kwargs
+    ):
+        """Constructor
+
+        Args:
+            product (str): the product that the component belongs to
+            component (str): the name of the component
+            component_handler (Optional[function]): the handler to use with each retrieved component
+            component_data (Optional): the data to use with the component handler
+        """
+        self.component_handler = Handler.get(component_handler, component_data)
+
+        self.component_url = f"{BugzillaComponent.API_URL}/{product}/{component}"
+
+        super(BugzillaComponent, self).__init__(
+            BugzillaComponent.URL,
+            Query(
+                self.component_url,
+                None,
+                self.__urls_cb,
+            ),
+            **kwargs,
+        )
+
+    def get_header(self):
+        header = super(BugzillaComponent, self).get_header()
+        header["X-Bugzilla-API-Key"] = self.get_apikey()
+        return header
+
+    def __urls_cb(self, res):
+        if not self.component_handler.isactive():
+            return
+
+        self.component_handler.handle(res)
+
+    def put(self, data):
+        """Update a component
+
+        Args:
+            data (dict): a dictionary
+        """
+
+        response = requests.put(self.component_url, data, headers=self.get_header())
+        response.raise_for_status()
+
+        return response.json()

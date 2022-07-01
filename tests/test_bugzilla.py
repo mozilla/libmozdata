@@ -1234,6 +1234,50 @@ class Shorten(MockTestCase):
         self.assertEqual(url_data, urls)
 
 
+class Component(MockTestCase):
+
+    mock_urls = [bugzilla.BugzillaComponent.URL]
+
+    def __init__(self, a):
+        tok = os.environ.get("API_KEY_BUGZILLA")
+        if tok:
+            bugzilla.Component.TOKEN = tok
+        super(Component, self).__init__(a)
+
+    @responses.activate
+    def test_get_component(self):
+        components = []
+        component_data = []
+
+        def component_handler(u, data):
+            components.append(u)
+            data.append(u)
+
+        bugzilla.BugzillaComponent(
+            product="Core",
+            component="DOM: Selection",
+            component_handler=component_handler,
+            component_data=component_data,
+        ).wait()
+
+        target_component = {
+            "bug_description_template": "",
+            "default_assignee": "nobody@mozilla.org",
+            "default_bug_type": "--",
+            "default_qa_contact": "",
+            "description": 'This component includes bugs for selection handling from <a href="https://w3c.github.io/selection-api/">https://w3c.github.io/selection-api/</a>.',
+            "id": 122,
+            "is_active": True,
+            "name": "DOM: Selection",
+            "team_name": "DOM Core",
+            "triage_owner": "htsai@mozilla.com",
+        }
+
+        self.assertEqual(len(component_data), 1)
+        self.assertEqual(component_data[0], target_component)
+        self.assertEqual(component_data, components)
+
+
 class BugLinksTest(unittest.TestCase):
     def test_bugid(self):
         self.assertEqual(
