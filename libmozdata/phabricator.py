@@ -655,10 +655,10 @@ class PhabricatorAPI(object):
             self.url + path,
             data=urlencode({"params": json.dumps(payload), "output": "json"}),
         )
+        response.raise_for_status()
 
         # Check response
         data = response.json()
-        assert response.ok
         assert "error_code" in data
         ConduitError.raise_if_error(data)
 
