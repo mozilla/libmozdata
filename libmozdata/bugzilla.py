@@ -1105,7 +1105,9 @@ class BugzillaComponent(Connection):
             data (dict): a dictionary
         """
 
-        response = requests.put(self.component_url, data, headers=self.get_header())
+        response = requests.put(
+            self.component_url, json=data, headers=self.get_header()
+        )
         response.raise_for_status()
 
         return response.json()
