@@ -1074,15 +1074,17 @@ class BugzillaComponent(Connection):
             component_data (Optional): the data to use with the component handler
         """
         self.component_handler = Handler.get(component_handler, component_data)
-
-        self.component_url = f"{BugzillaComponent.API_URL}/{product}/{component}"
+        params = {
+            "product": product,
+            "component": component,
+        }
 
         super(BugzillaComponent, self).__init__(
             BugzillaComponent.URL,
             Query(
-                self.component_url,
-                None,
-                self.__urls_cb,
+                BugzillaComponent.API_URL,
+                params,
+                self.__components_cb,
             ),
             **kwargs,
         )
@@ -1092,7 +1094,7 @@ class BugzillaComponent(Connection):
         header["X-Bugzilla-API-Key"] = self.get_apikey()
         return header
 
-    def __urls_cb(self, res):
+    def __components_cb(self, res):
         if not self.component_handler.isactive():
             return
 
@@ -1105,8 +1107,14 @@ class BugzillaComponent(Connection):
             data (dict): a dictionary
         """
 
+        assert len(self.queries) == 1
+        query = self.queries[0]
+
         response = requests.put(
-            self.component_url, json=data, headers=self.get_header()
+            query.url,
+            params=query.params,
+            json=data,
+            headers=self.get_header(),
         )
         response.raise_for_status()
 

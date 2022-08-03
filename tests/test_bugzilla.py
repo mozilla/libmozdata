@@ -1246,6 +1246,11 @@ class Component(MockTestCase):
 
     @responses.activate
     def test_get_component(self):
+        target_component = {
+            "id": 1955,
+            "name": "Audio/Video: Recording",
+        }
+
         components = []
         component_data = []
 
@@ -1255,27 +1260,18 @@ class Component(MockTestCase):
 
         bugzilla.BugzillaComponent(
             product="Core",
-            component="DOM: Selection",
+            component=target_component["name"],
             component_handler=component_handler,
             component_data=component_data,
         ).wait()
 
-        target_component = {
-            "bug_description_template": "",
-            "default_assignee": "nobody@mozilla.org",
-            "default_bug_type": "--",
-            "default_qa_contact": "",
-            "description": 'This component includes bugs for selection handling from <a href="https://w3c.github.io/selection-api/">https://w3c.github.io/selection-api/</a>.',
-            "id": 122,
-            "is_active": True,
-            "name": "DOM: Selection",
-            "team_name": "DOM Core",
-            "triage_owner": "htsai@mozilla.com",
-        }
-
         self.assertEqual(len(component_data), 1)
-        self.assertEqual(component_data[0], target_component)
         self.assertEqual(component_data, components)
+
+        component = component_data[0]
+        for key, value in target_component.items():
+            self.assertIn(key, component)
+            self.assertEqual(component[key], value)
 
 
 class BugLinksTest(unittest.TestCase):
