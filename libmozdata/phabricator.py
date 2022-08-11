@@ -489,7 +489,7 @@ class PhabricatorAPI(object):
         assert isinstance(state, BuildState)
         return self.request(
             "harbormaster.sendmessage",
-            buildTargetPHID=build_target_phid,
+            receiver=build_target_phid,
             type=state.value,
             unit=unit,
             lint=lint,
