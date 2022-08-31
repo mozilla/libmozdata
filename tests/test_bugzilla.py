@@ -777,6 +777,33 @@ class User(MockTestCase):
         self.assertEqual(user, user_data)
 
     @responses.activate
+    def test_get_inavlid_users(self):
+        user_data = {}
+
+        def user_handler(u, data):
+            data.update({"valid": u})
+
+        def fault_user_handler(u, data):
+            data.update({"fault": u})
+
+        bugzilla.BugzillaUser(
+            user_names=["nobody@mozilla.org", "invalid@mozilla.org.tld"],
+            user_handler=user_handler,
+            fault_user_handler=fault_user_handler,
+            user_data=user_data,
+        ).wait()
+
+        self.assertIn("valid", user_data)
+        self.assertEqual(user_data["valid"]["name"], "nobody@mozilla.org")
+
+        self.assertIn("fault", user_data)
+        fault_user = user_data["fault"]
+        self.assertIn("message", fault_user)
+        self.assertIn("error", fault_user)
+        self.assertEqual(fault_user["name"], "invalid@mozilla.org.tld")
+        self.assertEqual(fault_user["error"], True)
+
+    @responses.activate
     def test_get_user_include_fields(self):
         user = {}
         user_data = {}

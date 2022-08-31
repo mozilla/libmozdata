@@ -828,6 +828,7 @@ class BugzillaUser(Connection):
         search_strings=None,
         include_fields="_default",
         user_handler=None,
+        fault_user_handler=None,
         user_data=None,
         **kwargs,
     ):
@@ -838,9 +839,12 @@ class BugzillaUser(Connection):
             search_strings (List[str]): list of search strings
             include_fields (List[str]): list of include fields
             user_handler (Optional[function]): the handler to use with each retrieved user
+            fault_user_handler (Optional[function]): the handler to use with
+                each user error (e.g. user not existed).
             user_data (Optional): the data to use with the user handler
         """
         self.user_handler = Handler.get(user_handler, user_data)
+        self.fault_user_handler = Handler.get(fault_user_handler, user_data)
 
         if user_names is not None:
             if isinstance(user_names, six.string_types) or isinstance(user_names, int):
@@ -860,6 +864,7 @@ class BugzillaUser(Connection):
                         for user_id in user_names
                         if isinstance(user_id, int) or user_id.isdigit()
                     ],
+                    "permissive": fault_user_handler is not None or None,
                 }
                 for user_names in self.chunks(
                     user_names, chunk_size=Bugzilla.BUGZILLA_CHUNK_SIZE
@@ -892,11 +897,13 @@ class BugzillaUser(Connection):
         return header
 
     def __users_cb(self, res):
-        if not self.user_handler.isactive():
-            return
+        if self.user_handler.isactive():
+            for user in res["users"]:
+                self.user_handler.handle(user)
 
-        for user in res["users"]:
-            self.user_handler.handle(user)
+        if self.fault_user_handler.isactive():
+            for user in res["faults"]:
+                self.fault_user_handler.handle(user)
 
 
 class BugzillaProduct(Connection):
