@@ -777,7 +777,7 @@ class User(MockTestCase):
         self.assertEqual(user, user_data)
 
     @responses.activate
-    def test_get_inavlid_users(self):
+    def test_get_invalid_users(self):
         user_data = {}
 
         def user_handler(u, data):
