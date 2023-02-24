@@ -156,25 +156,25 @@ class BZInfo(Bugzilla):
             owner = None
             changes = h["changes"]
             for change in changes:
-                nam = change["field_name"]
-                rem = change["removed"]
-                add = change["added"]
+                field = change["field_name"]
+                removed = change["removed"]
+                added = change["added"]
 
-                if nam == "status":
-                    if rem == "NEW" and add == "ASSIGNED":
+                if field == "status":
+                    if removed == "NEW" and added == "ASSIGNED":
                         owner = who
-                elif nam == "assigned_to":
-                    owner = add
-                elif nam == "flagtypes.name":
+                elif field == "assigned_to":
+                    owner = added
+                elif field == "flagtypes.name":
                     # Get the reviewers
-                    for m in self.review_pattern.finditer(add):
+                    for m in self.review_pattern.finditer(added):
                         if who in reviewers:
                             reviewers[who].add(m.group(1))
                         else:
                             reviewers[who] = set([m.group(1)])
 
                     # Get people pinged for feedback
-                    for m in self.feedback_pattern.finditer(add):
+                    for m in self.feedback_pattern.finditer(added):
                         if who in feedbacks:
                             feedbacks[who].add(m.group(1))
                         else:

@@ -8,7 +8,6 @@ from connection import Connection
 
 
 class FXRevision(Connection):
-
     ARCHIVES_URL = "http://archive.mozilla.org"
     NIGHTLY_URL = ARCHIVES_URL + "/pub/firefox/nightly/"
 

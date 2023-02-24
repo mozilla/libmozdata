@@ -160,7 +160,6 @@ class VersionsTest(unittest.TestCase):
         )
 
     def test_dual_esr(self):
-
         # Check esr & esr previous
         with self.setup_versions(
             nightly="55.0a1",
@@ -175,7 +174,6 @@ class VersionsTest(unittest.TestCase):
         )
 
     def test_unique_esr(self):
-
         # Check no esr previous is present
         with self.setup_versions(
             nightly="55.0a1", devel="54.0b6", stable="53.0.2", esr="52.1.1esr"

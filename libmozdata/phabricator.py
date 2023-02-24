@@ -252,7 +252,6 @@ class PhabricatorAPI(object):
         )
 
         def _clean(diff):
-
             # Make all fields easily accessible
             if "fields" in diff and isinstance(diff["fields"], dict):
                 diff.update(diff["fields"])
@@ -672,6 +671,7 @@ class PhabricatorAPI(object):
         without hitting a local mercurial repository
         If the full diff details are provided, they can be used directly in the stack
         """
+
         # Diff PHIDs from our patch to its base
         def add_patch(diff):
             # Build a nicer Diff instance with associated commit & patch
@@ -704,7 +704,6 @@ class PhabricatorAPI(object):
 
         parents = self.load_parents(diff["revisionPHID"])
         if parents:
-
             # Load all parent diffs
             for parent in parents:
                 logger.info("Loading parent diff {}".format(parent))

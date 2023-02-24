@@ -32,7 +32,6 @@ class MockTestCase(unittest.TestCase):
     mock_urls = []
 
     def setUp(self):
-
         # Setup mock callbacks
         for mock_url in self.mock_urls:
             url_re = re.compile(r"^{}".format(mock_url))
