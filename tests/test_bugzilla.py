@@ -13,7 +13,6 @@ from tests.auto_mock import MockTestCase
 
 
 class BugIDTest(MockTestCase):
-
     mock_urls = [bugzilla.Bugzilla.URL]
 
     @responses.activate
@@ -282,7 +281,6 @@ class BugIDTest(MockTestCase):
 
 
 class BugCommentHistoryTest(MockTestCase):
-
     mock_urls = [bugzilla.Bugzilla.URL]
 
     @responses.activate
@@ -577,7 +575,6 @@ class BugCommentHistoryTest(MockTestCase):
 
 
 class BugAttachmentTest(MockTestCase):
-
     mock_urls = [bugzilla.Bugzilla.URL]
 
     @responses.activate
@@ -724,7 +721,6 @@ class BugAttachmentTest(MockTestCase):
 
 
 class BugDuplicateTest(MockTestCase):
-
     mock_urls = [bugzilla.Bugzilla.URL]
 
     @responses.activate
@@ -747,7 +743,6 @@ class BugDuplicateTest(MockTestCase):
 
 
 class User(MockTestCase):
-
     mock_urls = [bugzilla.BugzillaUser.URL]
 
     def __init__(self, a):
@@ -1022,7 +1017,6 @@ class User(MockTestCase):
 
 
 class Product(MockTestCase):
-
     mock_urls = [bugzilla.BugzillaProduct.URL]
 
     def __init__(self, a):
@@ -1232,7 +1226,6 @@ class Product(MockTestCase):
 
 
 class Shorten(MockTestCase):
-
     mock_urls = [bugzilla.BugzillaShorten.URL]
 
     def __init__(self, a):
@@ -1262,7 +1255,6 @@ class Shorten(MockTestCase):
 
 
 class Component(MockTestCase):
-
     mock_urls = [bugzilla.BugzillaComponent.URL]
 
     def __init__(self, a):
