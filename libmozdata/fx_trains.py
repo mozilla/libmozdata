@@ -8,10 +8,10 @@ import requests
 class FirefoxTrains:
     """Firefox Trains
 
-    Documentations: https://fx-trains.herokuapp.com/about
+    Documentations: https://whattrainisitnow.com/about
     """
 
-    URL = "https://fx-trains.herokuapp.com/api/"
+    URL = "https://whattrainisitnow.com/api/"
 
     def __get(self, path):
         resp = requests.get(self.URL + path, timeout=10)
