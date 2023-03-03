@@ -300,6 +300,16 @@ class PhabricatorAPI(object):
             raise PhabricatorRevisionNotFoundException()
         return data[0]
 
+    def edit_revision(self, revision_id, transactions):
+        """
+        Edit a differential revision
+        """
+        return self.request(
+            "differential.revision.edit",
+            objectIdentifier=revision_id,
+            transactions=transactions,
+        )
+
     def list_repositories(self):
         """
         List available repositories
