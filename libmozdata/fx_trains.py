@@ -12,9 +12,10 @@ class FirefoxTrains:
     """
 
     URL = "https://whattrainisitnow.com/api/"
+    TIMEOUT = 30
 
     def __get(self, path):
-        resp = requests.get(self.URL + path, timeout=10)
+        resp = requests.get(self.URL + path, timeout=self.TIMEOUT)
         resp.raise_for_status()
         return resp.json()
 
