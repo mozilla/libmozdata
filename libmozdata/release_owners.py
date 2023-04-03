@@ -14,7 +14,7 @@ _OWNERS = None
 def _get_sub_versions(s):
     s = s.strip()
     s = s.split(".")
-    return [int(v.split(" ")[0]) for v in s]
+    return [int(v.split(" ", 1)[0]) for v in s]
 
 
 def get_versions(s):
