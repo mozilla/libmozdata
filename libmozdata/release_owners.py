@@ -5,11 +5,26 @@
 import requests
 
 from . import utils
-from .release_calendar import get_versions
 from .wiki_parser import InvalidWiki, WikiParser
 
 OWNERS_URL = "https://wiki.mozilla.org/Release_Management/Release_owners"
 _OWNERS = None
+
+
+def _get_sub_versions(s):
+    s = s.strip()
+    s = s.split(".")
+    return [int(v.split(" ")[0]) for v in s]
+
+
+def get_versions(s):
+    fx = "Firefox "
+    if not s.startswith(fx):
+        raise InvalidWiki('Invalid version format, expect: "Firefox ..."')
+    N = len(fx)
+    version = s[N:]
+    versions = version.split(";")
+    return [_get_sub_versions(v) for v in versions]
 
 
 def _get_list_people(s):
