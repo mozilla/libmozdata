@@ -5,7 +5,6 @@
 
 import collections
 import enum
-import functools
 import json
 import logging
 from urllib.parse import urlencode, urlparse
@@ -44,14 +43,6 @@ class ArtifactType(enum.Enum):
     WorkingCopy = "working-copy"
     File = "file"
     Uri = "uri"
-
-
-@functools.lru_cache(maxsize=2048)
-def revision_exists_on_central(revision):
-    url = HGMO_JSON_REV_URL_TEMPLATE.format(revision)
-    resp = requests.get(url)
-    resp.raise_for_status()
-    return resp.ok
 
 
 def revision_available(repo, revision):
