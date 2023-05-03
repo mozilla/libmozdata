@@ -4,7 +4,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import requests
+
 from . import config
+
 
 class LandoWarnings(object):
     """
@@ -25,7 +27,10 @@ class LandoWarnings(object):
 
             response = requests.delete(
                 f"{self.api_url}/{warning_id}",
-                headers={"X-Phabricator-API-Key": self.api_key, "User-Agent": self.USER_AGENT},
+                headers={
+                    "X-Phabricator-API-Key": self.api_key,
+                    "User-Agent": self.USER_AGENT,
+                },
             )
 
             if response.status_code != 200:
@@ -43,7 +48,10 @@ class LandoWarnings(object):
                 "group": "LINT",
                 "data": {"message": warning},
             },
-            headers={"X-Phabricator-API-Key": self.api_key, "User-Agent": self.USER_AGENT},
+            headers={
+                "X-Phabricator-API-Key": self.api_key,
+                "User-Agent": self.USER_AGENT,
+            },
         )
         if response.status_code != 201:
             raise Exception(
@@ -61,7 +69,10 @@ class LandoWarnings(object):
                 "diff_id": diff_id,
                 "group": "LINT",
             },
-            headers={"X-Phabricator-API-Key": self.api_key, "User-Agent": self.USER_AGENT},
+            headers={
+                "X-Phabricator-API-Key": self.api_key,
+                "User-Agent": self.USER_AGENT,
+            },
         )
         if response.status_code != 200:
             raise Exception(
