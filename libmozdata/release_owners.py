@@ -48,6 +48,7 @@ def get_owners():
             "Secondary",
             "Engineering REO",
             "Release Duty",
+            "QA Owner",
             "Corresponding ESR",
             "Release Date",
         ] != table[0]:
@@ -57,7 +58,7 @@ def get_owners():
         for row in table[1:]:
             try:
                 # sometimes the date is 2019-XX-XX (when the date is not known)
-                release_date = utils.get_date_ymd(row[6])
+                release_date = utils.get_date_ymd(row[7])
             except (AssertionError, ValueError):
                 continue
 
@@ -68,7 +69,8 @@ def get_owners():
                     "secondary": row[2],
                     "engineering reo": row[3],
                     "release duty": _get_list_people(row[4]),
-                    "corresponding esr": row[5],
+                    "qa owner": row[5],
+                    "corresponding esr": row[6],
                     "release date": release_date,
                 }
             )
