@@ -13,6 +13,8 @@ from urllib.parse import urlencode, urlparse
 import hglib
 import requests
 
+from . import config
+
 HGMO_JSON_REV_URL_TEMPLATE = "https://hg.mozilla.org/mozilla-central/json-rev/{}"
 MOZILLA_PHABRICATOR_PROD = "https://phabricator.services.mozilla.com/api/"
 
@@ -215,6 +217,7 @@ class PhabricatorAPI(object):
     """
 
     def __init__(self, api_key, url=MOZILLA_PHABRICATOR_PROD):
+        self.USER_AGENT = config.get("User-Agent", "name", "libmozdata")
         self.api_key = api_key
         self.url = url
         assert self.url.endswith("/api/"), "Phabricator API must end with /api/"
@@ -227,6 +230,10 @@ class PhabricatorAPI(object):
     def hostname(self):
         parts = urlparse(self.url)
         return parts.netloc
+
+    def get_header(self):
+        """Get the header to use each query"""
+        return {"User-Agent": self.USER_AGENT}
 
     def search_diffs(
         self,
@@ -662,6 +669,7 @@ class PhabricatorAPI(object):
         # Run POST request on api
         response = requests.post(
             self.url + path,
+            headers=self.get_header(),
             data=urlencode({"params": json.dumps(payload), "output": "json"}),
         )
         response.raise_for_status()
