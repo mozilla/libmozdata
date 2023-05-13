@@ -6,6 +6,7 @@ import os
 import unittest
 
 import responses
+from requests import HTTPError
 
 from libmozdata import bugzilla, handler
 from libmozdata.connection import Query
@@ -1252,6 +1253,27 @@ class Shorten(MockTestCase):
         self.assertEqual(len(url_data), 1)
         self.assertEqual(url_data[0], "https://mzl.la/3tvuS0m")
         self.assertEqual(url_data, urls)
+
+    @responses.activate
+    def test_extremely_long_url(self):
+        url = "https://bugzilla.mozilla.org/buglist.cgi?bug_id=" + ",".join(
+            str(1800000 + i) for i in range(1100)
+        )
+
+        # The goal here is to reproduce https://github.com/mozilla/libmozdata/issues/227
+        assert 8600 < len(url) < 12000
+
+        req = bugzilla.BugzillaShorten(
+            url=url,
+            url_handler=lambda u, data: None,
+            url_data=[],
+        )
+
+        try:
+            req.wait()
+        except HTTPError:
+            # We should not get other type of exceptions
+            pass
 
 
 class Component(MockTestCase):
