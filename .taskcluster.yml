@@ -45,6 +45,7 @@ tasks:
     - $if: >
         (tasks_for == "github-pull-request" && event.action in ["opened", "reopened", "synchronize"])
         || (tasks_for == "github-push" && event["ref"] == "refs/heads/master")
+        || tag != "latest"
       then:
         taskId: { $eval: as_slugid("lint_and_tests_task") }
         provisionerId: proj-relman
