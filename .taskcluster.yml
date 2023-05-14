@@ -42,35 +42,39 @@ tasks:
 
     taskboot_image: "mozilla/taskboot:0.2.2"
   in:
-    - taskId: { $eval: as_slugid("lint_and_tests_task") }
-      provisionerId: proj-relman
-      workerType: ci
-      created: { $fromNow: "" }
-      deadline: { $fromNow: "1 hour" }
-      payload:
-        maxRunTime: 3600
-        image: python:3.9
-        env:
-          CODECOV_TOKEN: 2074f917-03ff-4f90-bafd-1fb186e42216
-        command:
-          - "/bin/bash"
-          - "-lcx"
-          - "git clone --quiet ${repository} &&
-            cd libmozdata &&
-            git -c advice.detachedHead=false checkout ${head_rev} &&
-            pip install --disable-pip-version-check --no-cache-dir --progress-bar off -r requirements.txt &&
-            pip install --disable-pip-version-check --no-cache-dir --progress-bar off -r test-requirements.txt &&
-            pre-commit run -a --show-diff-on-failure &&
-            coverage run --source=libmozdata -m unittest discover tests/ --verbose &&
-            python -m coverage run setup.py sdist &&
-            pip install dist/libmozdata-$(cat VERSION).tar.gz &&
-            bash <(curl -s https://codecov.io/bash)
-            "
-      metadata:
-        name: libmozdata lint and tests
-        description: libmozdata lint and tests
-        owner: mcastelluccio@mozilla.com
-        source: https://github.com/mozilla/libmozdata
+    - $if: >
+        (tasks_for == "github-pull-request" && event.action in ["opened", "reopened", "synchronize"])
+        || (tasks_for == "github-push" && event["ref"] == "refs/heads/master")
+      then:
+        taskId: { $eval: as_slugid("lint_and_tests_task") }
+        provisionerId: proj-relman
+        workerType: ci
+        created: { $fromNow: "" }
+        deadline: { $fromNow: "1 hour" }
+        payload:
+          maxRunTime: 3600
+          image: python:3.9
+          env:
+            CODECOV_TOKEN: 2074f917-03ff-4f90-bafd-1fb186e42216
+          command:
+            - "/bin/bash"
+            - "-lcx"
+            - "git clone --quiet ${repository} &&
+              cd libmozdata &&
+              git -c advice.detachedHead=false checkout ${head_rev} &&
+              pip install --disable-pip-version-check --no-cache-dir --progress-bar off -r requirements.txt &&
+              pip install --disable-pip-version-check --no-cache-dir --progress-bar off -r test-requirements.txt &&
+              pre-commit run -a --show-diff-on-failure &&
+              coverage run --source=libmozdata -m unittest discover tests/ --verbose &&
+              python -m coverage run setup.py sdist &&
+              pip install dist/libmozdata-$(cat VERSION).tar.gz &&
+              bash <(curl -s https://codecov.io/bash)
+              "
+        metadata:
+          name: libmozdata lint and tests
+          description: libmozdata lint and tests
+          owner: mcastelluccio@mozilla.com
+          source: https://github.com/mozilla/libmozdata
 
     - $if: 'tag != "latest"'
       then:
