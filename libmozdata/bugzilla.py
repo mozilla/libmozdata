@@ -7,6 +7,7 @@ import re
 
 import requests
 import six
+from requests import HTTPError
 
 import libmozdata.versions
 
@@ -1055,6 +1056,14 @@ class BugzillaShorten(Connection):
 
     def __urls_cb(self, res):
         if not self.url_handler.isactive():
+            return
+
+        if not isinstance(res, dict):
+            # This is a workaround to handle cases where Bugzilla returns 200
+            # response with HTML content instead of 4xx error.
+            # See https://github.com/mozilla/libmozdata/issues/227
+            if self.RAISE_ERROR:
+                raise HTTPError("The response is not a valid JSON")
             return
 
         self.url_handler.handle(res["url"])
