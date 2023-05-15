@@ -44,7 +44,7 @@ tasks:
   in:
     - $if: >
         (tasks_for == "github-pull-request" && event.action in ["opened", "reopened", "synchronize"])
-        || (tasks_for == "github-push" && event["ref"] == "refs/heads/master")
+        || (tasks_for == "github-push" && event["ref"][:22] != "refs/heads/dependabot/")
         || tag != "latest"
       then:
         taskId: { $eval: as_slugid("lint_and_tests_task") }
