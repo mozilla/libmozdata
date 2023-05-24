@@ -16,9 +16,14 @@ class FirefoxTrains:
 
     _instance = None
 
-    def __init__(self) -> None:
-        """Constructor"""
-        self._cache = {}
+    def __init__(self, cache: bool = True) -> None:
+        """Constructor
+
+        Args:
+            cache: If True, the API responses will be cached.
+        """
+
+        self._cache = {} if cache else None
 
     @classmethod
     def get_instance(cls):
@@ -28,12 +33,17 @@ class FirefoxTrains:
         return cls._instance
 
     def __get(self, path):
-        if path not in self._cache:
-            resp = requests.get(self.URL + path, timeout=self.TIMEOUT)
-            resp.raise_for_status()
-            self._cache[path] = resp.json()
+        if self._cache is not None and path in self._cache:
+            return self._cache[path]
 
-        return self._cache[path]
+        resp = requests.get(self.URL + path, timeout=self.TIMEOUT)
+        resp.raise_for_status()
+        resp_json = resp.json()
+
+        if self._cache is not None:
+            self._cache[path] = resp_json
+
+        return resp_json
 
     def get_release_schedule(self, channel):
         """Get the release schedule for a given channel.
