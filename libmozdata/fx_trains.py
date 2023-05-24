@@ -14,10 +14,26 @@ class FirefoxTrains:
     URL = "https://whattrainisitnow.com/api/"
     TIMEOUT = 30
 
+    _instance = None
+
+    def __init__(self) -> None:
+        """Constructor"""
+        self._cache = {}
+
+    @classmethod
+    def get_instance(cls):
+        """Get the singleton instance of FirefoxTrains."""
+        if cls._instance is None:
+            cls._instance = cls()
+        return cls._instance
+
     def __get(self, path):
-        resp = requests.get(self.URL + path, timeout=self.TIMEOUT)
-        resp.raise_for_status()
-        return resp.json()
+        if path not in self._cache:
+            resp = requests.get(self.URL + path, timeout=self.TIMEOUT)
+            resp.raise_for_status()
+            self._cache[path] = resp.json()
+
+        return self._cache[path]
 
     def get_release_schedule(self, channel):
         """Get the release schedule for a given channel.
