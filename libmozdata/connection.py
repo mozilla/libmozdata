@@ -48,6 +48,7 @@ class Query(object):
 class Connection(object):
     """Represents a connection to a server"""
 
+    VERIFY_SSL = True
     TIMEOUT = 30
     MAX_RETRIES = 256
     MAX_WORKERS = multiprocessing.cpu_count()
@@ -190,7 +191,7 @@ class Connection(object):
                                 params=query.params,
                                 headers=header,
                                 auth=auth,
-                                verify=True,
+                                verify=self.VERIFY_SSL,
                                 timeout=self.TIMEOUT,
                                 hooks={"response": cb},
                             )
@@ -203,7 +204,7 @@ class Connection(object):
                                     params=p,
                                     headers=header,
                                     auth=auth,
-                                    verify=True,
+                                    verify=self.VERIFY_SSL,
                                     timeout=self.TIMEOUT,
                                     hooks={"response": cb},
                                 )
@@ -214,7 +215,7 @@ class Connection(object):
                             query.url,
                             headers=header,
                             auth=auth,
-                            verify=True,
+                            verify=self.VERIFY_SSL,
                             timeout=self.TIMEOUT,
                             hooks={"response": cb},
                         )
