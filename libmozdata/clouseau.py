@@ -7,7 +7,7 @@ from .connection import Connection, Query
 
 
 class CrashClouseau(Connection):
-    URL = config.get("Clouseau", "URL", "https://crash-clouseau.herokuapp.com")
+    URL = config.get("Clouseau", "URL", "https://clouseau.moz.tools")
     API_URL = URL + "/api"
 
 

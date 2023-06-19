@@ -15,7 +15,7 @@ URL = https://crash-stats.mozilla.org
 token =
 
 [Clouseau]
-URL = https://crash-clouseau.herokuapp.com
+URL = https://clouseau.moz.tools
 
 [Bugzilla]
 URL = https://bugzilla.mozilla.org
