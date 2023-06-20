@@ -16,15 +16,23 @@ from .connection import Connection, Query
 from .handler import Handler
 
 
-class Bugzilla(Connection):
-    """Connection to bugzilla.mozilla.org"""
-
+class BugzillaBase(Connection):
     URL = config.get("Bugzilla", "URL", "https://bugzilla.mozilla.org")
     # URL = config.get('Allizgub', 'URL', 'https://bugzilla-dev.allizom.org')
-    API_URL = URL + "/rest/bug"
-    ATTACHMENT_API_URL = API_URL + "/attachment"
     TOKEN = config.get("Bugzilla", "token", "")
     # TOKEN = config.get('Allizgub', 'token', '')
+
+    def get_header(self):
+        header = super(BugzillaBase, self).get_header()
+        header["X-Bugzilla-API-Key"] = self.get_apikey()
+        return header
+
+
+class Bugzilla(BugzillaBase):
+    """Connection to bugzilla.mozilla.org"""
+
+    API_URL = BugzillaBase.URL + "/rest/bug"
+    ATTACHMENT_API_URL = API_URL + "/attachment"
     BUGZILLA_CHUNK_SIZE = 100
 
     def __init__(
@@ -93,11 +101,6 @@ class Bugzilla(Connection):
             self.attachment_results = []
             self.got_data = False
             self.no_private_bugids = None
-
-    def get_header(self):
-        header = super(Bugzilla, self).get_header()
-        header["X-Bugzilla-API-Key"] = self.get_apikey()
-        return header
 
     def put(self, data, attachment=False, retry_on_failure=False):
         """Put some data in bugs
@@ -816,12 +819,10 @@ class Bugzilla(Connection):
             )
 
 
-class BugzillaUser(Connection):
+class BugzillaUser(BugzillaBase):
     """Connection to bugzilla.mozilla.org"""
 
-    URL = config.get("Bugzilla", "URL", "https://bugzilla.mozilla.org")
-    API_URL = URL + "/rest/user"
-    TOKEN = config.get("Bugzilla", "token", "")
+    API_URL = BugzillaBase.URL + "/rest/user"
 
     def __init__(
         self,
@@ -892,11 +893,6 @@ class BugzillaUser(Connection):
 
             super(BugzillaUser, self).__init__(BugzillaUser.URL, queries, **kwargs)
 
-    def get_header(self):
-        header = super(BugzillaUser, self).get_header()
-        header["X-Bugzilla-API-Key"] = self.get_apikey()
-        return header
-
     def __users_cb(self, res):
         if self.user_handler.isactive():
             for user in res["users"]:
@@ -907,16 +903,14 @@ class BugzillaUser(Connection):
                 self.fault_user_handler.handle(user)
 
 
-class BugzillaProduct(Connection):
+class BugzillaProduct(BugzillaBase):
     """
     Connection to bugzilla.mozilla.org
 
     API docs: https://bugzilla.readthedocs.io/en/latest/api/core/v1/product.html
     """
 
-    URL = config.get("Bugzilla", "URL", "https://bugzilla.mozilla.org")
-    API_URL = URL + "/rest/product"
-    TOKEN = config.get("Bugzilla", "token", "")
+    API_URL = BugzillaBase.URL + "/rest/product"
 
     def __init__(
         self,
@@ -1007,11 +1001,6 @@ class BugzillaProduct(Connection):
             **kwargs,
         )
 
-    def get_header(self):
-        header = super(BugzillaProduct, self).get_header()
-        header["X-Bugzilla-API-Key"] = self.get_apikey()
-        return header
-
     def __products_cb(self, res):
         if not self.product_handler.isactive():
             return
@@ -1020,14 +1009,12 @@ class BugzillaProduct(Connection):
             self.product_handler.handle(product)
 
 
-class BugzillaShorten(Connection):
+class BugzillaShorten(BugzillaBase):
     """
     Connection to bugzilla.mozilla.org
     """
 
-    URL = config.get("Bugzilla", "URL", "https://bugzilla.mozilla.org")
-    API_URL = URL + "/rest/bitly/shorten"
-    TOKEN = config.get("Bugzilla", "token", "")
+    API_URL = BugzillaBase.URL + "/rest/bitly/shorten"
 
     def __init__(self, url, url_data=None, url_handler=None, **kwargs):
         """Constructor
@@ -1049,11 +1036,6 @@ class BugzillaShorten(Connection):
             **kwargs,
         )
 
-    def get_header(self):
-        header = super(BugzillaShorten, self).get_header()
-        header["X-Bugzilla-API-Key"] = self.get_apikey()
-        return header
-
     def __urls_cb(self, res):
         if not self.url_handler.isactive():
             return
@@ -1069,14 +1051,12 @@ class BugzillaShorten(Connection):
         self.url_handler.handle(res["url"])
 
 
-class BugzillaComponent(Connection):
+class BugzillaComponent(BugzillaBase):
     """
     Connection to bugzilla.mozilla.org
     """
 
-    URL = config.get("Bugzilla", "URL", "https://bugzilla.mozilla.org")
-    API_URL = URL + "/rest/component"
-    TOKEN = config.get("Bugzilla", "token", "")
+    API_URL = BugzillaBase.URL + "/rest/component"
 
     def __init__(
         self, product, component, component_data=None, component_handler=None, **kwargs
@@ -1104,11 +1084,6 @@ class BugzillaComponent(Connection):
             ),
             **kwargs,
         )
-
-    def get_header(self):
-        header = super(BugzillaComponent, self).get_header()
-        header["X-Bugzilla-API-Key"] = self.get_apikey()
-        return header
 
     def __components_cb(self, res):
         if not self.component_handler.isactive():
