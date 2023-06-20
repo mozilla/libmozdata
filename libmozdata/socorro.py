@@ -244,3 +244,50 @@ class Bugs(Socorro):
             data[k] = list(v)
 
         return data
+
+
+class SignatureFirstDate(Socorro):
+    """SignatureFirstDate: https://crash-stats.mozilla.org/api/#SignatureFirstDate"""
+
+    URL = Socorro.API_URL + "/SignatureFirstDate/"
+
+    def __init__(
+        self, params=None, handler=None, handlerdata=None, queries=None, **kwargs
+    ):
+        """Constructor
+
+        Args:
+            params (Optional[dict]): the params for the query
+            handler (Optional[function]): handler to use with the result of the query
+            handlerdata (Optional): data used in second argument of the handler
+            queries (Optional[List[Query]]): queries to execute
+        """
+        if queries:
+            super(SignatureFirstDate, self).__init__(queries, **kwargs)
+        else:
+            super(SignatureFirstDate, self).__init__(
+                Query(SignatureFirstDate.URL, params, handler, handlerdata), **kwargs
+            )
+
+    @staticmethod
+    def get_signatures(signatures):
+        """Get the first date and build id for the specified signatures.
+
+        Args:
+            signatures (List[str]): signatures to check.
+
+        Returns:
+            dict: the first date for each signature.
+        """
+
+        def default_handler(json, data):
+            data.extend(json["hits"])
+
+        data = []
+        SignatureFirstDate(
+            params={"signatures": signatures},
+            handler=default_handler,
+            handlerdata=data,
+        ).wait()
+
+        return data

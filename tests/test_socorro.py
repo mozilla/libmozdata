@@ -69,5 +69,30 @@ class BugsTest(unittest.TestCase):
         self.assertIsNotNone(bugs)
 
 
+class SignatureFirstDateTest(unittest.TestCase):
+    def test_get_get_signatures(self):
+        signature = [
+            "TF_Notify",
+            "EnterJit",
+        ]
+        signature_dates = socorro.SignatureFirstDate.get_signatures(signature)
+
+        self.assertEqual(
+            signature_dates,
+            [
+                {
+                    "signature": "EnterJit",
+                    "first_build": "20171014220542",
+                    "first_date": "2017-10-15T13:24:10.225600+00:00",
+                },
+                {
+                    "signature": "TF_Notify",
+                    "first_build": "20100115144158",
+                    "first_date": "2011-01-01T13:19:54.349341+00:00",
+                },
+            ],
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
