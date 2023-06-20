@@ -30,10 +30,9 @@ class Socorro(Connection):
 
 
 class SuperSearch(Socorro):
-    """SuperSearch: https://crash-stats.mozilla.org/search/?product=&_dont_run=1"""
+    """SuperSearch: https://crash-stats.mozilla.org/api/#SuperSearch"""
 
     URL = Socorro.API_URL + "/SuperSearch/"
-    URL_UNREDACTED = Socorro.API_URL + "/SuperSearchUnredacted/"
     WEB_URL = Socorro.CRASH_STATS_URL + "/search/"
 
     def __init__(
@@ -50,33 +49,8 @@ class SuperSearch(Socorro):
         if queries is not None:
             super(SuperSearch, self).__init__(queries, **kwargs)
         else:
-            url = SuperSearch.URL
-            unredacted = False
-            if "_facets" in params:
-                facets = params["_facets"]
-                if "url" in facets or "email" in facets:
-                    url = SuperSearch.URL_UNREDACTED
-                    unredacted = True
-            if not unredacted and "_columns" in params:
-                columns = params["_columns"]
-                if "url" in columns or "email" in columns:
-                    url = SuperSearch.URL_UNREDACTED
-            if not unredacted:
-                for k, v in params.items():
-                    if (
-                        "url" in k
-                        or "email" in k
-                        or (
-                            (isinstance(v, list) or isinstance(v, six.string_types))
-                            and ("url" in v or "email" in v)
-                        )
-                    ):
-                        url = SuperSearch.URL_UNREDACTED
-                        unredacted = True
-                        break
-
             super(SuperSearch, self).__init__(
-                Query(url, params, handler, handlerdata), **kwargs
+                Query(self.URL, params, handler, handlerdata), **kwargs
             )
 
     @staticmethod
@@ -107,6 +81,12 @@ class SuperSearch(Socorro):
             search_date = [">=" + _start]
 
         return search_date
+
+
+class SuperSearchUnredacted(SuperSearch):
+    """SuperSearchUnredacted: https://crash-stats.mozilla.org/api/#SuperSearchUnredacted"""
+
+    URL = Socorro.API_URL + "/SuperSearchUnredacted/"
 
 
 class ProcessedCrash(Socorro):
