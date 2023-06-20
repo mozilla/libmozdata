@@ -1339,5 +1339,11 @@ class BugLinksTest(unittest.TestCase):
         )
 
 
+class BugFieldsTest(unittest.TestCase):
+    def test_get_field_values(self):
+        values = bugzilla.BugFields.get_field_values("priority")
+        self.assertEqual(values, ["P1", "P2", "P3", "P4", "P5", "--"])
+
+
 if __name__ == "__main__":
     unittest.main()

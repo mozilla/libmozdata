@@ -1110,3 +1110,67 @@ class BugzillaComponent(BugzillaBase):
         response.raise_for_status()
 
         return response.json()
+
+
+class BugFields(BugzillaBase):
+    """Fetching bug fields information from Bugzilla
+
+    Docs: https://bmo.readthedocs.io/en/latest/api/core/v1/field.html#fields
+    """
+
+    API_URL = BugzillaBase.URL + "/rest/field/bug"
+
+    def __init__(
+        self, field=None, handler=None, handlerdata=None, queries=None, **kwargs
+    ):
+        """Constructor
+
+        Args:
+            field (Optional[str]): the name of the field, if empty will fetch all fields
+            handler (Optional[function]): the handler to use with each retrieved field
+            handlerdata (Optional): the data to use with the field handler
+            queries (Optional[Query]): the queries to use
+        """
+        if not queries:
+            endpoint_url = f"{self.API_URL}/{field}" if field else self.API_URL
+            queries = Query(endpoint_url, None, handler, handlerdata)
+
+        super(BugFields, self).__init__(self.URL, queries, **kwargs)
+
+    @classmethod
+    def get_field_info(cls, field):
+        """Get information about a field
+
+        Args:
+            field (str): the name of the field
+
+        Returns:
+            dict: the information about the field
+        """
+
+        def handler(resp, data):
+            data.update(resp)
+
+        data = {}
+        cls(
+            field=field,
+            handler=handler,
+            handlerdata=data,
+        ).wait()
+
+        field_info = data["fields"][0]
+        assert field_info["name"] == field
+
+        return field_info
+
+    @classmethod
+    def get_field_values(cls, field):
+        """Get the legal values of a field
+
+        Args:
+            field (str): the name of the field
+
+        Returns:
+            List[str]: the legal values of the field
+        """
+        return [value["name"] for value in cls.get_field_info(field)["values"]]
