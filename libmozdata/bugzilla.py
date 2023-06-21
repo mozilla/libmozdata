@@ -1138,6 +1138,25 @@ class BugFields(BugzillaBase):
         super(BugFields, self).__init__(self.URL, queries, **kwargs)
 
     @classmethod
+    def fetch_all_fields_info(cls):
+        """Get information about all fields
+
+        Returns:
+            list: the information about the fields
+        """
+
+        def handler(resp, data):
+            data.update(resp)
+
+        data = {}
+        cls(
+            handler=handler,
+            handlerdata=data,
+        ).wait()
+
+        return data["fields"]
+
+    @classmethod
     def fetch_field_info(cls, field):
         """Get information about a field
 
