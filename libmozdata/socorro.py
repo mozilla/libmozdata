@@ -49,9 +49,41 @@ class SuperSearch(Socorro):
         if queries is not None:
             super(SuperSearch, self).__init__(queries, **kwargs)
         else:
+            if self.__has_deprecated_unredacted_params(params):
+                raise ValueError(
+                    "Requesting PII data using the `SuperSearch` class is not "
+                    "supported anymore. Please use `SuperSearchUnredacted` instead."
+                )
             super(SuperSearch, self).__init__(
                 Query(self.URL, params, handler, handlerdata), **kwargs
             )
+
+    def __has_deprecated_unredacted_params(self, params):
+        """Check if the params is requesting PII data that we used to
+        automatically support retrieving it by redirecting the request to the
+        unredacted endpoint (i.e., SuperSearchUnredacted).
+        """
+        unredacted = False
+        if "_facets" in params:
+            facets = params["_facets"]
+            if "url" in facets or "email" in facets:
+                unredacted = True
+        if not unredacted and "_columns" in params:
+            columns = params["_columns"]
+            if "url" in columns or "email" in columns:
+                unredacted = True
+        if not unredacted:
+            for k, v in params.items():
+                if (
+                    "url" in k
+                    or "email" in k
+                    or (
+                        (isinstance(v, list) or isinstance(v, six.string_types))
+                        and ("url" in v or "email" in v)
+                    )
+                ):
+                    unredacted = True
+        return unredacted
 
     @staticmethod
     def get_link(params):
