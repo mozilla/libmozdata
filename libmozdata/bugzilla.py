@@ -1138,7 +1138,7 @@ class BugFields(BugzillaBase):
         super(BugFields, self).__init__(self.URL, queries, **kwargs)
 
     @classmethod
-    def get_field_info(cls, field):
+    def fetch_field_info(cls, field):
         """Get information about a field
 
         Args:
@@ -1164,7 +1164,7 @@ class BugFields(BugzillaBase):
         return field_info
 
     @classmethod
-    def get_field_values(cls, field):
+    def fetch_field_values(cls, field):
         """Get the legal values of a field
 
         Args:
@@ -1173,4 +1173,4 @@ class BugFields(BugzillaBase):
         Returns:
             List[str]: the legal values of the field
         """
-        return [value["name"] for value in cls.get_field_info(field)["values"]]
+        return [value["name"] for value in cls.fetch_field_info(field)["values"]]
