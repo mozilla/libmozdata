@@ -16,15 +16,23 @@ from .connection import Connection, Query
 from .handler import Handler
 
 
-class Bugzilla(Connection):
-    """Connection to bugzilla.mozilla.org"""
-
+class BugzillaBase(Connection):
     URL = config.get("Bugzilla", "URL", "https://bugzilla.mozilla.org")
     # URL = config.get('Allizgub', 'URL', 'https://bugzilla-dev.allizom.org')
-    API_URL = URL + "/rest/bug"
-    ATTACHMENT_API_URL = API_URL + "/attachment"
     TOKEN = config.get("Bugzilla", "token", "")
     # TOKEN = config.get('Allizgub', 'token', '')
+
+    def get_header(self):
+        header = super(BugzillaBase, self).get_header()
+        header["X-Bugzilla-API-Key"] = self.get_apikey()
+        return header
+
+
+class Bugzilla(BugzillaBase):
+    """Connection to bugzilla.mozilla.org"""
+
+    API_URL = BugzillaBase.URL + "/rest/bug"
+    ATTACHMENT_API_URL = API_URL + "/attachment"
     BUGZILLA_CHUNK_SIZE = 100
 
     def __init__(
@@ -93,11 +101,6 @@ class Bugzilla(Connection):
             self.attachment_results = []
             self.got_data = False
             self.no_private_bugids = None
-
-    def get_header(self):
-        header = super(Bugzilla, self).get_header()
-        header["X-Bugzilla-API-Key"] = self.get_apikey()
-        return header
 
     def put(self, data, attachment=False, retry_on_failure=False):
         """Put some data in bugs
@@ -816,12 +819,10 @@ class Bugzilla(Connection):
             )
 
 
-class BugzillaUser(Connection):
+class BugzillaUser(BugzillaBase):
     """Connection to bugzilla.mozilla.org"""
 
-    URL = config.get("Bugzilla", "URL", "https://bugzilla.mozilla.org")
-    API_URL = URL + "/rest/user"
-    TOKEN = config.get("Bugzilla", "token", "")
+    API_URL = BugzillaBase.URL + "/rest/user"
 
     def __init__(
         self,
@@ -892,11 +893,6 @@ class BugzillaUser(Connection):
 
             super(BugzillaUser, self).__init__(BugzillaUser.URL, queries, **kwargs)
 
-    def get_header(self):
-        header = super(BugzillaUser, self).get_header()
-        header["X-Bugzilla-API-Key"] = self.get_apikey()
-        return header
-
     def __users_cb(self, res):
         if self.user_handler.isactive():
             for user in res["users"]:
@@ -907,16 +903,14 @@ class BugzillaUser(Connection):
                 self.fault_user_handler.handle(user)
 
 
-class BugzillaProduct(Connection):
+class BugzillaProduct(BugzillaBase):
     """
     Connection to bugzilla.mozilla.org
 
     API docs: https://bugzilla.readthedocs.io/en/latest/api/core/v1/product.html
     """
 
-    URL = config.get("Bugzilla", "URL", "https://bugzilla.mozilla.org")
-    API_URL = URL + "/rest/product"
-    TOKEN = config.get("Bugzilla", "token", "")
+    API_URL = BugzillaBase.URL + "/rest/product"
 
     def __init__(
         self,
@@ -1007,11 +1001,6 @@ class BugzillaProduct(Connection):
             **kwargs,
         )
 
-    def get_header(self):
-        header = super(BugzillaProduct, self).get_header()
-        header["X-Bugzilla-API-Key"] = self.get_apikey()
-        return header
-
     def __products_cb(self, res):
         if not self.product_handler.isactive():
             return
@@ -1020,14 +1009,12 @@ class BugzillaProduct(Connection):
             self.product_handler.handle(product)
 
 
-class BugzillaShorten(Connection):
+class BugzillaShorten(BugzillaBase):
     """
     Connection to bugzilla.mozilla.org
     """
 
-    URL = config.get("Bugzilla", "URL", "https://bugzilla.mozilla.org")
-    API_URL = URL + "/rest/bitly/shorten"
-    TOKEN = config.get("Bugzilla", "token", "")
+    API_URL = BugzillaBase.URL + "/rest/bitly/shorten"
 
     def __init__(self, url, url_data=None, url_handler=None, **kwargs):
         """Constructor
@@ -1049,11 +1036,6 @@ class BugzillaShorten(Connection):
             **kwargs,
         )
 
-    def get_header(self):
-        header = super(BugzillaShorten, self).get_header()
-        header["X-Bugzilla-API-Key"] = self.get_apikey()
-        return header
-
     def __urls_cb(self, res):
         if not self.url_handler.isactive():
             return
@@ -1069,14 +1051,12 @@ class BugzillaShorten(Connection):
         self.url_handler.handle(res["url"])
 
 
-class BugzillaComponent(Connection):
+class BugzillaComponent(BugzillaBase):
     """
     Connection to bugzilla.mozilla.org
     """
 
-    URL = config.get("Bugzilla", "URL", "https://bugzilla.mozilla.org")
-    API_URL = URL + "/rest/component"
-    TOKEN = config.get("Bugzilla", "token", "")
+    API_URL = BugzillaBase.URL + "/rest/component"
 
     def __init__(
         self, product, component, component_data=None, component_handler=None, **kwargs
@@ -1105,11 +1085,6 @@ class BugzillaComponent(Connection):
             **kwargs,
         )
 
-    def get_header(self):
-        header = super(BugzillaComponent, self).get_header()
-        header["X-Bugzilla-API-Key"] = self.get_apikey()
-        return header
-
     def __components_cb(self, res):
         if not self.component_handler.isactive():
             return
@@ -1135,3 +1110,86 @@ class BugzillaComponent(Connection):
         response.raise_for_status()
 
         return response.json()
+
+
+class BugFields(BugzillaBase):
+    """Fetching bug fields information from Bugzilla
+
+    Docs: https://bmo.readthedocs.io/en/latest/api/core/v1/field.html#fields
+    """
+
+    API_URL = BugzillaBase.URL + "/rest/field/bug"
+
+    def __init__(
+        self, field=None, handler=None, handlerdata=None, queries=None, **kwargs
+    ):
+        """Constructor
+
+        Args:
+            field (Optional[str]): the name of the field, if empty will fetch all fields
+            handler (Optional[function]): the handler to use with each retrieved field
+            handlerdata (Optional): the data to use with the field handler
+            queries (Optional[Query]): the queries to use
+        """
+        if not queries:
+            endpoint_url = f"{self.API_URL}/{field}" if field else self.API_URL
+            queries = Query(endpoint_url, None, handler, handlerdata)
+
+        super(BugFields, self).__init__(self.URL, queries, **kwargs)
+
+    @classmethod
+    def fetch_all_fields_info(cls):
+        """Get information about all fields
+
+        Returns:
+            list: the information about the fields
+        """
+
+        def handler(resp, data):
+            data.update(resp)
+
+        data = {}
+        cls(
+            handler=handler,
+            handlerdata=data,
+        ).wait()
+
+        return data["fields"]
+
+    @classmethod
+    def fetch_field_info(cls, field):
+        """Get information about a field
+
+        Args:
+            field (str): the name of the field
+
+        Returns:
+            dict: the information about the field
+        """
+
+        def handler(resp, data):
+            data.update(resp)
+
+        data = {}
+        cls(
+            field=field,
+            handler=handler,
+            handlerdata=data,
+        ).wait()
+
+        field_info = data["fields"][0]
+        assert field_info["name"] == field
+
+        return field_info
+
+    @classmethod
+    def fetch_field_values(cls, field):
+        """Get the legal values of a field
+
+        Args:
+            field (str): the name of the field
+
+        Returns:
+            List[str]: the legal values of the field
+        """
+        return [value["name"] for value in cls.fetch_field_info(field)["values"]]
