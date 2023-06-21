@@ -1339,7 +1339,10 @@ class BugLinksTest(unittest.TestCase):
         )
 
 
-class BugFieldsTest(unittest.TestCase):
+class BugFieldsTest(MockTestCase):
+    mock_urls = [bugzilla.BugFields.URL]
+
+    @responses.activate
     def test_fetch_field_values(self):
         values = bugzilla.BugFields.fetch_field_values("priority")
         self.assertEqual(values, ["P1", "P2", "P3", "P4", "P5", "--"])
