@@ -63,6 +63,13 @@ class SuperSearch(Socorro):
         automatically support retrieving it by redirecting the request to the
         unredacted endpoint (i.e., SuperSearchUnredacted).
         """
+        if not isinstance(params, dict):
+            # This is a workaround to avoid crashing when the params values is a
+            # list of params. We could instead of this, check each item in the
+            # list, but it's not worth it since this method is just for backward
+            # compatibility.
+            return False
+
         unredacted = False
         if "_facets" in params:
             facets = params["_facets"]
