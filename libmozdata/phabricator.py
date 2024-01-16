@@ -7,6 +7,7 @@ import collections
 import enum
 import json
 import logging
+from functools import cached_property
 from urllib.parse import urlencode, urlparse
 
 import hglib
@@ -213,9 +214,12 @@ class PhabricatorAPI(object):
         self.url = url
         assert self.url.endswith("/api/"), "Phabricator API must end with /api/"
 
-        # Test authentication
-        self.user = self.request("user.whoami")
-        logger.info("Authenticated on {} as {}".format(self.url, self.user["realName"]))
+    @cached_property
+    def user(self):
+        """
+        Return the authenticated user details
+        """
+        return self.request("user.whoami")
 
     @property
     def hostname(self):
