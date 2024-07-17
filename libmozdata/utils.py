@@ -8,6 +8,7 @@ import operator
 import os.path
 import random
 from datetime import date, datetime, timedelta
+from itertools import count
 
 import dateutil.parser
 import pytz
@@ -381,3 +382,39 @@ def get_language(path):
     for lang, names in langs.items():
         if name in names or extension in names:
             return lang
+
+
+# This is roughly equivalent to the itertools.islice which was added in
+# Python 3.10.
+# Copied from https://docs.python.org/3/library/itertools.html#itertools.islice
+def islice(iterable, *args):
+    # islice('ABCDEFG', 2) → A B
+    # islice('ABCDEFG', 2, 4) → C D
+    # islice('ABCDEFG', 2, None) → C D E F G
+    # islice('ABCDEFG', 0, None, 2) → A C E G
+
+    s = slice(*args)
+    start = 0 if s.start is None else s.start
+    stop = s.stop
+    step = 1 if s.step is None else s.step
+    if start < 0 or (stop is not None and stop < 0) or step <= 0:
+        raise ValueError
+
+    indices = count() if stop is None else range(max(start, stop))
+    next_i = start
+    for i, element in zip(indices, iterable):
+        if i == next_i:
+            yield element
+            next_i += step
+
+
+# This is roughly equivalent to the itertools.batched which was added in
+# Python 3.12.
+# Copied from https://docs.python.org/3/library/itertools.html#itertools.batched
+def batched(iterable, n):
+    # batched('ABCDEFG', 3) → ABC DEF G
+    if n < 1:
+        raise ValueError("n must be at least one")
+    iterator = iter(iterable)
+    while batch := tuple(islice(iterator, n)):
+        yield batch
