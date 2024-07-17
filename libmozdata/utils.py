@@ -408,7 +408,7 @@ def islice(iterable, *args):
             next_i += step
 
 
-# This is a roughly equivalent to the itertools.batched which was added in
+# This is roughly equivalent to the itertools.batched which was added in
 # Python 3.12.
 # Copied from https://docs.python.org/3/library/itertools.html#itertools.batched
 def batched(iterable, n):
