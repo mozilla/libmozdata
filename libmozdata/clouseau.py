@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from itertools import batched
+
 from . import config
 from .connection import Connection, Query
 
@@ -54,14 +56,20 @@ class Reports(CrashClouseau):
             dict: the reports by signatures
         """
         data = {}
-        cls(
-            params={
-                "signatures": signatures,
-                "product": product,
-                "channel": channel,
-            },
-            handler=cls._default_handler,
-            handlerdata=data,
-        ).wait()
+        requests = [
+            cls(
+                params={
+                    "signatures": signatures_batch,
+                    "product": product,
+                    "channel": channel,
+                },
+                handler=cls._default_handler,
+                handlerdata=data,
+            )
+            for signatures_batch in batched(signatures, 20)
+        ]
+
+        for request in requests:
+            request.wait()
 
         return data
