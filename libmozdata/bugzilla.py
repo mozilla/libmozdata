@@ -404,6 +404,15 @@ class Bugzilla(BugzillaBase):
                         "inbound",
                     )
                 ]
+            elif channel == "autoland":
+                landing_patterns += [
+                    (
+                        re.compile(
+                            r"://hg.mozilla.org/integration/autoland/rev/([0-9a-f]+)"
+                        ),
+                        "autoland",
+                    )
+                ]
             else:
                 raise Exception("Unexpected channel: " + channel)
 
