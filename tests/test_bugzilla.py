@@ -3,6 +3,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+import re
 import unittest
 
 import responses
@@ -1351,6 +1352,44 @@ class BugFieldsTest(MockTestCase):
     def test_fetch_all_fields_info(self):
         fields = bugzilla.BugFields.fetch_all_fields_info()
         self.assertGreater(len(fields), 800)
+
+
+class LandingPatternTest(unittest.TestCase):
+    def test_get_landing_patterns_autoland(self):
+        patterns = bugzilla.Bugzilla.get_landing_patterns(channels=["autoland"])
+
+        expected_pattern = re.compile(
+            r"://hg.mozilla.org/integration/autoland/rev/([0-9a-f]+)"
+        )
+        self.assertEqual(len(patterns), 1)
+        self.assertEqual(patterns[0][1], "autoland")
+        self.assertEqual(patterns[0][0].pattern, expected_pattern.pattern)
+
+    def test_get_landing_patterns_multiple_channels(self):
+        patterns = bugzilla.Bugzilla.get_landing_patterns(
+            channels=["central", "autoland"]
+        )
+
+        self.assertEqual(len(patterns), 3)
+
+        central_pattern_1 = re.compile(
+            r"://hg.mozilla.org/mozilla-central/rev/([0-9a-f]+)"
+        )
+        central_pattern_2 = re.compile(
+            r"://hg.mozilla.org/mozilla-central/pushloghtml\?changeset=([0-9a-f]+)"
+        )
+        autoland_pattern = re.compile(
+            r"://hg.mozilla.org/integration/autoland/rev/([0-9a-f]+)"
+        )
+
+        self.assertEqual(patterns[0][1], "central")
+        self.assertEqual(patterns[0][0].pattern, central_pattern_1.pattern)
+
+        self.assertEqual(patterns[1][1], "central")
+        self.assertEqual(patterns[1][0].pattern, central_pattern_2.pattern)
+
+        self.assertEqual(patterns[2][1], "autoland")
+        self.assertEqual(patterns[2][0].pattern, autoland_pattern.pattern)
 
 
 if __name__ == "__main__":
