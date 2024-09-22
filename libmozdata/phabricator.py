@@ -12,6 +12,7 @@ from urllib.parse import urlencode, urlparse
 
 import hglib
 import requests
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_fixed
 
 from . import config
 
@@ -654,6 +655,11 @@ class PhabricatorAPI(object):
             data = [data]
         return data
 
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_fixed(2),
+        retry=retry_if_exception_type(requests.exceptions.ConnectionError),
+    )
     def request(self, path, **payload):
         """
         Send a request to Phabricator API
