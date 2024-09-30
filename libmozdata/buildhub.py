@@ -10,7 +10,10 @@ from distutils.version import LooseVersion
 
 import requests
 
+from . import config
+
 SEARCH_URL = os.getenv("BUILDHUB_SEARCH_URL", "https://buildhub.moz.tools/api/search")
+USER_AGENT = config.get("User-Agent", "name", "libmozdata")
 
 
 class BadBuildhubRequest(Exception):
@@ -18,7 +21,11 @@ class BadBuildhubRequest(Exception):
 
 
 def fetch(search_url, json):
-    response = requests.post(search_url, json=json)
+    response = requests.post(
+        search_url,
+        json=json,
+        headers={"User-Agent": USER_AGENT}
+    )
     if response.status_code == 400:
         raise BadBuildhubRequest(search_url)
     response.raise_for_status()

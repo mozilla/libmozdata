@@ -4,11 +4,13 @@
 
 import requests
 
-from . import utils
+from . import utils, config
 from .wiki_parser import InvalidWiki, WikiParser
 
 OWNERS_URL = "https://wiki.mozilla.org/Release_Management/Release_owners"
 _OWNERS = None
+
+USER_AGENT = config.get("User-Agent", "name", "libmozdata")
 
 
 def _get_sub_versions(s):
@@ -36,7 +38,10 @@ def get_owners():
     if _OWNERS is not None:
         return _OWNERS
 
-    html = requests.get(OWNERS_URL).text.encode("ascii", errors="ignore")
+    html = requests.get(
+        OWNERS_URL,
+        headers={"User-Agent": USER_AGENT}
+    ).text.encode("ascii", errors="ignore")
     parser = WikiParser(tables=[0])
     try:
         parser.feed(html)
