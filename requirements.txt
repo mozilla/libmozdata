@@ -1,6 +1,7 @@
 icalendar>=3.10
 python-dateutil>=2.5.2
 python-hglib>=2.6.1
+pytz==2024.2
 requests-futures>=0.9.8
 requests[security]>=2.7.0
 setuptools>=28.6.1
