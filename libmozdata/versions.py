@@ -9,7 +9,7 @@ from os.path import commonprefix
 import requests
 from icalendar import Calendar
 
-from . import utils, config
+from . import config, utils
 
 __versions = None
 __version_dates = None
@@ -48,10 +48,7 @@ def __getVersions():
             return
         return esr.endswith("esr") and esr[:-3] or esr
 
-    resp = requests.get(
-        URL_VERSIONS,
-        headers={"User-Agent": USER_AGENT}
-    )
+    resp = requests.get(URL_VERSIONS, headers={"User-Agent": USER_AGENT})
     data = resp.json()
 
     nightly = data["FIREFOX_NIGHTLY"]
@@ -68,18 +65,12 @@ def __getVersions():
 
 
 def __getVersionDates():
-    resp = requests.get(
-        URL_HISTORY,
-        headers={"User-Agent": USER_AGENT}
-    )
+    resp = requests.get(URL_HISTORY, headers={"User-Agent": USER_AGENT})
     data = resp.json()
 
     data = dict([(v, utils.get_moz_date(d)) for v, d in data.items()])
 
-    resp = requests.get(
-        URL_CALENDAR,
-        headers={"User-Agent": USER_AGENT}
-    )
+    resp = requests.get(URL_CALENDAR, headers={"User-Agent": USER_AGENT})
     calendar = Calendar.from_ical(resp.content)
 
     for component in calendar.walk():
@@ -96,10 +87,7 @@ def __getVersionDates():
 
 
 def __getStabilityVersionDates():
-    resp = requests.get(
-        URL_STABILITY,
-        headers={"User-Agent": USER_AGENT}
-    )
+    resp = requests.get(URL_STABILITY, headers={"User-Agent": USER_AGENT})
 
     return dict([(v, utils.get_moz_date(d)) for v, d in resp.json().items()])
 

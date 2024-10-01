@@ -2,8 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from . import config
 import requests
+
+from . import config
 
 
 class FirefoxTrains:
@@ -41,7 +42,7 @@ class FirefoxTrains:
         resp = requests.get(
             self.URL + path,
             timeout=self.TIMEOUT,
-            headers={"User-Agent": self.USER_AGENT}
+            headers={"User-Agent": self.USER_AGENT},
         )
         resp.raise_for_status()
         resp_json = resp.json()
