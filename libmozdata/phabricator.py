@@ -209,7 +209,7 @@ class PhabricatorAPI(object):
     """
 
     def __init__(self, api_key, url=MOZILLA_PHABRICATOR_PROD):
-        self.USER_AGENT = config.get("User-Agent", "name", "libmozdata")
+        self.USER_AGENT = config.required_get("User-Agent", "name")
         self.api_key = api_key
         self.url = url
         assert self.url.endswith("/api/"), "Phabricator API must end with /api/"

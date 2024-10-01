@@ -66,3 +66,10 @@ def set_config(conf):
 def get(section, option, default=None, type=str):
     global __config
     return __config.get(section, option, default=default, type=type)
+
+
+def required_get(section, option, type=str):
+    global __config
+    value = __config.get(section, option, type=type)
+    assert value, f"Option {option} in section {section} is not set"
+    return value

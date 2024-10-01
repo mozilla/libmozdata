@@ -55,7 +55,7 @@ class Connection(object):
     RAISE_ERROR = True
     CHUNK_SIZE = 32
     TOKEN = ""
-    USER_AGENT = config.get("User-Agent", "name", "libmozdata")
+    USER_AGENT = config.required_get("User-Agent", "name")
     X_FORWARDED_FOR = utils.get_x_fwed_for_str(
         config.get("X-Forwarded-For", "data", "")
     )
