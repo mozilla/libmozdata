@@ -4,6 +4,8 @@
 
 import requests
 
+from . import config
+
 
 class FirefoxTrains:
     """Firefox Trains
@@ -24,6 +26,7 @@ class FirefoxTrains:
         """
 
         self._cache = {} if cache else None
+        self.USER_AGENT = config.get("User-Agent", "name", "libmozdata")
 
     @classmethod
     def get_instance(cls):
@@ -36,7 +39,11 @@ class FirefoxTrains:
         if self._cache is not None and path in self._cache:
             return self._cache[path]
 
-        resp = requests.get(self.URL + path, timeout=self.TIMEOUT)
+        resp = requests.get(
+            self.URL + path,
+            timeout=self.TIMEOUT,
+            headers={"User-Agent": self.USER_AGENT},
+        )
         resp.raise_for_status()
         resp_json = resp.json()
 
