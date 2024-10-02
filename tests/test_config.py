@@ -155,6 +155,22 @@ class ConfigTest(unittest.TestCase):
         self.assertIsNone(config.get("Section5", "Option9"))
         self.assertEqual(config.get("Section5", "Option9", "Default"), "Default")
 
+    def test_required_get(self):
+        with open("config.ini", "w") as f:
+            custom_conf = ConfigParser()
+            custom_conf.add_section("User-Agent")
+            custom_conf.set("User-Agent", "something", "value")
+            custom_conf.write(f)
+
+        from libmozdata import config
+
+        config.set_config(config.ConfigIni("config.ini"))
+
+        with self.assertRaisesRegex(
+            AssertionError, "Option name in section User-Agent is not set"
+        ):
+            config.required_get("User-Agent", "name")
+
 
 class ConfigEnvTest(unittest.TestCase):
     def test_config_env(self):
