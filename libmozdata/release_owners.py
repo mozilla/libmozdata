@@ -37,7 +37,8 @@ def get_owners():
         return _OWNERS
 
     html = requests.get(
-        OWNERS_URL, headers={"User-Agent": config.required_get("User-Agent", "name")}
+        OWNERS_URL,
+        headers={"User-Agent": config.get("User-Agent", "name", required=True)},
     ).text.encode("ascii", errors="ignore")
     parser = WikiParser(tables=[0])
     try:

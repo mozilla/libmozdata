@@ -155,7 +155,7 @@ class ConfigTest(unittest.TestCase):
         self.assertIsNone(config.get("Section5", "Option9"))
         self.assertEqual(config.get("Section5", "Option9", "Default"), "Default")
 
-    def test_required_get(self):
+    def test_get_required(self):
         with open("config.ini", "w") as f:
             custom_conf = ConfigParser()
             custom_conf.add_section("User-Agent")
@@ -169,7 +169,7 @@ class ConfigTest(unittest.TestCase):
         with self.assertRaisesRegex(
             AssertionError, "Option name in section User-Agent is not set"
         ):
-            config.required_get("User-Agent", "name")
+            config.get("User-Agent", "name", required=True)
 
 
 class ConfigEnvTest(unittest.TestCase):

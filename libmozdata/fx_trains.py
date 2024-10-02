@@ -26,7 +26,7 @@ class FirefoxTrains:
         """
 
         self._cache = {} if cache else None
-        self.USER_AGENT = config.required_get("User-Agent", "name")
+        self.USER_AGENT = config.get("User-Agent", "name", required=True)
 
     @classmethod
     def get_instance(cls):

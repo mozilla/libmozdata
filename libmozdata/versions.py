@@ -47,7 +47,8 @@ def __getVersions():
         return esr.endswith("esr") and esr[:-3] or esr
 
     resp = requests.get(
-        URL_VERSIONS, headers={"User-Agent": config.required_get("User-Agent", "name")}
+        URL_VERSIONS,
+        headers={"User-Agent": config.get("User-Agent", "name", required=True)},
     )
     data = resp.json()
 
@@ -66,14 +67,16 @@ def __getVersions():
 
 def __getVersionDates():
     resp = requests.get(
-        URL_HISTORY, headers={"User-Agent": config.required_get("User-Agent", "name")}
+        URL_HISTORY,
+        headers={"User-Agent": config.get("User-Agent", "name", required=True)},
     )
     data = resp.json()
 
     data = dict([(v, utils.get_moz_date(d)) for v, d in data.items()])
 
     resp = requests.get(
-        URL_CALENDAR, headers={"User-Agent": config.required_get("User-Agent", "name")}
+        URL_CALENDAR,
+        headers={"User-Agent": config.get("User-Agent", "name", required=True)},
     )
     calendar = Calendar.from_ical(resp.content)
 
@@ -92,7 +95,8 @@ def __getVersionDates():
 
 def __getStabilityVersionDates():
     resp = requests.get(
-        URL_STABILITY, headers={"User-Agent": config.required_get("User-Agent", "name")}
+        URL_STABILITY,
+        headers={"User-Agent": config.get("User-Agent", "name", required=True)},
     )
 
     return dict([(v, utils.get_moz_date(d)) for v, d in resp.json().items()])

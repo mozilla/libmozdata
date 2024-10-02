@@ -55,7 +55,7 @@ class Connection(object):
     RAISE_ERROR = True
     CHUNK_SIZE = 32
     TOKEN = ""
-    USER_AGENT = config.required_get("User-Agent", "name")
+    USER_AGENT = None
     X_FORWARDED_FOR = utils.get_x_fwed_for_str(
         config.get("X-Forwarded-For", "data", "")
     )
@@ -96,6 +96,9 @@ class Connection(object):
                 )
             if "raise_error" in kwargs:
                 self.RAISE_ERROR = kwargs["raise_error"]
+
+        if not self.USER_AGENT:
+            config.get("User-Agent", "name", required=True)
 
         self.exec_queries()
 
