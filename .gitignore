@@ -4,5 +4,6 @@
 .coverage
 htmlcov/
 mozdata.ini
+!tests/mozdata.ini
 dist
 libmozdata.egg-info
