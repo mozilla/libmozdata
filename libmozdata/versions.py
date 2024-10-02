@@ -27,8 +27,6 @@ URL_STABILITY = (
 
 REGEX_EVENT = re.compile("Firefox ([0-9]+) Release", re.IGNORECASE)
 
-USER_AGENT = config.get("User-Agent", "name", "libmozdata")
-
 
 def __get_major(v):
     if not v:
@@ -48,7 +46,10 @@ def __getVersions():
             return
         return esr.endswith("esr") and esr[:-3] or esr
 
-    resp = requests.get(URL_VERSIONS, headers={"User-Agent": USER_AGENT})
+    resp = requests.get(
+        URL_VERSIONS,
+        headers={"User-Agent": config.get("User-Agent", "name", required=True)},
+    )
     data = resp.json()
 
     nightly = data["FIREFOX_NIGHTLY"]
@@ -65,12 +66,18 @@ def __getVersions():
 
 
 def __getVersionDates():
-    resp = requests.get(URL_HISTORY, headers={"User-Agent": USER_AGENT})
+    resp = requests.get(
+        URL_HISTORY,
+        headers={"User-Agent": config.get("User-Agent", "name", required=True)},
+    )
     data = resp.json()
 
     data = dict([(v, utils.get_moz_date(d)) for v, d in data.items()])
 
-    resp = requests.get(URL_CALENDAR, headers={"User-Agent": USER_AGENT})
+    resp = requests.get(
+        URL_CALENDAR,
+        headers={"User-Agent": config.get("User-Agent", "name", required=True)},
+    )
     calendar = Calendar.from_ical(resp.content)
 
     for component in calendar.walk():
@@ -87,7 +94,10 @@ def __getVersionDates():
 
 
 def __getStabilityVersionDates():
-    resp = requests.get(URL_STABILITY, headers={"User-Agent": USER_AGENT})
+    resp = requests.get(
+        URL_STABILITY,
+        headers={"User-Agent": config.get("User-Agent", "name", required=True)},
+    )
 
     return dict([(v, utils.get_moz_date(d)) for v, d in resp.json().items()])
 

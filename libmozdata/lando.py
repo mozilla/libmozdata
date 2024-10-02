@@ -16,7 +16,7 @@ class LandoWarnings(object):
     def __init__(self, api_url, api_key):
         self.api_url = f"{api_url}/diff_warnings"
         self.api_key = api_key
-        self.USER_AGENT = config.get("User-Agent", "name", "libmozdata")
+        self.USER_AGENT = config.get("User-Agent", "name", required=True)
 
     def del_warnings(self, warnings):
         """
