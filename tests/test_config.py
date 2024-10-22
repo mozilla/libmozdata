@@ -180,6 +180,8 @@ class ConfigEnvTest(unittest.TestCase):
         cfg = config.ConfigEnv()
         self.assertEqual(cfg.get("Bugzilla", "token", "default"), "my_bugzilla_api_key")
         self.assertEqual(cfg.get("Section", "Option", "default"), "default")
+        config.set_config(cfg)
+        self.assertEqual(config.get("Bugzilla", "token"), "my_bugzilla_api_key")
 
 
 if __name__ == "__main__":

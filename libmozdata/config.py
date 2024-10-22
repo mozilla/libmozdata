@@ -45,12 +45,15 @@ class ConfigIni(Config):
 
 
 class ConfigEnv(Config):
-    def get(self, section, option, default=None):
+    def get(self, section, option, default=None, type=str):
         env = os.environ.get("LIBMOZDATA_CFG_" + section.upper() + "_" + option.upper())
         if not env:
             return default
 
-        return env
+        if type == list or type == set:
+            return type([s.strip(" /t") for s in env.split(",")])
+        else:
+            return type(env)
 
 
 __config = ConfigIni()
