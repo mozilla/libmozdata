@@ -41,9 +41,7 @@ class ConfigIni(Config):
 
     def get(self, section, option, default=None, type=str):
         if not self.config.has_option(section, option):
-            if default is not None:
-                return default
-            return super().get(section, option)
+            return default or super().get(section, option)
 
         res = self.config.get(section, option)
         if type == list or type == set:
@@ -59,9 +57,7 @@ class ConfigEnv(Config):
     def get(self, section, option, default=None, type=str):
         env = os.environ.get("LIBMOZDATA_CFG_" + section.upper() + "_" + option.upper())
         if not env:
-            if default is not None:
-                return default
-            return super().get(section, option)
+            return default or super().get(section, option)
 
         if type == list or type == set:
             return type([s.strip(" /t") for s in env.split(",")])
