@@ -18,9 +18,7 @@ class Config(object):
         self.local_config[(section, option)] = value
 
     def get(self, section, option, default=None):
-        if (section, option) in self.local_config:
-            return self.local_config[(section, option)]
-        return None
+        return self.local_config.get((section, option), default)
 
 
 class ConfigIni(Config):
