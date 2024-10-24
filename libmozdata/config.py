@@ -11,12 +11,19 @@ except ImportError:
 
 
 class Config(object):
-    def get(section, option, default=None):
-        raise NotImplementedError
+    def __init__(self):
+        self.local_config = {}
+
+    def set_default(self, section, option, value):
+        self.local_config[(section, option)] = value
+
+    def get(self, section, option, default=None):
+        return self.local_config.get((section, option), default)
 
 
 class ConfigIni(Config):
     def __init__(self, path=None):
+        super().__init__()
         self.config = ConfigParser()
         if path is not None:
             self.config.read(path)
@@ -32,7 +39,9 @@ class ConfigIni(Config):
 
     def get(self, section, option, default=None, type=str):
         if not self.config.has_option(section, option):
-            return default
+            if default is not None:
+                return default
+            return super().get(section, option)
 
         res = self.config.get(section, option)
         if type == list or type == set:
@@ -48,7 +57,9 @@ class ConfigEnv(Config):
     def get(self, section, option, default=None, type=str):
         env = os.environ.get("LIBMOZDATA_CFG_" + section.upper() + "_" + option.upper())
         if not env:
-            return default
+            if default is not None:
+                return default
+            return super().get(section, option)
 
         if type == list or type == set:
             return type([s.strip(" /t") for s in env.split(",")])
@@ -72,3 +83,8 @@ def get(section, option, default=None, type=str, required=False):
     if required:
         assert value is not None, f"Option {option} in section {section} is not set"
     return value
+
+
+def set_default_value(section, option, value):
+    global __config
+    __config.set_default(section, option, value)
