@@ -171,7 +171,7 @@ class ConfigTest(unittest.TestCase):
         ):
             config.get("User-Agent", "name", required=True)
 
-    def test_set_value(self):
+    def test_set_default_value(self):
         """
         The set_value function correctly sets a value in the configuration
         """
@@ -184,7 +184,7 @@ class ConfigTest(unittest.TestCase):
         from libmozdata import config
 
         config.set_config(config.ConfigIni("config.ini"))
-        config.set_value("User-Agent", "name", "something-0.1.1")
+        config.set_default_value("User-Agent", "name", "something-0.1.1")
 
         self.assertEqual(config.get("User-Agent", "name"), "something-0.1.1")
 
@@ -198,7 +198,7 @@ class ConfigTest(unittest.TestCase):
         from libmozdata import config
 
         config.set_config(config.ConfigIni("config.ini"))
-        config.set_value("User-Agent", "name", "something-0.1.1")
+        config.set_default_value("User-Agent", "name", "something-0.1.1")
 
         self.assertEqual(
             config.get("User-Agent", "name", required=True), "something-0.1.1"

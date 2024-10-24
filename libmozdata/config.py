@@ -14,7 +14,7 @@ class Config(object):
     def __init__(self):
         self.local_config = {}
 
-    def set(self, section, option, value):
+    def set_default(self, section, option, value):
         self.local_config[(section, option)] = value
 
     def get(self, section, option, default=None):
@@ -83,6 +83,6 @@ def get(section, option, default=None, type=str, required=False):
     return value
 
 
-def set_value(section, option, value):
+def set_default_value(section, option, value):
     global __config
-    __config.set(section, option, value)
+    __config.set_default(section, option, value)
