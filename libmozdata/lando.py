@@ -14,7 +14,7 @@ class LandoWarnings(object):
     """
 
     def __init__(self, api_url, api_key):
-        self.api_url = f"{api_url}/diff_warnings"
+        self.api_url = f"{api_url}/diff_warnings/"
         self.api_key = api_key
         self.USER_AGENT = config.get("User-Agent", "name", required=True)
 
@@ -26,7 +26,7 @@ class LandoWarnings(object):
             warning_id = warning["id"]
 
             response = requests.delete(
-                f"{self.api_url}/{warning_id}",
+                f"{self.api_url}{warning_id}",
                 headers={
                     "X-Phabricator-API-Key": self.api_key,
                     "User-Agent": self.USER_AGENT,
@@ -34,7 +34,9 @@ class LandoWarnings(object):
             )
 
             if response.status_code != 200:
-                raise Exception(f"Failed to delete warning with ID {warning_id}!")
+                raise Exception(
+                    f"Failed to delete warning with ID {warning_id} with error {response.status_code}:\n{response.text}"
+                )
 
     def add_warning(self, warning, revision_id, diff_id):
         """
@@ -55,7 +57,7 @@ class LandoWarnings(object):
         )
         if response.status_code != 201:
             raise Exception(
-                f"Failed to add warnings for revision_id {revision_id} and diff_id {diff_id}!"
+                f"Failed to add warnings for revision_id {revision_id} and diff_id {diff_id} with error {response.status_code}:\n{response.text}"
             )
 
     def get_warnings(self, revision_id, diff_id):
@@ -76,7 +78,7 @@ class LandoWarnings(object):
         )
         if response.status_code != 200:
             raise Exception(
-                f"Failed to get warnings for revision_id {revision_id} and diff_id {diff_id}!"
+                f"Failed to get warnings for revision_id {revision_id} and diff_id {diff_id} with error {response.status_code}:\n{response.text}"
             )
 
         return response.json()
