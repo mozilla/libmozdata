@@ -38,7 +38,7 @@ class Test_LandoWarnings(unittest.TestCase):
     def test_get_warnings(self):
         responses.add(
             responses.GET,
-            f"{MOCK_LANDO_API_URL}/diff_warnings?revision_id={MOCK_REV_ID}&diff_id={MOCK_DIFF_ID}&group={MOCK_GROUP}",
+            f"{MOCK_LANDO_API_URL}/diff_warnings/?revision_id={MOCK_REV_ID}&diff_id={MOCK_DIFF_ID}&group={MOCK_GROUP}",
             json=MOCK_WARNINGS_DATA,
             headers={"X-Phabricator-API-Key": MOCK_LANDO_TOKEN},
             status=200,
@@ -59,7 +59,7 @@ class Test_LandoWarnings(unittest.TestCase):
         # Error code with 404
         responses.add(
             responses.GET,
-            f"{MOCK_LANDO_API_URL}/diff_warnings?revision_id={MOCK_REV_ID}&diff_id={MOCK_DIFF_ID}&group={MOCK_GROUP}",
+            f"{MOCK_LANDO_API_URL}/diff_warnings/?revision_id={MOCK_REV_ID}&diff_id={MOCK_DIFF_ID}&group={MOCK_GROUP}",
             json=MOCK_WARNINGS_DATA,
             headers={"X-Phabricator-API-Key": MOCK_LANDO_TOKEN},
             status=400,
@@ -77,7 +77,7 @@ class Test_LandoWarnings(unittest.TestCase):
     def test_add_warnings(self):
         responses.add(
             responses.POST,
-            f"{MOCK_LANDO_API_URL}/diff_warnings",
+            f"{MOCK_LANDO_API_URL}/diff_warnings/",
             match=[responses.json_params_matcher(MOCK_WARNINGS_DATA_PUT)],
             headers={"X-Phabricator-API-Key": MOCK_LANDO_TOKEN},
             status=201,
@@ -99,7 +99,7 @@ class Test_LandoWarnings(unittest.TestCase):
     def test_del_all_warnings(self):
         responses.add(
             responses.GET,
-            f"{MOCK_LANDO_API_URL}/diff_warnings?revision_id={MOCK_REV_ID}&diff_id={MOCK_DIFF_ID}&group={MOCK_GROUP}",
+            f"{MOCK_LANDO_API_URL}/diff_warnings/?revision_id={MOCK_REV_ID}&diff_id={MOCK_DIFF_ID}&group={MOCK_GROUP}",
             json=MOCK_WARNINGS_DATA,
             headers={"X-Phabricator-API-Key": MOCK_LANDO_TOKEN},
             status=200,
