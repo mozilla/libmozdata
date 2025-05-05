@@ -60,7 +60,7 @@ class Test_LandoWarnings(unittest.TestCase):
         responses.add(
             responses.GET,
             f"{MOCK_LANDO_API_URL}/diff_warnings/?revision_id={MOCK_REV_ID}&diff_id={MOCK_DIFF_ID}&group={MOCK_GROUP}",
-            json=MOCK_WARNINGS_DATA,
+            body="Nice error",
             headers={"X-Phabricator-API-Key": MOCK_LANDO_TOKEN},
             status=400,
         )
@@ -70,7 +70,8 @@ class Test_LandoWarnings(unittest.TestCase):
             mock_lando.get_warnings(MOCK_REV_ID, MOCK_DIFF_ID)
         except Exception as ex:
             self.assertEqual(
-                str(ex), "Failed to get warnings for revision_id 0 and diff_id 0!"
+                str(ex),
+                "Failed to get warnings for revision_id 0 and diff_id 0 with error 400:\nNice error",
             )
 
     @responses.activate

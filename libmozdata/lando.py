@@ -26,7 +26,7 @@ class LandoWarnings(object):
             warning_id = warning["id"]
 
             response = requests.delete(
-                f"{self.api_url}/{warning_id}",
+                f"{self.api_url}{warning_id}",
                 headers={
                     "X-Phabricator-API-Key": self.api_key,
                     "User-Agent": self.USER_AGENT,
