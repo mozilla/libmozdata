@@ -34,7 +34,9 @@ class LandoWarnings(object):
             )
 
             if response.status_code != 200:
-                raise Exception(f"Failed to delete warning with ID {warning_id}!")
+                raise Exception(
+                    f"Failed to delete warning with ID {warning_id} with error {response.status_code}:\n{response.text}"
+                )
 
     def add_warning(self, warning, revision_id, diff_id):
         """
@@ -55,7 +57,7 @@ class LandoWarnings(object):
         )
         if response.status_code != 201:
             raise Exception(
-                f"Failed to add warnings for revision_id {revision_id} and diff_id {diff_id}!"
+                f"Failed to add warnings for revision_id {revision_id} and diff_id {diff_id} with error {response.status_code}:\n{response.text}"
             )
 
     def get_warnings(self, revision_id, diff_id):
@@ -76,7 +78,7 @@ class LandoWarnings(object):
         )
         if response.status_code != 200:
             raise Exception(
-                f"Failed to get warnings for revision_id {revision_id} and diff_id {diff_id}!"
+                f"Failed to get warnings for revision_id {revision_id} and diff_id {diff_id} with error {response.status_code}:\n{response.text}"
             )
 
         return response.json()
