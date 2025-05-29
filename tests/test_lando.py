@@ -136,7 +136,8 @@ class Test_LandoWarnings(unittest.TestCase):
         try:
             mock_lando.del_warnings(MOCK_WARNINGS_DATA)
         except Exception as ex:
-            assert str(ex) == (
+            self.assertEqual(
+                str(ex),
                 f"Failed to delete warning with ID {MOCK_WARNINGS_ID} with error 400:\nDelete error"
             )
 
