@@ -138,7 +138,7 @@ class Test_LandoWarnings(unittest.TestCase):
         except Exception as ex:
             self.assertEqual(
                 str(ex),
-                f"Failed to delete warning with ID {MOCK_WARNINGS_ID} with error 400:\nDelete error"
+                f"Failed to delete warning with ID {MOCK_WARNINGS_ID} with error 400:\nDelete error",
             )
 
 
