@@ -120,5 +120,26 @@ class Test_LandoWarnings(unittest.TestCase):
         )
 
 
+    @responses.activate
+    def test_del_warnings_fail(self):
+        MOCK_WARNINGS_DATA = [{"id": MOCK_WARNINGS_ID}]
+        responses.add(
+            responses.DELETE,
+            f"{MOCK_LANDO_API_URL}/diff_warnings/{MOCK_WARNINGS_ID}",
+            body="Delete error",
+            headers={"X-Phabricator-API-Key": MOCK_LANDO_TOKEN},
+            status=400,
+        )
+
+        mock_lando = LandoWarnings(MOCK_LANDO_API_URL, MOCK_LANDO_TOKEN)
+
+        try:
+            mock_lando.del_warnings(MOCK_WARNINGS_DATA)
+        except Exception as ex:
+            assert str(ex) == (
+                f"Failed to delete warning with ID {MOCK_WARNINGS_ID} with error 400:\nDelete error"
+            )
+
+
 if __name__ == "__main__":
     unittest.main()
