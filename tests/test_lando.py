@@ -119,7 +119,6 @@ class Test_LandoWarnings(unittest.TestCase):
             MOCK_LANDO_TOKEN,
         )
 
-
     @responses.activate
     def test_del_warnings_fail(self):
         MOCK_WARNINGS_DATA = [{"id": MOCK_WARNINGS_ID}]
