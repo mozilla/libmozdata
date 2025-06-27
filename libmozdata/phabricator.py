@@ -19,7 +19,7 @@ HGMO_JSON_REV_URL_TEMPLATE = "https://hg.mozilla.org/mozilla-central/json-rev/{}
 MOZILLA_PHABRICATOR_PROD = "https://phabricator.services.mozilla.com/api/"
 
 PhabricatorPatch = collections.namedtuple(
-    "PhabricatorPatch", "id, phid, patch, base_revision, commits"
+    "PhabricatorPatch", "id, phid, patch, base_revision, commits, merged"
 )
 
 logger = logging.getLogger(__name__)
@@ -692,14 +692,25 @@ class PhabricatorAPI(object):
             assert "id" in diff
             assert "phid" in diff
             assert "baseRevision" in diff
+
+            # Load dfif's revision to get its status
+            revision = self.load_revision(rev_phid=diff["revisionPHID"])
+            status = revision["fields"]["status"]
+            merged = status["closed"] is True and status["value"] == "published"
+
+            # Load the patch itself (raw format)
             patch = self.load_raw_diff(diff["id"])
             diffs = self.search_diffs(
                 diff_phid=diff["phid"], attachments={"commits": True}
             )
             commits = diffs[0]["attachments"]["commits"].get("commits", [])
-            logger.info("Adding patch #{} to stack".format(diff["id"]))
+            logger.info(
+                "Adding patch #{} to stack ({})".format(
+                    diff["id"], "merged" if merged else "non-merged"
+                )
+            )
             return PhabricatorPatch(
-                diff["id"], diff["phid"], patch, diff["baseRevision"], commits
+                diff["id"], diff["phid"], patch, diff["baseRevision"], commits, merged
             )
 
         # Load full diff when not provided by user
