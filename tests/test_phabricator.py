@@ -14,4 +14,6 @@ class PhabricatorTest(unittest.TestCase):
         assert True
 
     def test_pickle_phabricatorpatch(self):
-        pickle.dumps(PhabricatorPatch("123", "PHID-DIFF-xxx", "", "rev", []))
+        pickle.dumps(
+            PhabricatorPatch("123", "PHID-DIFF-xxx", "", "rev", [], merged=False)
+        )
