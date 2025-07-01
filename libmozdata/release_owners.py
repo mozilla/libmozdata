@@ -36,10 +36,19 @@ def get_owners():
     if _OWNERS is not None:
         return _OWNERS
 
-    html = requests.get(
+    resp = requests.get(
         OWNERS_URL,
         headers={"User-Agent": config.get("User-Agent", "name", required=True)},
-    ).text.encode("ascii", errors="ignore")
+    )
+    resp.raise_for_status()
+
+    html = resp.text.encode("ascii", errors="ignore")
+
+    # debug
+    print("-" * 80)
+    print("HTML", html)
+    print("-" * 80)
+
     parser = WikiParser(tables=[0])
     try:
         parser.feed(html)
@@ -61,7 +70,8 @@ def get_owners():
             try:
                 # sometimes the date is 2019-XX-XX (when the date is not known)
                 release_date = utils.get_date_ymd(row[6])
-            except (AssertionError, ValueError):
+            except (AssertionError, ValueError) as e:
+                print(f"SKIP row {row[6]}: {e}")
                 continue
 
             _OWNERS.append(
