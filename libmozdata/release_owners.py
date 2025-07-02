@@ -3,6 +3,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import requests
+from requests.exceptions import HTTPError
 
 from . import config, utils
 from .wiki_parser import InvalidWiki, WikiParser
@@ -36,10 +37,17 @@ def get_owners():
     if _OWNERS is not None:
         return _OWNERS
 
-    html = requests.get(
+    resp = requests.get(
         OWNERS_URL,
         headers={"User-Agent": config.get("User-Agent", "name", required=True)},
-    ).text.encode("ascii", errors="ignore")
+    )
+    try:
+        resp.raise_for_status()
+    except HTTPError as e:
+        raise InvalidWiki("Failed to load wiki data") from e
+
+    html = resp.text.encode("ascii", errors="ignore")
+
     parser = WikiParser(tables=[0])
     try:
         parser.feed(html)
