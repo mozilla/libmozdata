@@ -693,7 +693,7 @@ class PhabricatorAPI(object):
             assert "phid" in diff
             assert "baseRevision" in diff
 
-            # Load dfif's revision to get its status
+            # Load diff's revision to get its status
             revision = self.load_revision(rev_phid=diff["revisionPHID"])
             status = revision["fields"]["status"]
             merged = status["closed"] is True and status["value"] == "published"
