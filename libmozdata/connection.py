@@ -98,7 +98,7 @@ class Connection(object):
                 self.RAISE_ERROR = kwargs["raise_error"]
 
         if not self.USER_AGENT:
-            config.get("User-Agent", "name", required=True)
+            self.USER_AGENT = config.get("User-Agent", "name", required=True)
 
         self.exec_queries()
 
