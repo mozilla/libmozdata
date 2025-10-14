@@ -3,6 +3,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from collections import namedtuple
+from urllib.parse import urljoin
+
 import requests
 
 from . import config
@@ -91,3 +94,60 @@ class LandoWarnings(object):
 
         if len(current_warnings):
             return self.del_warnings(current_warnings)
+
+
+# Represent the commit in both mercurial & git sources, using full hashes
+CommitMap = namedtuple("CommitMap", "git_hash, hg_hash")
+
+
+class LandoMissingCommit(Exception):
+    """
+    Raised when a commit is not available on Lando CommitMap API
+    """
+
+
+class LandoCommitMapAPI:
+    """
+    Anonymous API calls on Lando API to convert mercurial <=> git commits
+    """
+
+    def __init__(self, api_url="https://lando.moz.tools/api/"):
+        self.api_url = api_url
+        assert self.api_url.endswith("/"), "Lando API url must end with a /"
+        self.USER_AGENT = config.get("User-Agent", "name", required=True)
+
+    def request(self, method, repository, revision) -> CommitMap:
+        """
+        Call a conversion method on Lando API and return a CommitMap object
+        with both full hashes
+        """
+        url = urljoin(self.api_url, f"{method}/{repository}/{revision}")
+        resp = requests.get(
+            url,
+            headers={
+                "User-Agent": self.USER_AGENT,
+            },
+        )
+        if not resp.ok:
+            if resp.status_code == 404:
+                raise LandoMissingCommit(
+                    f"No commit found for {method} {revision}@{repository}"
+                )
+
+            raise Exception(
+                f"Failed to resolve {method} {revision}@{repository}: {resp.text}"
+            )
+
+        return CommitMap(**resp.json())
+
+    def git2hg(self, revision: str, repository="firefox") -> CommitMap:
+        """
+        Convert a git hash into a mercurial one
+        """
+        return self.request("git2hg", repository, revision)
+
+    def hg2git(self, revision: str, repository="firefox") -> CommitMap:
+        """
+        Convert a mercurial hash into a git one
+        """
+        return self.request("hg2git", repository, revision)
