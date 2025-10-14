@@ -2,7 +2,12 @@ import unittest
 
 import responses
 
-from libmozdata.lando import LandoWarnings
+from libmozdata.lando import (
+    CommitMap,
+    LandoCommitMapAPI,
+    LandoMissingCommit,
+    LandoWarnings,
+)
 
 MOCK_LANDO_API_URL = "http://api.lando.test"
 MOCK_LANDO_TOKEN = "Some Test Token"
@@ -139,6 +144,110 @@ class Test_LandoWarnings(unittest.TestCase):
                 str(ex),
                 f"Failed to delete warning with ID {MOCK_WARNINGS_ID} with error 400:\nDelete error",
             )
+
+
+class Test_LandoCommitMap(unittest.TestCase):
+    @responses.activate
+    def test_git2hg(self):
+        responses.add(
+            responses.GET,
+            f"{MOCK_LANDO_API_URL}/git2hg/test_repo/1234abcde",
+            json={"git_hash": "1234abcde1234abcde", "hg_hash": "56789xxxx"},
+        )
+
+        mock_lando = LandoCommitMapAPI(MOCK_LANDO_API_URL + "/")
+
+        self.assertEqual(
+            mock_lando.git2hg("1234abcde", repository="test_repo"),
+            CommitMap("1234abcde1234abcde", "56789xxxx"),
+        )
+
+    @responses.activate
+    def test_hg2git(self):
+        responses.add(
+            responses.GET,
+            f"{MOCK_LANDO_API_URL}/hg2git/test_repo/1234abcde",
+            json={"hg_hash": "1234abcde1234abcde", "git_hash": "56789xxxx"},
+        )
+
+        mock_lando = LandoCommitMapAPI(MOCK_LANDO_API_URL + "/")
+
+        self.assertEqual(
+            mock_lando.hg2git("1234abcde", repository="test_repo"),
+            CommitMap("56789xxxx", "1234abcde1234abcde"),
+        )
+
+    @responses.activate
+    def test_git2hg_missing(self):
+        responses.add(
+            responses.GET,
+            f"{MOCK_LANDO_API_URL}/git2hg/test_repo/1234abcde",
+            status=404,
+        )
+
+        mock_lando = LandoCommitMapAPI(MOCK_LANDO_API_URL + "/")
+
+        with self.assertRaises(LandoMissingCommit) as e:
+            self.assertEqual(mock_lando.git2hg("1234abcde", repository="test_repo"))
+
+        self.assertEqual(
+            str(e.exception), "No commit found for git2hg 1234abcde@test_repo"
+        )
+
+    @responses.activate
+    def test_hg2git_missing(self):
+        responses.add(
+            responses.GET,
+            f"{MOCK_LANDO_API_URL}/hg2git/test_repo/1234abcde",
+            status=404,
+        )
+
+        mock_lando = LandoCommitMapAPI(MOCK_LANDO_API_URL + "/")
+
+        with self.assertRaises(LandoMissingCommit) as e:
+            self.assertEqual(mock_lando.hg2git("1234abcde", repository="test_repo"))
+
+        self.assertEqual(
+            str(e.exception), "No commit found for hg2git 1234abcde@test_repo"
+        )
+
+    @responses.activate
+    def test_git2hg_failure(self):
+        responses.add(
+            responses.GET,
+            f"{MOCK_LANDO_API_URL}/git2hg/test_repo/1234abcde",
+            status=500,
+            json={"error": "System error"},
+        )
+
+        mock_lando = LandoCommitMapAPI(MOCK_LANDO_API_URL + "/")
+
+        with self.assertRaises(Exception) as e:
+            self.assertEqual(mock_lando.git2hg("1234abcde", repository="test_repo"))
+
+        self.assertEqual(
+            str(e.exception),
+            'Failed to resolve git2hg 1234abcde@test_repo: {"error": "System error"}',
+        )
+
+    @responses.activate
+    def test_hg2git_failure(self):
+        responses.add(
+            responses.GET,
+            f"{MOCK_LANDO_API_URL}/hg2git/test_repo/1234abcde",
+            status=500,
+            json={"error": "System error"},
+        )
+
+        mock_lando = LandoCommitMapAPI(MOCK_LANDO_API_URL + "/")
+
+        with self.assertRaises(Exception) as e:
+            self.assertEqual(mock_lando.hg2git("1234abcde", repository="test_repo"))
+
+        self.assertEqual(
+            str(e.exception),
+            'Failed to resolve hg2git 1234abcde@test_repo: {"error": "System error"}',
+        )
 
 
 if __name__ == "__main__":
