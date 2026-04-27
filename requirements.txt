@@ -6,4 +6,4 @@ requests-futures>=0.9.8
 requests[security]>=2.7.0
 setuptools>=28.6.1
 six>=1.10.0
-whatthepatch>=0.0.4
+whatthepatch>=1.0.7
