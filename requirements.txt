@@ -1,5 +1,5 @@
 icalendar>=3.10
-python-dateutil>=2.5.2
+python-dateutil>=2.9.0.post0
 python-hglib>=2.6.1
 pytz>=2022
 requests-futures>=0.9.8
