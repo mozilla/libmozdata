@@ -561,7 +561,8 @@ class Bugzilla(BugzillaBase):
             res: result
         """
         if res.status_code == 200:
-            for bug in res.json()["bugs"]:
+            data = res.json()
+            for bug in data["bugs"]:
                 self.bughandler.handle(bug)
         elif self.RAISE_ERROR:
             res.raise_for_status()
@@ -616,7 +617,8 @@ class Bugzilla(BugzillaBase):
                     timeout=self.TIMEOUT,
                 )
                 if r.ok:
-                    count = r.json()["bug_count"]
+                    data = r.json()
+                    count = data["bug_count"]
                     del params["count_only"]
                     params["limit"] = Bugzilla.BUGZILLA_CHUNK_SIZE
                     params["order"] = "bug_id"
@@ -652,7 +654,8 @@ class Bugzilla(BugzillaBase):
 
         def cb(res, *args, **kwargs):
             if res.status_code == 200:
-                for bug in res.json()["bugs"]:
+                data = res.json()
+                for bug in data["bugs"]:
                     _list.add(bug["id"])
             elif self.RAISE_ERROR:
                 res.raise_for_status()
