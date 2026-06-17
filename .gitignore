@@ -6,3 +6,4 @@ htmlcov/
 mozdata.ini
 dist
 libmozdata.egg-info
+node_modules
