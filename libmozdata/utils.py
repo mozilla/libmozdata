@@ -7,7 +7,7 @@ import math
 import operator
 import os.path
 import random
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from itertools import count
 
 import dateutil.parser
@@ -44,7 +44,7 @@ def get_timestamp(dt):
         int: the corresponding timestamp
     """
     if isinstance(dt, six.string_types):
-        dt = datetime.utcnow() if dt == "now" else get_date_ymd(dt)
+        dt = datetime.now(timezone.utc) if dt == "now" else get_date_ymd(dt)
     return int(calendar.timegm(dt.timetuple()))
 
 
@@ -57,7 +57,7 @@ def get_date_from_timestamp(ts):
     Returns:
         datetime.datetime: the corresponding datetime in UTC tz
     """
-    return datetime.utcfromtimestamp(ts).replace(tzinfo=pytz.utc)
+    return datetime.fromtimestamp(ts, tz=pytz.utc)
 
 
 def get_date_ymd(dt):
@@ -75,13 +75,13 @@ def get_date_ymd(dt):
         return as_utc(dt)
 
     if dt == "today":
-        today = datetime.utcnow()
+        today = datetime.now(timezone.utc)
         return pytz.utc.localize(datetime(today.year, today.month, today.day))
     elif dt == "tomorrow":
-        tomorrow = datetime.utcnow() + timedelta(1)
+        tomorrow = datetime.now(timezone.utc) + timedelta(1)
         return pytz.utc.localize(datetime(tomorrow.year, tomorrow.month, tomorrow.day))
     elif dt == "yesterday":
-        yesterday = datetime.utcnow() - timedelta(1)
+        yesterday = datetime.now(timezone.utc) - timedelta(1)
         return pytz.utc.localize(
             datetime(yesterday.year, yesterday.month, yesterday.day)
         )
@@ -131,7 +131,7 @@ def get_now_timestamp():
     Returns:
         int: timestamp for now
     """
-    return get_timestamp(datetime.utcnow())
+    return get_timestamp(datetime.now(timezone.utc))
 
 
 def is64(cpu_name):
@@ -327,10 +327,12 @@ def get_params_for_url(params):
         "?"
         + "&".join(
             [
-                quote(name) + "=" + quote(str(value))
-                if not isinstance(value, list)
-                else "&".join(
-                    [quote(name) + "=" + quote(str(intValue)) for intValue in value]
+                (
+                    quote(name) + "=" + quote(str(value))
+                    if not isinstance(value, list)
+                    else "&".join(
+                        [quote(name) + "=" + quote(str(intValue)) for intValue in value]
+                    )
                 )
                 for name, value in sorted(params.items(), key=lambda p: p[0])
                 if value is not None

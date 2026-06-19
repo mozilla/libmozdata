@@ -78,7 +78,6 @@ def set_config(conf):
 
 
 def get(section, option, default=None, type=str, required=False):
-    global __config
     value = __config.get(section, option, default=default, type=type)
     if required:
         assert value is not None, f"Option {option} in section {section} is not set"
@@ -86,5 +85,4 @@ def get(section, option, default=None, type=str, required=False):
 
 
 def set_default_value(section, option, value):
-    global __config
     __config.set_default(section, option, value)

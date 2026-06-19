@@ -4,7 +4,7 @@
 
 import argparse
 import numbers
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pprint import pprint
 
 from . import config, modules, utils
@@ -36,7 +36,8 @@ class FileStats(object):
         )
         self.utc_ts_from = (
             utils.get_timestamp(
-                datetime.utcfromtimestamp(utc_ts) + timedelta(-self.max_days)
+                datetime.fromtimestamp(utc_ts, tz=timezone.utc)
+                + timedelta(-self.max_days)
             )
             if isinstance(utc_ts, numbers.Number) and utc_ts > 0
             else None
