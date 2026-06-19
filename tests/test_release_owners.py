@@ -9,6 +9,10 @@ from libmozdata.wiki_parser import InvalidWiki
 
 
 class ReleaseOwnersTest(unittest.TestCase):
+    # Temporarily disabled: wiki.mozilla.org is behind a JavaScript bot
+    # challenge, so the release owners table can no longer be fetched over
+    # plain HTTP. See https://github.com/mozilla/libmozdata/issues/289
+    @unittest.skip("Wiki is behind a JS bot challenge (issue #289)")
     def test_ro(self):
         # The wiki hosting release owners table may provide 403 to CI tasks
         try:
