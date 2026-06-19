@@ -54,7 +54,7 @@ tasks:
         deadline: { $fromNow: "1 hour" }
         payload:
           maxRunTime: 3600
-          image: python:3.9
+          image: python:3.13
           env:
             CODECOV_TOKEN: 2074f917-03ff-4f90-bafd-1fb186e42216
           command:

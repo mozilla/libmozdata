@@ -4,7 +4,7 @@ import numbers
 import re
 import warnings
 import weakref
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import whatthepatch
 
@@ -665,7 +665,9 @@ def bug_analysis(bug, uplift_channel=None, author_cache={}, reviewer_cache={}):
                     hgmozilla.RawRevision.get_revision(obj["channel"], rev),
                     author_names,
                     reviewers,
-                    utils.as_utc(datetime.utcfromtimestamp(obj["creation_date"])),
+                    utils.as_utc(
+                        datetime.fromtimestamp(obj["creation_date"], tz=timezone.utc)
+                    ),
                 )
             )
     else:
@@ -976,7 +978,9 @@ def get_patch_info(
     bug_pattern = re.compile(r"[\t ]*[Bb][Uu][Gg][\t ]*([0-9]+)")
 
     def handler_revision(json, data):
-        data["date"] = utils.as_utc(datetime.utcfromtimestamp(json["pushdate"][0]))
+        data["date"] = utils.as_utc(
+            datetime.fromtimestamp(json["pushdate"][0], tz=timezone.utc)
+        )
         data["backedout"] = json.get("backedoutby", "") != ""
         m = bug_pattern.search(json["desc"])
         if not m or m.group(1) != data["bugid"]:
