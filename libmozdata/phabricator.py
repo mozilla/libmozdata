@@ -7,6 +7,7 @@ import collections
 import enum
 import json
 import logging
+import math
 import time
 from functools import cached_property
 from urllib.parse import urlencode, urlparse
@@ -676,11 +677,12 @@ class PhabricatorAPI(object):
                 data=urlencode({"params": json.dumps(payload), "output": "json"}),
             )
             if response.status_code >= 500:
-                # Retry after a while on 50x
+                # Retry after a while on 50x using exponential backoff
+                backoff = math.exp(nb_try)
                 logger.info(
-                    f"Phabricator failed with status code {response.status_code}, retrying in 5 seconds..."
+                    f"Phabricator failed with status code {response.status_code}, retrying in {backoff:.1f} seconds..."
                 )
-                time.sleep(5)
+                time.sleep(backoff)
             else:
                 # Stop retrying on the first successful try or other HTTP errors
                 break
