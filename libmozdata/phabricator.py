@@ -210,7 +210,7 @@ class PhabricatorAPI(object):
     Phabricator Rest API client
     """
 
-    def __init__(self, api_key, url=MOZILLA_PHABRICATOR_PROD, max_retries=3):
+    def __init__(self, api_key, url=MOZILLA_PHABRICATOR_PROD, max_retries=5):
         self.USER_AGENT = config.get("User-Agent", "name", required=True)
         self.api_key = api_key
         self.url = url
