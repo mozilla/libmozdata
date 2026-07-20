@@ -1,4 +1,4 @@
-icalendar>=7.2.0
+icalendar>=7.2.2
 python-dateutil>=2.5.2
 python-hglib>=2.6.1
 pytz>=2022
