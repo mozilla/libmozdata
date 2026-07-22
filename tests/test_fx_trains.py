@@ -24,6 +24,13 @@ class FirefoxTrainsTest(MockTestCase):
         self.assertEqual(release_dates["29.0"], "2014-04-29")
 
     @responses.activate
+    def test_get_lando_uplift_train(self):
+        fx_trains = FirefoxTrains()
+        uplift_train = fx_trains.get_lando_uplift_train()
+        self.assertIn("nightly", uplift_train)
+        self.assertIn("version", uplift_train["nightly"])
+
+    @responses.activate
     def test_get_release_schedule(self):
         fx_trains = FirefoxTrains()
         release_schedule = fx_trains.get_release_schedule("beta")

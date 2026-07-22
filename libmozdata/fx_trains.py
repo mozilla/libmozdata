@@ -88,4 +88,16 @@ class FirefoxTrains:
         api_path = "firefox/releases/"
         return self.__get(api_path)
 
+    def get_lando_uplift_train(self):
+        """Get the current version and release date for each channel.
+
+        Returns:
+            dict: keyed by channel (nightly, beta, release, esr, esr_previous),
+                each value a dict with at least a "version" (int) key. A channel
+                may be null (e.g. esr_previous outside an ESR overlap period).
+        """
+
+        api_path = "lando/uplift/train/"
+        return self.__get(api_path)
+
     # TODO: add methods for the other API endpoints
