@@ -8,15 +8,59 @@ import operator
 import os.path
 import random
 from datetime import date, datetime, timedelta, timezone
+from functools import cache
 from itertools import count
 
 import dateutil.parser
 import pytz
+import requests
 import six
 from dateutil.relativedelta import relativedelta
 from requests.utils import quote
+from urllib3.util.retry import Retry
 
 __pacific = pytz.timezone("US/Pacific")
+
+
+@cache
+def get_session(name: str) -> requests.Session:
+    """Get a `requests` session with retries enabled on connection errors and
+    50x HTTP error codes, using exponential backoff.
+
+    Sessions are cached by name, so calling this function multiple times with
+    the same name will return the same session.
+
+    Args:
+        name (str): an arbitrary name identifying the caller, used to cache
+            the session
+
+    Returns:
+        requests.Session: a session with retries enabled
+    """
+    session = requests.Session()
+
+    retry = Retry(
+        total=8,
+        backoff_factor=1,
+        status_forcelist=[429, 500, 502, 503, 504],
+        # Also retry non-idempotent methods (e.g. POST), since urllib3
+        # excludes them by default.
+        allowed_methods=None,
+        # Return the last response instead of raising, once retries are
+        # exhausted, so callers can keep inspecting status_code/text.
+        raise_on_status=False,
+    )
+
+    # Default HTTPAdapter uses 10 connections. Mount custom adapter to increase
+    # that limit. Connections are established as needed, so using a large value
+    # should not negatively impact performance.
+    http_adapter = requests.adapters.HTTPAdapter(
+        pool_connections=50, pool_maxsize=50, max_retries=retry
+    )
+    session.mount("https://", http_adapter)
+    session.mount("http://", http_adapter)
+
+    return session
 
 
 def get_best(stats):

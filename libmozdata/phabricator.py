@@ -7,15 +7,13 @@ import collections
 import enum
 import json
 import logging
-import math
-import time
 from functools import cached_property
 from urllib.parse import urlencode, urlparse
 
 import hglib
-import requests
 
 from . import config
+from .utils import get_session
 
 HGMO_JSON_REV_URL_TEMPLATE = "https://hg.mozilla.org/mozilla-central/json-rev/{}"
 MOZILLA_PHABRICATOR_PROD = "https://phabricator.services.mozilla.com/api/"
@@ -210,17 +208,11 @@ class PhabricatorAPI(object):
     Phabricator Rest API client
     """
 
-    def __init__(self, api_key, url=MOZILLA_PHABRICATOR_PROD, max_retries=5):
+    def __init__(self, api_key, url=MOZILLA_PHABRICATOR_PROD):
         self.USER_AGENT = config.get("User-Agent", "name", required=True)
         self.api_key = api_key
         self.url = url
         assert self.url.endswith("/api/"), "Phabricator API must end with /api/"
-
-        # Number of API calls retries on 50x before raising an error
-        self.max_retries = max_retries
-        assert (
-            isinstance(self.max_retries, int) and self.max_retries > 0
-        ), "Invalid max_retries parameter"
 
     @cached_property
     def user(self):
@@ -669,23 +661,11 @@ class PhabricatorAPI(object):
         # Add api token to payload
         payload["__conduit__"] = {"token": self.api_key}
 
-        # Run POST request on api, retrying on 50x errors
-        for nb_try in range(1, self.max_retries + 1):
-            response = requests.post(
-                self.url + path,
-                headers=self.get_header(),
-                data=urlencode({"params": json.dumps(payload), "output": "json"}),
-            )
-            if response.status_code >= 500:
-                # Retry after a while on 50x using exponential backoff
-                backoff = math.exp(nb_try)
-                logger.info(
-                    f"Phabricator failed with status code {response.status_code}, retrying in {backoff:.1f} seconds..."
-                )
-                time.sleep(backoff)
-            else:
-                # Stop retrying on the first successful try or other HTTP errors
-                break
+        response = get_session("phabricator").post(
+            self.url + path,
+            headers=self.get_header(),
+            data=urlencode({"params": json.dumps(payload), "output": "json"}),
+        )
 
         # Raise immediate 40x errors or out-of-retries 50x
         response.raise_for_status()

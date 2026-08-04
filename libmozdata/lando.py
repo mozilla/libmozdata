@@ -6,9 +6,8 @@
 from collections import namedtuple
 from urllib.parse import urljoin
 
-import requests
-
 from . import config
+from .utils import get_session
 
 
 class LandoWarnings(object):
@@ -28,7 +27,7 @@ class LandoWarnings(object):
         for warning in warnings:
             warning_id = warning["id"]
 
-            response = requests.delete(
+            response = get_session("lando").delete(
                 f"{self.api_url}{warning_id}",
                 headers={
                     "X-Phabricator-API-Key": self.api_key,
@@ -45,7 +44,7 @@ class LandoWarnings(object):
         """
         Adds a warning to Lando
         """
-        response = requests.post(
+        response = get_session("lando").post(
             self.api_url,
             json={
                 "revision_id": revision_id,
@@ -67,7 +66,7 @@ class LandoWarnings(object):
         """
         Gets a list of warnings
         """
-        response = requests.get(
+        response = get_session("lando").get(
             self.api_url,
             params={
                 "revision_id": revision_id,
@@ -122,7 +121,7 @@ class LandoCommitMapAPI:
         with both full hashes
         """
         url = urljoin(self.api_url, f"{method}/{repository}/{revision}")
-        resp = requests.get(
+        resp = get_session("lando").get(
             url,
             headers={
                 "User-Agent": self.USER_AGENT,
