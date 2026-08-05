@@ -4,8 +4,6 @@
 
 import unittest
 
-import six
-
 from libmozdata import utils
 from libmozdata.FileStats import FileStats
 
@@ -17,8 +15,7 @@ class FileStatsTest(unittest.TestCase):
         self.assertIsNotNone(info)
         self.assertEqual(info["path"], "netwerk/protocol/http/nsHttpConnectionMgr.cpp")
         self.assertEqual(info["module"], "Necko")
-        six.assertCountEqual(
-            self,
+        self.assertCountEqual(
             info["components"],
             [
                 "Core::Networking",

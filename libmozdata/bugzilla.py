@@ -6,7 +6,6 @@ import functools
 import re
 
 import requests
-import six
 from requests import HTTPError
 
 import libmozdata.versions
@@ -75,7 +74,7 @@ class Bugzilla(BugzillaBase):
             super(Bugzilla, self).__init__(Bugzilla.URL, queries=queries, **kwargs)
         else:
             super(Bugzilla, self).__init__(Bugzilla.URL, **kwargs)
-            if isinstance(bugids, six.string_types) or isinstance(bugids, dict):
+            if isinstance(bugids, str) or isinstance(bugids, dict):
                 self.bugids = [bugids]
             elif isinstance(bugids, int):
                 self.bugids = [str(bugids)]
@@ -196,9 +195,9 @@ class Bugzilla(BugzillaBase):
 
         def __merge_fields(f1, f2):
             if f1:
-                f1 = {f1} if isinstance(f1, six.string_types) else set(f1)
+                f1 = {f1} if isinstance(f1, str) else set(f1)
                 if f2:
-                    f2 = {f2} if isinstance(f2, six.string_types) else set(f2)
+                    f2 = {f2} if isinstance(f2, str) else set(f2)
                     return list(f1.union(f2))
                 else:
                     return f1
@@ -257,7 +256,7 @@ class Bugzilla(BugzillaBase):
 
     @staticmethod
     def get_links(bugids):
-        if isinstance(bugids, six.string_types) or isinstance(bugids, int):
+        if isinstance(bugids, str) or isinstance(bugids, int):
             return "https://bugzilla.mozilla.org/" + str(bugids)
         else:
             return ["https://bugzilla.mozilla.org/" + str(bugid) for bugid in bugids]
@@ -594,7 +593,7 @@ class Bugzilla(BugzillaBase):
         header = self.get_header()
         specials = {"count_only", "limit", "order", "offset"}
         for query in self.bugids:
-            if isinstance(query, six.string_types):
+            if isinstance(query, str):
                 url = Bugzilla.API_URL + "?" + query
                 self.bugs_results.append(
                     self.session.get(
@@ -730,7 +729,7 @@ class Bugzilla(BugzillaBase):
                 bugs = json["bugs"]
                 if bugs:
                     for key in bugs.keys():
-                        if isinstance(key, six.string_types) and key.isdigit():
+                        if isinstance(key, str) and key.isdigit():
                             comments = bugs[key]
                             self.commenthandler.handle(comments, key)
         elif self.RAISE_ERROR:
@@ -775,7 +774,7 @@ class Bugzilla(BugzillaBase):
                 bugs = json["bugs"]
                 if bugs:
                     for key in bugs.keys():
-                        if isinstance(key, six.string_types) and key.isdigit():
+                        if isinstance(key, str) and key.isdigit():
                             attachments = bugs[key]
                             self.attachmenthandler.handle(attachments, key)
         elif self.RAISE_ERROR:
@@ -861,7 +860,7 @@ class BugzillaUser(BugzillaBase):
         self.fault_user_handler = Handler.get(fault_user_handler, user_data)
 
         if user_names is not None:
-            if isinstance(user_names, six.string_types) or isinstance(user_names, int):
+            if isinstance(user_names, str) or isinstance(user_names, int):
                 user_names = [user_names]
 
             params = [
@@ -870,8 +869,7 @@ class BugzillaUser(BugzillaBase):
                     "names": [
                         user_name
                         for user_name in user_names
-                        if isinstance(user_name, six.string_types)
-                        and not user_name.isdigit()
+                        if isinstance(user_name, str) and not user_name.isdigit()
                     ],
                     "ids": [
                         str(user_id)
@@ -891,7 +889,7 @@ class BugzillaUser(BugzillaBase):
                 **kwargs,
             )
         elif search_strings is not None:
-            if isinstance(search_strings, six.string_types):
+            if isinstance(search_strings, str):
                 search_strings = [search_strings]
 
             queries = []
@@ -952,9 +950,9 @@ class BugzillaProduct(BugzillaBase):
 
             if include_fields:
                 if "include_fields" in params:
-                    if isinstance(include_fields, six.string_types):
+                    if isinstance(include_fields, str):
                         include_fields = [include_fields]
-                    if isinstance(params.get("include_fields"), six.string_types):
+                    if isinstance(params.get("include_fields"), str):
                         params["include_fields"] = [params["include_fields"]]
 
                     params["include_fields"] = list(
@@ -965,9 +963,9 @@ class BugzillaProduct(BugzillaBase):
 
             if product_types:
                 if "type" in params:
-                    if isinstance(product_types, six.string_types):
+                    if isinstance(product_types, str):
                         product_types = [product_types]
-                    if isinstance(params.get("type"), six.string_types):
+                    if isinstance(params.get("type"), str):
                         params["type"] = [params["type"]]
 
                     params["type"] = list(set(params["type"]).union(product_types))
@@ -975,9 +973,7 @@ class BugzillaProduct(BugzillaBase):
                     params["type"] = product_types
 
         elif product_names is not None:
-            if isinstance(product_names, six.string_types) or isinstance(
-                product_names, int
-            ):
+            if isinstance(product_names, str) or isinstance(product_names, int):
                 product_names = [product_names]
 
             params = {
@@ -986,8 +982,7 @@ class BugzillaProduct(BugzillaBase):
                 "names": [
                     product_name
                     for product_name in product_names
-                    if isinstance(product_name, six.string_types)
-                    and not product_name.isdigit()
+                    if isinstance(product_name, str) and not product_name.isdigit()
                 ],
                 "ids": [
                     str(product_id)

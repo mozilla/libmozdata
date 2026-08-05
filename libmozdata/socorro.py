@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import six
-
 from . import config, utils
 from .connection import Connection, Query
 
@@ -85,7 +83,7 @@ class SuperSearch(Socorro):
                     "url" in k
                     or "email" in k
                     or (
-                        (isinstance(v, list) or isinstance(v, six.string_types))
+                        (isinstance(v, list) or isinstance(v, str))
                         and ("url" in v or "email" in v)
                     )
                 ):
@@ -175,7 +173,7 @@ class ProcessedCrash(Socorro):
         data = {}
         __base = {"crash_id": None, "datatype": "processed"}
 
-        if isinstance(crashids, six.string_types):
+        if isinstance(crashids, str):
             __base["crash_id"] = crashids
             _dict = {}
             data[crashids] = _dict
@@ -243,7 +241,7 @@ class Bugs(Socorro):
                     if signature in data:
                         data[signature].add(hit["id"])
 
-        if isinstance(signatures, six.string_types):
+        if isinstance(signatures, str):
             data = {signatures: set()}
             Bugs(
                 params={"signatures": signatures},

@@ -6,8 +6,6 @@ import functools
 import re
 from datetime import timedelta
 
-import six
-
 from . import config, utils
 from .connection import Connection, Query
 
@@ -93,7 +91,7 @@ class Redash(Connection):
             dict: containing result in json for each query
         """
         data = {}
-        if isinstance(query_ids, six.string_types):
+        if isinstance(query_ids, str):
             url = Redash.API_URL + "/" + query_ids + "/results.json"
             Redash(
                 Query(

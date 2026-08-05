@@ -5,8 +5,6 @@
 import logging
 import re
 
-import six
-
 from . import hgmozilla
 from .connection import Query
 
@@ -32,7 +30,7 @@ class HGFileInfo(object):
         self.node = node
         self.date_type = "date" if date_type == "creation" else "pushdate"
         self.data = {}
-        self.paths = [paths] if isinstance(paths, six.string_types) else paths
+        self.paths = [paths] if isinstance(paths, str) else paths
         for p in self.paths:
             self.data[p] = []
         self.bug_pattern = re.compile(r"[\t ]*[Bb][Uu][Gg][\t ]*([0-9]+)")

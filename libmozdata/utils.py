@@ -14,7 +14,6 @@ from itertools import count
 import dateutil.parser
 import pytz
 import requests
-import six
 from dateutil.relativedelta import relativedelta
 from requests.utils import quote
 from urllib3.util.retry import Retry
@@ -87,7 +86,7 @@ def get_timestamp(dt):
     Returns:
         int: the corresponding timestamp
     """
-    if isinstance(dt, six.string_types):
+    if isinstance(dt, str):
         dt = datetime.now(timezone.utc) if dt == "now" else get_date_ymd(dt)
     return int(calendar.timegm(dt.timetuple()))
 
@@ -162,7 +161,7 @@ def get_date(_date, delta=None):
     Returns:
         str: the date as a string 'Year-month-day'
     """
-    if isinstance(_date, six.string_types):
+    if isinstance(_date, str):
         _date = get_date_ymd(_date)
     if delta:
         _date -= timedelta(delta)
@@ -351,16 +350,16 @@ def get_channels():
 
 
 def get_str_list(x):
-    if isinstance(x, six.string_types):
+    if isinstance(x, str):
         return [x]
-    if isinstance(x, six.integer_types):
+    if isinstance(x, int):
         return [str[x]]
     if isinstance(x, list) or isinstance(x, set):
-        return [str(y) if isinstance(y, six.integer_types) else y for y in x]
+        return [str(y) if isinstance(y, int) else y for y in x]
 
 
 def get_x_fwed_for_str(s):
-    if isinstance(s, six.string_types):
+    if isinstance(s, str):
         return ", ".join(map(lambda x: x.strip(" \t"), s.split(",")))
     else:
         return ", ".join(map(lambda x: x.strip(" \t"), s))
