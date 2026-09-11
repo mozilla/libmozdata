@@ -19,7 +19,9 @@ HGMO_JSON_REV_URL_TEMPLATE = "https://hg.mozilla.org/mozilla-central/json-rev/{}
 MOZILLA_PHABRICATOR_PROD = "https://phabricator.services.mozilla.com/api/"
 
 PhabricatorPatch = collections.namedtuple(
-    "PhabricatorPatch", "id, phid, patch, base_revision, commits, merged"
+    "PhabricatorPatch",
+    "id, phid, patch, base_revision, commits, merged, first_public_parent",
+    defaults=[None],
 )
 
 logger = logging.getLogger(__name__)
@@ -705,13 +707,33 @@ class PhabricatorAPI(object):
                 diff_phid=diff["phid"], attachments={"commits": True}
             )
             commits = diffs[0]["attachments"]["commits"].get("commits", [])
+            query_diffs = self.request("differential.querydiffs", ids=[diff["id"]])
+            properties = query_diffs.get(str(diff["id"]), {}).get("properties", {})
+            local_commits = properties.get("local:commits") or {}
+            if not local_commits:
+                logger.warn("Diff %s has no local:commits property", diff["id"])
+
+            first_public_parent = None
+            # local:commits is keyed by the local commit node, which may differ from
+            # the public commit identifier exposed by Phabricator's commits attachment
+            # hence iterating over values (there is only one in the dict but key unknown).
+            for local_commit in local_commits.values():
+                first_public_parent = local_commit.get("firstPublicParent")
+                if first_public_parent:
+                    break
             logger.info(
                 "Adding patch #{} to stack ({})".format(
                     diff["id"], "merged" if merged else "non-merged"
                 )
             )
             return PhabricatorPatch(
-                diff["id"], diff["phid"], patch, diff["baseRevision"], commits, merged
+                diff["id"],
+                diff["phid"],
+                patch,
+                diff["baseRevision"],
+                commits,
+                merged,
+                first_public_parent,
             )
 
         # Load full diff when not provided by user
