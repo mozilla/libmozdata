@@ -4,6 +4,6 @@ python-hglib>=2.6.1
 pytz>=2022
 requests-futures>=0.9.8
 requests[security]>=2.7.0
-setuptools>=83.0.0
+setuptools>=84.0.0
 urllib3>=1.26.0
 whatthepatch>=0.0.4
