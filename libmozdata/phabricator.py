@@ -7,6 +7,7 @@ import collections
 import enum
 import json
 import logging
+import os
 from functools import cached_property
 from urllib.parse import urlencode, urlparse
 
@@ -230,7 +231,13 @@ class PhabricatorAPI(object):
 
     def get_header(self):
         """Get the header to use each query"""
-        return {"User-Agent": self.USER_AGENT}
+        headers = {"User-Agent": self.USER_AGENT}
+
+        edge_key = os.environ.get("PHABRICATOR_EDGE_KEY")
+        if edge_key:
+            headers["Mozilla-Edge-Key"] = edge_key
+
+        return headers
 
     def search_diffs(
         self,
